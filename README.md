@@ -13,9 +13,16 @@ Q-Advantage publishes reproducible, auditable benchmarks for post-quantum crypto
 ## How it works 
 No hidden infrastructure. No marketing-grade numbers. The recipe is in `/benchmark`, the methodology is in `METHODOLOGY.md`, and every weekly run is one click away in the Actions tab.
 
+
 ## Status
 
-🟡 **Week 2 of public build.** Benchmark harness shipping. Dashboard next.
+| Component | State | Latest |
+|---|---|---|
+| Q-Shield benchmark harness | Operational | [Latest run](./benchmark/results/RESULTS.md) |
+| Q-Arena algorithm benchmarks | In development | — |
+| Q-Day Index | In development | — |
+
+Q-Shield runs weekly on dedicated AWS infrastructure. Methodology, harness code, and full result history are in this repository.
 
 ## Repo layout
 ## Methodology
