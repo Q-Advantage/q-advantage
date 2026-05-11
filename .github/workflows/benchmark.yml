@@ -1,0 +1,51 @@
+name: Weekly PQC Benchmark
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC (09:00 East Africa, 23:00 Sunday US Pacific)
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    # Manual trigger from the Actions tab
+
+jobs:
+  benchmark:
+    name: Run Q-Shield benchmark on dedicated hardware
+    runs-on: [self-hosted, q-advantage-bench]
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Show environment
+        run: |
+          echo "Runner: $(hostname)"
+          echo "CPU: $(grep -m1 'model name' /proc/cpuinfo | sed 's/.*: //')"
+          echo "Kernel: $(uname -r)"
+          uptime
+
+      - name: Run benchmark
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/benchmark.py
+
+      - name: Commit results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add benchmark/results/
+          if git diff --staged --quiet; then
+            echo "No result changes to commit"
+          else
+            git commit -m "chore: weekly benchmark run $(date -u +%Y-%m-%d) [skip ci]"
+            git push
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ -f benchmark/results/RESULTS.md ]; then
+            echo "## Latest benchmark results" >> $GITHUB_STEP_SUMMARY
+            cat benchmark/results/RESULTS.md >> $GITHUB_STEP_SUMMARY
+          fi
+
