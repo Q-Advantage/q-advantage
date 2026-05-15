@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
     # Manual trigger from the Actions tab
 
+permissions:
+  contents: write
+
 jobs:
   benchmark:
     name: Run Q-Shield benchmark on dedicated hardware
