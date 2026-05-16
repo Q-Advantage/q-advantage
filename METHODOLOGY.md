@@ -14,6 +14,35 @@ All Q-Shield benchmarks run on a single dedicated AWS EC2 instance.
 - **OS:** Ubuntu 24.04 LTS
 - **Process affinity:** pinned to a single core for the duration of measurement
 
+## Hardware transparency
+
+Q-Advantage benchmarks currently run on an AWS EC2 t3.medium instance
+(Intel Xeon Platinum 8259CL @ 2.5GHz, AVX2 available, 2 vCPU, 3.7 GiB RAM,
+us-east-1). This is a *burstable* instance class: CPU performance is
+guaranteed at a baseline level and can burst above baseline when CPU credits
+are available. Under sustained load with depleted credits, the instance
+throttles to baseline, which would silently slow timed iterations.
+
+Every result file therefore includes a `runtime_metrics` block alongside the
+existing `environment` block:
+
+- `cpu_steal_jiffies` / `cpu_steal_seconds`: delta of Linux kernel steal-time
+  across the timed loop. Steal-time counts CPU cycles taken from the guest
+  by the hypervisor. On a burstable instance, sustained non-zero steal-time
+  indicates throttling. Healthy runs show steal-time near zero. Seconds are
+  derived assuming `USER_HZ=100`, the default on stock Ubuntu kernels.
+- `loadavg_start` / `loadavg_end`: 1/5/15-minute load averages captured at
+  the start and end of the timed loop. Used to detect noisy-neighbour or
+  concurrent-process effects.
+- `wall_clock_seconds`: total elapsed time of the timed loop.
+- `instance_type`: the EC2 instance class in use.
+- `burstable`: whether the instance class is burstable.
+
+When this project graduates to a fixed-performance instance class, this
+document will be updated and historical runs from the burstable period will
+remain available in the repository for reproducibility. The hardware change
+will be explicitly dated; results will not be silently migrated.
+
 ## Software stack
 
 - `liboqs` — built from source, current `main`, AVX2 optimizations enabled
