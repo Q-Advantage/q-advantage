@@ -147,6 +147,36 @@ def _git_value(args: list[str]) -> str:
         return "unknown"
 
 
+def _read_cpu_steal_jiffies() -> int:
+    """Return cumulative steal-time in jiffies from /proc/stat aggregate cpu line.
+
+    Steal-time counts CPU cycles taken from the guest by the hypervisor. On a
+    burstable EC2 instance (t3.*), sustained non-zero deltas indicate CPU
+    credit exhaustion and benchmark timings should be treated as unreliable.
+    Returns -1 on parse failure (does not raise; benchmark must continue).
+    """
+    try:
+        with open("/proc/stat", "r") as f:
+            first_line = f.readline()
+        fields = first_line.split()
+        # Format: cpu user nice system idle iowait irq softirq steal guest guest_nice
+        if fields[0] != "cpu" or len(fields) < 9:
+            return -1
+        return int(fields[8])
+    except (OSError, ValueError, IndexError):
+        return -1
+
+
+def _read_loadavg() -> tuple[float, float, float]:
+    """Return (1min, 5min, 15min) load averages. (-1, -1, -1) on failure."""
+    try:
+        with open("/proc/loadavg", "r") as f:
+            parts = f.readline().split()
+        return float(parts[0]), float(parts[1]), float(parts[2])
+    except (OSError, ValueError, IndexError):
+        return -1.0, -1.0, -1.0
+
+
 def gather_environment(script_args: list[str]) -> dict[str, Any]:
     records = _read_proc_cpuinfo()
     return {
@@ -476,6 +506,13 @@ def main() -> None:
     total = len(all_algorithms)
     algorithm_results: dict[str, Any] = {}
 
+    # Snapshot runtime metrics before the timed loop. We capture steal-time
+    # and load average at both endpoints so any throttling or noisy-neighbour
+    # interference during the run is visible in the published results.
+    steal_jiffies_start = _read_cpu_steal_jiffies()
+    loadavg_start = _read_loadavg()
+    wall_start = time.perf_counter()
+
     for idx, alg in enumerate(all_algorithms, 1):
         t_start = time.perf_counter()
         print(f"[{idx}/{total}] {alg} ...", end="", file=sys.stderr, flush=True)
@@ -499,13 +536,39 @@ def main() -> None:
             print(f" {status} ({elapsed:.1f}s)", file=sys.stderr)
         algorithm_results[alg] = result
 
+    # Snapshot runtime metrics after the timed loop.
+    steal_jiffies_end = _read_cpu_steal_jiffies()
+    loadavg_end = _read_loadavg()
+    wall_elapsed = time.perf_counter() - wall_start
+
+    # Convert steal-time to seconds. Assumes USER_HZ=100, which is the default
+    # on stock Ubuntu kernels (verify with `getconf CLK_TCK` if porting).
+    if steal_jiffies_start >= 0 and steal_jiffies_end >= 0:
+        steal_delta_jiffies = steal_jiffies_end - steal_jiffies_start
+        steal_delta_seconds = round(steal_delta_jiffies / 100.0, 3)
+    else:
+        steal_delta_jiffies = -1
+        steal_delta_seconds = -1.0
+
+    runtime_metrics: dict[str, Any] = {
+        "wall_clock_seconds": round(wall_elapsed, 2),
+        "cpu_steal_jiffies": steal_delta_jiffies,
+        "cpu_steal_seconds": steal_delta_seconds,
+        "loadavg_start": list(loadavg_start),
+        "loadavg_end": list(loadavg_end),
+        "instance_type": env["ec2_instance_type"],
+        "burstable": env["ec2_instance_type"].startswith(("t2.", "t3.", "t3a.", "t4g.")),
+    }
+
     full_results: dict[str, Any] = {
         "environment": env,
+        "runtime_metrics": runtime_metrics,
         "algorithms": algorithm_results,
     }
 
     run_date = env["iso_timestamp"][:10]
-    json_path = output_dir / f"results-{run_date}.json"
+    git_short = env["git_commit"][:7] if env["git_commit"] != "unknown" else "unknown"
+    json_path = output_dir / f"results-{run_date}-{git_short}.json"
     md_path = output_dir / "RESULTS.md"
 
     with open(json_path, "w") as f:
