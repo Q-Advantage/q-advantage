@@ -10,6 +10,13 @@ on:
 permissions:
   contents: write
 
+# Serialize benchmark runs. A second trigger arriving while a run is in
+# progress will queue behind it rather than running concurrently — which
+# would race on benchmark/results/ writes and corrupt history.
+concurrency:
+  group: benchmark-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   benchmark:
     name: Run Q-Shield benchmark on dedicated hardware
@@ -19,6 +26,10 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          # Full history (not the default shallow clone) so that
+          # rebase-on-conflict in the commit step has somewhere to land.
+          fetch-depth: 0
 
       - name: Show environment
         run: |
@@ -37,12 +48,36 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add benchmark/results/
+
           if git diff --staged --quiet; then
             echo "No result changes to commit"
-          else
-            git commit -m "chore: weekly benchmark run $(date -u +%Y-%m-%d) [skip ci]"
-            git push
+            exit 0
           fi
+
+          git commit -m "chore: weekly benchmark run $(date -u +%Y-%m-%d) [skip ci]"
+
+          # The runner's local main may have fallen behind remote during the
+          # 49-minute benchmark window (e.g. a developer pushed docs while
+          # we were running). Rebase-on-fail handles this cleanly: the only
+          # file the runner ever writes is benchmark/results/, which no human
+          # edits, so conflicts are not expected. If a conflict somehow
+          # occurs, fail loudly rather than papering over it.
+          for attempt in 1 2 3; do
+            if git push origin main; then
+              echo "Pushed on attempt $attempt"
+              exit 0
+            fi
+            echo "Push attempt $attempt failed; rebasing on origin/main"
+            git fetch origin main
+            if ! git rebase origin/main; then
+              echo "Rebase produced a conflict — aborting and failing the workflow"
+              git rebase --abort || true
+              exit 1
+            fi
+          done
+
+          echo "Push failed after 3 attempts; failing workflow"
+          exit 1
 
       - name: Summary
         if: always()
