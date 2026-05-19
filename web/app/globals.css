@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    background: theme("colors.bg.DEFAULT");
+    color: theme("colors.fg.DEFAULT");
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.005em;
+    line-height: 1.55;
+  }
+
+  /* Code and mono spans get monospace by default */
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: theme("fontFamily.mono");
+  }
+
+  /* Subtle focus ring — accessibility without garish blue browser default */
+  :focus-visible {
+    outline: 2px solid theme("colors.accent.DEFAULT");
+    outline-offset: 2px;
+  }
+
+  /* Selection styling */
+  ::selection {
+    background: theme("colors.accent.soft");
+    color: theme("colors.fg.DEFAULT");
+  }
+
+  /* Scrollbar — restrained, dark */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: theme("colors.bg.DEFAULT");
+  }
+  ::-webkit-scrollbar-thumb {
+    background: theme("colors.border.strong");
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: theme("colors.fg.faint");
+  }
+}
+
+@layer components {
+  /* Eyebrow label — uppercase mono, used above section headings.
+     Marketing site convention. */
+  .eyebrow {
+    @apply font-mono text-2xs uppercase tracking-eyebrow text-fg-subtle font-medium;
+  }
+
+  /* Mono numeric cell — every table number should use this */
+  .num {
+    @apply font-mono tabular-nums;
+  }
+
+  /*
+   * Marketing-only background: radial green glow + noise overlay.
+   * Applied via <body className="..."> on the / route via a wrapper.
+   * Scoped to .marketing-bg to avoid bleeding into dashboard pages.
+   */
+  .marketing-bg {
+    position: relative;
+  }
+
+  .marketing-bg::before {
+    content: "";
+    position: fixed;
+    top: -20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1200px;
+    height: 1200px;
+    background: radial-gradient(
+      circle,
+      rgba(74, 222, 128, 0.06) 0%,
+      transparent 60%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .marketing-bg::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.025;
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: overlay;
+  }
+
+  /* Reveal animation helpers — used on marketing landing for staged fade-in.
+     Each .reveal-N adds a small delay so elements cascade on first paint. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: reveal 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  }
+  .reveal-1 { animation-delay: 0.05s; }
+  .reveal-2 { animation-delay: 0.15s; }
+  .reveal-3 { animation-delay: 0.25s; }
+  .reveal-4 { animation-delay: 0.35s; }
+  .reveal-5 { animation-delay: 0.45s; }
+}
+
+@keyframes reveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
