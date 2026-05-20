@@ -27,9 +27,7 @@ export function Footer() {
               LinkedIn
             </a>
             <a
-              href="https://github.com/Q-Advantage/website/blob/main/docs/METHODOLOGY.md"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/methodology"
               className="text-sm text-fg-muted hover:text-fg transition-colors"
             >
               Methodology

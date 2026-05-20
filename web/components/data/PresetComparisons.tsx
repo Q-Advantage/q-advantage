@@ -19,13 +19,17 @@ interface PresetComparisonsProps {
 /**
  * Quick Comparison preset cards.
  *
- * Each card pairs a one-line takeaway with a tiny inline "ratio bar" — two
- * stacked horizontal bars showing log-scale relative speeds. Bars give the
- * visual anchor that text-only cards can't.
+ * Each card pairs a takeaway with two stacked log-scale bars comparing the
+ * two algorithms on one operation. The faster algorithm's bar is green, the
+ * slower is grey — a "green = faster" legend in the section header makes
+ * that mapping explicit (an earlier version dropped the bars because the
+ * color meaning wasn't obvious; the legend solves that).
  *
- * Used in two places:
- *   - /q-shield (dashboard) with title "The takeaways from this week's data"
- *   - / (home) with title "Quick comparisons" — same data, mirrored
+ * Log scale is essential: some pairs span 6 orders of magnitude (ML-DSA-65
+ * sign at ~149µs vs SLH-DSA-128s sign at ~1.29s), so a linear bar would
+ * render the faster one as a single pixel.
+ *
+ * Used on both /q-shield and the home page.
  */
 export function PresetComparisons({
   title = "The takeaways from this week's data",
@@ -50,15 +54,28 @@ export function PresetComparisons({
             </p>
           )}
         </div>
-        {showOpenLink && (
-          <Link
-            href="/q-shield/compare"
-            className="inline-flex items-center gap-1.5 text-xs text-fg-muted hover:text-fg transition-colors"
-          >
-            Open compare view
-            <ArrowUpRight className="w-3 h-3" />
-          </Link>
-        )}
+        <div className="flex flex-col items-end gap-2">
+          {showOpenLink && (
+            <Link
+              href="/q-shield/compare"
+              className="inline-flex items-center gap-1.5 text-xs text-fg-muted hover:text-fg transition-colors"
+            >
+              Open compare view
+              <ArrowUpRight className="w-3 h-3" />
+            </Link>
+          )}
+          {/* Legend — makes the green/grey bar meaning explicit */}
+          <div className="flex items-center gap-3 text-2xs font-mono text-fg-subtle">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block w-3 h-1.5 rounded-full bg-accent" />
+              faster
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block w-3 h-1.5 rounded-full bg-fg-subtle/40" />
+              slower
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
@@ -84,7 +101,6 @@ export function PresetComparisons({
                 {p.headline}
               </div>
 
-              {/* Mini ratio bars */}
               {a && b && aVal > 0 && bVal > 0 && (
                 <MiniBars
                   aLabel={a.display_name}
@@ -112,11 +128,9 @@ export function PresetComparisons({
 }
 
 /**
- * Two stacked horizontal bars showing relative speed on log scale.
- * Log scale is essential because some pairs span 6 orders of magnitude
- * (ML-DSA-65 sign vs SLH-DSA-128s sign). The visual goal is "you can see
- * which is much faster," not "you can read precise values from the bar
- * length" — those numbers live in the card's headline ratio.
+ * Two stacked horizontal bars on log scale. Faster = green, slower = grey.
+ * Bar length encodes relative magnitude (log-scaled so wide-range pairs
+ * stay scannable). The legend in the section header explains the colors.
  */
 function MiniBars({
   aLabel,
@@ -131,13 +145,10 @@ function MiniBars({
   bValue: number;
   op: Operation;
 }) {
-  // Use log scale so the visual proportions are scannable. Faster
-  // algorithm = shorter bar = green; slower = longer bar = dim.
   const logA = Math.log10(Math.max(aValue, 0.001));
   const logB = Math.log10(Math.max(bValue, 0.001));
   const maxLog = Math.max(logA, logB);
   const minLog = Math.min(logA, logB);
-  // Normalize so the longer bar reaches ~95% and the shorter scales proportionally
   const aWidth = Math.max(8, ((logA - minLog + 1) / (maxLog - minLog + 1)) * 95);
   const bWidth = Math.max(8, ((logB - minLog + 1) / (maxLog - minLog + 1)) * 95);
   const aFaster = aValue < bValue;

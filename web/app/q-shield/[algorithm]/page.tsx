@@ -86,6 +86,14 @@ export default function AlgorithmPage({ params }: PageProps) {
           <p className="text-base text-fg-muted max-w-2xl leading-relaxed font-light">
             {describeAlgorithm(algo)}
           </p>
+          {algorithmNote(algo) && (
+            <div className="max-w-2xl mt-1 flex gap-2.5 px-4 py-3 border border-status-warn/25 bg-status-warn/[0.06] rounded-md">
+              <span className="text-status-warn text-sm leading-none mt-0.5" aria-hidden>
+                ⚠
+              </span>
+              <p className="text-xs text-fg-muted leading-relaxed">{algorithmNote(algo)}</p>
+            </div>
+          )}
         </div>
 
         {/* Audit strip */}
@@ -195,7 +203,7 @@ function OperationSection({ operation, stats, totalRuns, history }: OperationSec
         <div className="eyebrow mb-2">Mean over time</div>
         <Sparkline data={history} height={140} full />
         <p className="text-2xs text-fg-subtle mt-2">
-          Click any point to view the GitHub commit that produced it.
+          Click any point to view the GitHub Actions run that produced it.
         </p>
       </div>
     </section>
@@ -242,6 +250,18 @@ function StatField({
       </dd>
     </div>
   );
+}
+
+function algorithmNote(algo: NormalizedAlgorithm): string | null {
+  // Parameter-set-specific advisories. Keyed off the canonical id.
+  switch (algo.id) {
+    case "ml-kem-512":
+      return "ML-KEM-512 targets NIST security level 1 — the lowest of the standardized parameter sets. Most deployments choosing a post-quantum KEM today select ML-KEM-768 (level 3) as the default; 512 is benchmarked here for completeness and for constrained environments, not as a general recommendation.";
+    case "slh-dsa-shake-128s":
+      return "The \u201Cs\u201D (small) variant optimizes for signature size at the cost of signing speed — note the sign time is measured in seconds, not microseconds. Choose the \u201Cf\u201D (fast) variant when signing throughput matters more than signature size.";
+    default:
+      return null;
+  }
 }
 
 function describeAlgorithm(algo: NormalizedAlgorithm): string {

@@ -2,7 +2,7 @@
 
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 import { useRouter } from "next/navigation";
-import { formatDuration, formatRunDate, shortSha, githubCommitUrl } from "@/lib/format";
+import { formatDuration, formatRunDate, shortSha, githubChecksUrl } from "@/lib/format";
 
 interface SparklinePoint {
   /** ISO timestamp string for x-axis */
@@ -136,7 +136,7 @@ function ClickableDot({ cx, cy, payload, active }: DotProps) {
         r={10}
         fill="transparent"
         onClick={() =>
-          window.open(githubCommitUrl(payload.full_sha), "_blank", "noopener")
+          window.open(githubChecksUrl(payload.full_sha), "_blank", "noopener")
         }
       />
       {/* Visible dot */}

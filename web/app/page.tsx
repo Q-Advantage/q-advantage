@@ -159,14 +159,12 @@ export default function HomePage() {
                 Q-Advantage runs on GitHub Actions logs.
               </p>
               <div className="mt-8">
-                <a
-                  href="https://github.com/Q-Advantage/website/blob/main/docs/METHODOLOGY.md"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href="/methodology"
                   className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-transparent text-fg rounded-lg text-sm font-normal border border-border-strong hover:border-fg-muted transition-colors"
                 >
                   View full methodology
-                </a>
+                </Link>
               </div>
             </div>
 

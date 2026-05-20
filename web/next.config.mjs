@@ -9,6 +9,9 @@ const nextConfig = {
    * time via the loader. Next.js's automatic file tracing misses this
    * (the readFileSync call lives in a separate module from the route
    * handler), so we declare the dependency explicitly.
+   *
+   * Without this, dynamic OG image requests fail with ENOENT for
+   * /var/task/web/data/results.
    */
   experimental: {
     outputFileTracingIncludes: {

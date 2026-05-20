@@ -43,7 +43,7 @@ export function Header() {
             Products
           </Link>
           <Link
-            href="/#methodology"
+            href="/methodology"
             className="hidden md:inline text-sm text-fg-muted hover:text-fg transition-colors"
           >
             Methodology

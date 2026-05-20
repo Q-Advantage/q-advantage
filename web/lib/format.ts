@@ -131,3 +131,17 @@ export const GITHUB_REPO = "Q-Advantage/q-advantage";
 export function githubCommitUrl(full_sha: string): string {
   return `https://github.com/${GITHUB_REPO}/commit/${full_sha}`;
 }
+
+/**
+ * URL to the GitHub Actions checks/runs associated with a commit.
+ *
+ * The result JSON carries the commit SHA but not the workflow run ID, so we
+ * can't deep-link to a specific /actions/runs/{id} page. The commit's checks
+ * page bridges that: it shows the Actions run(s) that executed for this exact
+ * commit — i.e. the benchmark run that produced this data point. This is a
+ * more useful audit destination than the raw commit diff (which is just a
+ * JSON file change).
+ */
+export function githubChecksUrl(full_sha: string): string {
+  return `https://github.com/${GITHUB_REPO}/commit/${full_sha}/checks`;
+}
