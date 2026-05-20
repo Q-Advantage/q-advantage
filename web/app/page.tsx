@@ -96,7 +96,7 @@ export default function HomePage() {
           <PresetComparisons
             eyebrow="From this week's run"
             title="The takeaways."
-            subtitle="Live ratios from the latest weekly benchmark. Click any card to open the full comparison."
+            subtitle="Live ratios from the latest daily benchmark. Click any card to open the full comparison."
             showOpenLink={false}
           />
         </div>
@@ -128,7 +128,7 @@ export default function HomePage() {
             <ProductCard
               status="live"
               name="Q-Shield"
-              tag="PQC benchmarks · weekly"
+              tag="PQC benchmarks · daily"
               desc="Independent performance benchmarks for ML-KEM, ML-DSA, and SLH-DSA. Latency, throughput, key sizes — measured on auditable infrastructure."
               href="/q-shield"
               cta="View live dashboard"

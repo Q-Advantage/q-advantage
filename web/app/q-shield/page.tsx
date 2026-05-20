@@ -32,7 +32,7 @@ export default function QShieldPage() {
           </h1>
           <p className="text-base text-fg-muted max-w-2xl leading-relaxed font-light">
             Independent performance benchmarks for the NIST-standardized PQC
-            algorithms — ML-KEM, ML-DSA, and SLH-DSA. Re-run weekly on
+            algorithms — ML-KEM, ML-DSA, and SLH-DSA. Re-run daily on
             auditable infrastructure. Every data point links back to the
             GitHub commit that produced it.
           </p>

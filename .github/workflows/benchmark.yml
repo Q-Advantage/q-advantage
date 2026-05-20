@@ -1,9 +1,9 @@
-name: Weekly PQC Benchmark
+name: Daily PQC Benchmark
 
 on:
   schedule:
-    # Every Monday at 06:00 UTC (09:00 East Africa, 23:00 Sunday US Pacific)
-    - cron: '0 6 * * 1'
+    # Every day at 06:00 UTC (23:00 US Pacific previous day)
+    - cron: '0 6 * * *'
   workflow_dispatch:
     # Manual trigger from the Actions tab
 
@@ -54,7 +54,7 @@ jobs:
             exit 0
           fi
 
-          git commit -m "chore: weekly benchmark run $(date -u +%Y-%m-%d) [skip ci]"
+          git commit -m "chore: daily benchmark run $(date -u +%Y-%m-%d) [skip ci]"
 
           # The runner's local main may have fallen behind remote during the
           # 49-minute benchmark window (e.g. a developer pushed docs while

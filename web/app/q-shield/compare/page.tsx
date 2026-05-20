@@ -31,7 +31,7 @@ export default function ComparePage() {
           </h1>
           <p className="text-base text-fg-muted max-w-2xl leading-relaxed font-light">
             Pick any two PQC algorithms and an operation. Numbers come from
-            the latest weekly run, same hardware, same iteration count.
+            the latest daily run, same hardware, same iteration count.
           </p>
         </div>
 
