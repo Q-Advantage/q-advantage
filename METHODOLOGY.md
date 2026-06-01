@@ -1,78 +1,243 @@
 # Q-Advantage Methodology
 
-This document describes how Q-Advantage produces its benchmarks. The goal is reproducibility: anyone with the repo and an equivalent EC2 instance should be able to verify our numbers within statistical noise.
+> **Canonical version on the website:** <https://qadvantage.io/methodology>
+>
+> This file is a summary of the canonical methodology, kept in the repo for
+> people who prefer to read Markdown alongside the code. When methodology
+> changes, the website is updated first and this file follows. If you spot a
+> drift between the two, the website wins.
 
-> **Status:** v1.0 published Week 1. This file is the canonical version. The original draft lives in the methodology folder and on GitHub under tag `methodology-v1.0`.
+Q-Advantage is an independent, vendor-neutral benchmarking platform for the
+quantum era. It publishes three measurement products:
 
-## Hardware
+- **Q-Shield** — performance benchmarks for the NIST-standardized
+  post-quantum cryptographic algorithms.
+- **Q-Day Index** — a 0–100 score measuring how close today's quantum
+  hardware is to breaking RSA-2048.
+- **Q-Arena** — real quantum algorithms executed on real quantum hardware
+  (in design).
 
-All Q-Shield benchmarks run on a single dedicated AWS EC2 instance.
+Everything below is verifiable. Clone the repo, run the workflow, and you
+should reproduce our numbers within run-to-run variance.
 
-- **Instance type:** *(filled in by benchmark.py at run time)*
-- **vCPU model:** *(filled in by benchmark.py at run time)*
-- **Region:** us-east-1
-- **OS:** Ubuntu 24.04 LTS
-- **Process affinity:** pinned to a single core for the duration of measurement
+---
 
-## Hardware transparency
+## Three pillars
 
-Q-Advantage benchmarks currently run on an AWS EC2 t3.medium instance
-(Intel Xeon Platinum 8259CL @ 2.5GHz, AVX2 available, 2 vCPU, 3.7 GiB RAM,
-us-east-1). This is a *burstable* instance class: CPU performance is
-guaranteed at a baseline level and can burst above baseline when CPU credits
-are available. Under sustained load with depleted credits, the instance
-throttles to baseline, which would silently slow timed iterations.
+1. **Every benchmark, public.** Source code, test parameters, scoring engine,
+   dataset, and full result sets are all in this public repository. No
+   paywall, no NDA, no proprietary harness.
 
-Every result file therefore includes a `runtime_metrics` block alongside the
-existing `environment` block:
+2. **Every run, auditable.** Q-Shield benchmarks execute on scheduled GitHub
+   Actions, daily at 06:00 UTC, on dedicated self-hosted hardware. Every
+   workflow log is public. Every result commit is timestamped and signed by
+   `github-actions[bot]`. Each data point on the dashboard links back to the
+   run that produced it.
 
-- `cpu_steal_jiffies` / `cpu_steal_seconds`: delta of Linux kernel steal-time
-  across the timed loop. Steal-time counts CPU cycles taken from the guest
-  by the hypervisor. On a burstable instance, sustained non-zero steal-time
-  indicates throttling. Healthy runs show steal-time near zero. Seconds are
-  derived assuming `USER_HZ=100`, the default on stock Ubuntu kernels.
-- `loadavg_start` / `loadavg_end`: 1/5/15-minute load averages captured at
-  the start and end of the timed loop. Used to detect noisy-neighbour or
-  concurrent-process effects.
-- `wall_clock_seconds`: total elapsed time of the timed loop.
-- `instance_type`: the EC2 instance class in use.
-- `burstable`: whether the instance class is burstable.
+3. **Every score, reproducible.** The Q-Day Index scoring engine is
+   deterministic against the committed dataset — same inputs produce
+   identical scores to the third decimal. Q-Shield numbers are reproducible
+   within run-to-run variance on equivalent hardware. If you can't
+   reproduce, that's a bug worth filing.
 
-When this project graduates to a fixed-performance instance class, this
-document will be updated and historical runs from the burstable period will
-remain available in the repository for reproducibility. The hardware change
-will be explicitly dated; results will not be silently migrated.
+---
 
-## Software stack
+## Q-Shield methodology (summary)
 
-- `liboqs` — built from source, current `main`, AVX2 optimizations enabled
-- `liboqs-python` — current `main`
-- Python 3.12 (Ubuntu 24.04 default)
+Q-Shield measures the wall-clock performance of the NIST-standardized
+post-quantum algorithms — key generation, encapsulation/decapsulation for
+KEMs; key generation, signing, verification for signatures.
 
-## Measurement protocol
+**Algorithms covered:**
 
-For each algorithm and each operation (keygen, encap/decap, sign/verify):
+- KEMs (FIPS 203 — ML-KEM): ML-KEM-512, ML-KEM-768, ML-KEM-1024
+- Lattice signatures (FIPS 204 — ML-DSA): ML-DSA-44, ML-DSA-65, ML-DSA-87
+- Hash-based signatures (FIPS 205 — SLH-DSA): SLH_DSA_PURE_SHAKE_128S,
+  SLH_DSA_PURE_SHAKE_128F
 
-1. **Warm-up:** 50 untimed iterations
-2. **Measurement:** 1,000 timed iterations using `time.perf_counter_ns()`
-3. **Recorded statistics:** mean, median, p95, p99, stdev, min, max, ops/sec
-4. **Sizes:** public key, private key, ciphertext or signature in bytes
+All measured via [liboqs](https://github.com/open-quantum-safe/liboqs) 0.15.0
+from the Open Quantum Safe project, with `liboqs-python` pinned to the
+matching 0.15.0 in Python 3.12.
 
-## Algorithms covered (Q-Shield v1)
+**Run protocol.** Each operation runs for 1,000 timed iterations (preceded
+by 50 untimed warmups). Timing uses `time.perf_counter_ns()` with the
+garbage collector disabled and the process pinned to a single CPU core.
+For each operation we record mean, median, p95, p99, standard deviation,
+min, max, and operations per second.
 
-- KEMs: ML-KEM-512, ML-KEM-768, ML-KEM-1024
-- Signatures: ML-DSA-44, ML-DSA-65, ML-DSA-87, SLH-DSA-SHAKE-128s, SLH-DSA-SHAKE-128f
+**Result-file layout.** Each run writes
+`benchmark/results/results-YYYY-MM-DD-{short_sha}.json`. Every run is its
+own file, named by date and the git commit SHA. The dashboard reads the
+full series.
 
-## Q-Day Index
+**Runtime metrics.** Every result file includes a `runtime_metrics` block
+capturing wall-clock duration, CPU steal-time (delta of Linux kernel steal
+jiffies across the timed loop), and load averages at start and end. On
+burstable cloud instances this makes throttling visible in the audit trail
+rather than silently corrupting numbers.
 
-Methodology for the Q-Day Index lives in `docs/q-day-methodology.md` (Week 3 deliverable).
+**Hardware.** Currently AWS EC2 t3.medium in us-east-1, a burstable
+instance class. Steal-time data shows the instance runs clean (around
+0.24% on representative runs), so the planned c7i.large migration is
+deferred until budget or load justifies it. When the hardware changes,
+this document will be updated, the historical runs will remain available,
+and the change will be explicitly dated.
+
+**CI discipline.** Workflow at `.github/workflows/benchmark.yml` has two
+triggers only: scheduled (daily at 06:00 UTC) and manual
+`workflow_dispatch`. No `pull_request` trigger by design. A concurrency
+group serializes runs. `permissions: contents: write` is scoped per
+workflow. The bot's commit message includes `[skip ci]` to prevent
+recursion.
+
+**Access.** Runner access via AWS SSM Session Manager (no port 22 open to
+the public). The runner is registered as a systemd-managed self-hosted
+runner so it survives reboots.
+
+→ **Full Q-Shield methodology:**
+<https://qadvantage.io/methodology#q-shield>
+
+---
+
+## Q-Day Index methodology (summary)
+
+The Q-Day Index is a 0–100 score measuring how close today's quantum
+hardware is to breaking RSA-2048 with Shor's algorithm.
+
+**The anchor.** The score is distance to the Gidney 2025 estimate
+([arXiv:2505.15917](https://arxiv.org/abs/2505.15917)): roughly 1,000,000
+physical qubits, under a week of runtime, to factor RSA-2048. This is a
+peer-reviewed resource estimate, **not a law of physics**. The target fell
+~20× in six years on algorithmic and error-correction progress alone (from
+the 2019 Gidney & Ekera figure of 20M qubits / 8 hours), and it will move
+again. When it does, every score moves with it and the new anchor is cited.
+
+**The formula.** A multiplicative gate:
+
+```
+Threat = LogicalCapacity
+       × FidelityGate
+       × ECSignal
+       × 100
+```
+
+- **LogicalCapacity** — standing error-corrected logical qubits, divided
+  by what the anchor demands. Today this is zero for every scored system.
+- **FidelityGate** — multiplier on whether the system's two-qubit gate
+  fidelity clears the fault-tolerance threshold.
+- **ECSignal** — multiplier rewarding a publicly demonstrated
+  below-threshold error-correction result.
+
+The multiplicative structure is the point: any component going to zero
+takes the score to zero. There is no "mostly there" halfway state. Breaking
+RSA requires all of these.
+
+**The below-threshold rule.** A system earns the ECSignal multiplier only
+with a publicly reported demonstration that adding error-correction code
+distance reduces logical error rate. This is a rule, not editorial — the
+score reflects what has been demonstrated, not what is plausible or
+claimed. At the time of writing, one scored system clears this bar.
+
+**Field frontier, not a winner.** The hero number is the field frontier —
+the highest score currently held — not a named machine. The per-system
+table beneath names every machine and its score. The reader concludes; we
+don't crown.
+
+**The readiness axis.** Because the threat score is uncompromising
+(zero everywhere a system lacks standing logical qubits), the dashboard
+also surfaces a separate **readiness** axis — fidelity progress,
+error-correction progress, scale progress — rendered as stacked bars
+(structurally different from the threat gauge). Readiness is **not** the
+threat score and does not measure distance to breaking RSA. It tracks
+preconditions assembled. A system can have 80% readiness and zero threat
+simultaneously; that's the honest state of most of the field today.
+
+**Sourcing bar.** Every numeric input comes from either a peer-reviewed
+publication or an official vendor technical document. Press releases and
+secondary aggregators do not clear the bar. Where they conflict with
+published figures, the published figure wins — for example, Google's blog
+says coherence "approaching 100 µs", the Nature paper says 68 µs; the
+dataset cites the paper. Every field carries its source URL, confidence
+level, measurement method, and the date it was true.
+
+**Cross-method fidelity.** The raw two-qubit gate fidelity column on the
+dashboard is **deliberately not displayed as a ranking** — a 99.4% from
+Google measured via XEB is not the same physical quantity as a 99.2% from
+IBM measured via median ECR error. Each value carries its measurement
+method as a tag; the scoring formula treats fidelity through the
+FidelityGate term against the fault-tolerance threshold, not as a ranked
+comparison.
+
+**Analog systems.** Analog Hamiltonian simulators (QuEra Aquila, Pasqal
+Orion Alpha) have no gate-model two-qubit fidelity and no gate-model
+pathway to Shor's. Marked **N/A** — a category difference, not a low score.
+
+**Input confidence.** Each scored system carries an aggregate
+input-confidence rating (High / Medium / Low) computed mechanically from
+the per-field confidence tags, not hand-assigned.
+
+**Neutrality.** No vendor pays for placement, ranking, ordering, or early
+access. If we ever take vendor sponsorship of any kind, it will be
+announced publicly with terms in writing, and affected rows will be
+flagged.
+
+**On projecting a Q-Day year.** We do not publish a projected Q-Day year.
+A projection is only as good as its trajectory model, and we have not built
+one that survives hostile inspection. Historical entries (Sycamore 2019,
+Eagle 2021, Condor 2023) exist so a future trajectory model has data to
+fit, but the model itself is held internal until defensible.
+
+→ **Full Q-Day Index methodology, with the formal anchor caveats and the
+methods glossary:** <https://qadvantage.io/methodology#q-day-index>
+
+---
+
+## Q-Arena (in design)
+
+Q-Arena will run standardised quantum circuits — Bell-state preparation
+and small entanglement-witness tests initially — across multiple machines,
+so machines can be compared on what they actually do rather than what
+their data sheets claim. Targets are AWS Braket simulators and the IBM
+Quantum free tier for real hardware.
+
+**Q-Arena is not yet running.** Exact circuit list, machine roster, and
+run cadence will be finalised as we begin running them. Anything stated
+here in advance is a plan, not a promise.
+
+→ **Q-Arena methodology stub on the website:**
+<https://qadvantage.io/methodology#q-arena>
+
+---
 
 ## Known limitations
 
-- t3.medium (Week 2 starter) is a burstable instance. Migration to fixed-performance c7i.large planned before week-over-week comparisons are published.
-- Single-machine benchmark. Cross-architecture comparison (Graviton, AMD EPYC) is a future deliverable.
-- `liboqs` is a prototyping library, not a production cryptographic implementation. Performance numbers are representative but not authoritative for production deployments.
+- **t3.medium is burstable.** Steal-time data shows runs are clean today;
+  if it ever isn't, the audit trail surfaces it. Migration to a fixed
+  instance class is on the roadmap.
+- **Single machine for Q-Shield.** Cross-architecture comparison (Graviton,
+  AMD EPYC) is a future deliverable.
+- **`liboqs` is a prototyping library**, not a production cryptographic
+  implementation. Q-Shield numbers are representative of the algorithms
+  but should not be cited as authoritative for a specific production
+  deployment.
+- **Q-Day Index dataset depth.** Currently 8 scored systems plus 2 analog
+  N/A entries and 4 footnoted candidates. Coverage will grow as more
+  vendors publish qualifying specs.
+- **No projected Q-Day year.** Held internal until the trajectory model is
+  defensible.
+
+---
 
 ## How to challenge a result
 
-Open an issue or PR. Every weekly run logs `git_commit`, `cpu_model`, and full environment in its `results-YYYY-MM-DD.json`. If you can reproduce a discrepancy of more than 2 standard deviations on equivalent hardware, we want to hear about it.
+Open a [GitHub issue](https://github.com/Q-Advantage/q-advantage/issues),
+a pull request, or use the feedback form at the bottom of the
+[Q-Day Index page](https://qadvantage.io/q-day-index).
+
+Every Q-Shield run logs `git_commit`, `cpu_model`, and full environment in
+its result file. Every Q-Day Index figure has its source URL, measurement
+method, and date attached. If you can reproduce a Q-Shield discrepancy of
+more than 2 standard deviations on equivalent hardware, or have a sourced
+correction for a Q-Day Index value, we want to hear about it.
+
+→ **Live methodology, full depth:** <https://qadvantage.io/methodology>

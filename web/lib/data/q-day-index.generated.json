@@ -1,0 +1,1157 @@
+{
+  "_generated_by": "benchmark/build-q-day-index.py via benchmark/scoring.py (source of truth)",
+  "_do_not_edit": "Regenerate: python3 benchmark/build-q-day-index.py \u2014 never hand-edit.",
+  "anchor": {
+    "target": "RSA-2048",
+    "label": "Gidney 2025",
+    "logical_qubits": 4000,
+    "physical_qubits": 1000000,
+    "runtime": "<1 week",
+    "phys_gate_error_assumed": 0.001,
+    "source": "https://arxiv.org/abs/2505.15917",
+    "citation": "Gidney 2025, 'How to factor 2048 bit RSA integers with less than a million noisy qubits' (arXiv:2505.15917). ~20x physical-qubit reduction vs 2019 from algorithmic + error-correction advances; SAME hardware assumptions.",
+    "confidence": "peer_reviewed",
+    "as_of": "2025-05"
+  },
+  "hero": {
+    "frontier_threat_score": 8.356910326940133,
+    "confidence_band": [
+      4.178455163470066,
+      8.356910326940133
+    ],
+    "composite_industry_score": 1.0446137908675166,
+    "n_scored": 8,
+    "n_na": 2
+  },
+  "anchor_prior": {
+    "label": "Gidney+Ekera 2019",
+    "physical_qubits": 20000000,
+    "runtime": "~8 hours",
+    "source": "https://arxiv.org/abs/1905.09749",
+    "as_of": "2019-05"
+  },
+  "systems": [
+    {
+      "vendor": "IBM",
+      "system_name": "Heron r2",
+      "modality": "superconducting",
+      "threat_score": 0.0,
+      "na_reason": null,
+      "threat_components": {
+        "logical_capacity": 0.0,
+        "fidelity_gate": 0.5802987722891498,
+        "ec_signal": 0.15,
+        "effective_logical": 0.0
+      },
+      "readiness": {
+        "readiness": 30.5223662194142,
+        "fidelity_progress": 0.5802987722891498,
+        "ec_progress": 0.0,
+        "scale_progress": 0.36552076639241027,
+        "_meaning": "progress toward preconditions; NOT distance to breaking RSA"
+      },
+      "input_confidence": {
+        "level": "low",
+        "by_field": {
+          "logical_qubits": null,
+          "two_qubit_gate_fidelity": "peer_reviewed",
+          "error_correction_below_threshold": null,
+          "physical_qubits": "vendor_published"
+        }
+      },
+      "flags": [
+        "2Q fidelity is a dated calibration-snapshot median, not a fixed per-device value",
+        "2Q fidelity method = median_ECR_error; not directly comparable across vendors"
+      ],
+      "disclaimer_keys": [
+        "calibration_snapshot_drifts",
+        "press_vs_paper",
+        "modality_not_comparable"
+      ],
+      "provenance": {
+        "physical_qubits": {
+          "value": 156,
+          "source": "https://quantum.cloud.ibm.com/docs/en/guides/processor-types",
+          "confidence": "vendor_published",
+          "method": "device_specification",
+          "as_of": "2024-07",
+          "notes": null
+        },
+        "logical_qubits": {
+          "value": 0,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "No standing logical qubits. IBM's error-correction work (e.g. qLDPC roadmap) is forward-looking, not always-on capacity on this device."
+        },
+        "two_qubit_gate_fidelity": {
+          "value": 0.99243,
+          "source": "https://link.springer.com/article/10.1007/s11227-025-07047-7",
+          "confidence": "peer_reviewed",
+          "method": "median_ECR_error",
+          "as_of": "2024-08-01",
+          "notes": "WEAKEST-SOURCED FIDELITY IN THE SET \u2014 flagged deliberately. IBM does not publish a single fixed per-device 2Q gate fidelity; it publishes live calibration data (drifts daily) and dated medians in papers. Value shown is derived from a dated peer-reviewed median ECR error snapshot (7.57e-3 -> ~0.99243 fidelity) as of 2024-08-01. This is IBM's CZ/ECR two-qubit metric, NOT directly comparable to Google's XEB or trapped-ion RB. Treat as a dated snapshot, not a current value."
+        },
+        "single_qubit_gate_fidelity": {
+          "value": 0.999759,
+          "source": "https://link.springer.com/article/10.1007/s11227-025-07047-7",
+          "confidence": "peer_reviewed",
+          "method": "median_SX_error",
+          "as_of": "2024-08-01",
+          "notes": "Derived from median SX error 2.41e-4 as of 2024-08-01."
+        },
+        "t1_coherence_us": {
+          "value": 262.69,
+          "source": "https://link.springer.com/article/10.1007/s11227-025-07047-7",
+          "confidence": "peer_reviewed",
+          "method": "median_device_snapshot",
+          "as_of": "2024-08-01",
+          "notes": null
+        },
+        "t2_coherence_us": {
+          "value": 176.67,
+          "source": "https://link.springer.com/article/10.1007/s11227-025-07047-7",
+          "confidence": "peer_reviewed",
+          "method": "median_device_snapshot",
+          "as_of": "2024-08-01",
+          "notes": null
+        },
+        "error_correction_below_threshold": {
+          "value": false,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "Not demonstrated below-threshold surface-code scaling on this device in the Willow sense."
+        },
+        "cloud_available": {
+          "value": true,
+          "source": "https://quantum.cloud.ibm.com/docs/en/guides/processor-types",
+          "confidence": "vendor_published",
+          "method": null,
+          "as_of": null,
+          "notes": null
+        }
+      },
+      "release_year": 2024,
+      "topology": "heavy-hexagonal lattice, tunable couplers",
+      "notes": "IBM does not publish a single fixed two-qubit gate fidelity; it reports live calibration data that drifts daily, alongside dated medians in publications. The value shown is a dated peer-reviewed median, chosen so the figure is reproducible. Heron r2 can execute roughly 5,000 two-qubit gate operations in a circuit \u2014 a measure of circuit depth, not gate fidelity.",
+      "presentation": {}
+    },
+    {
+      "vendor": "Google",
+      "system_name": "Willow",
+      "modality": "superconducting",
+      "threat_score": 8.356910326940133,
+      "na_reason": null,
+      "threat_components": {
+        "logical_capacity": 0.08356910326940133,
+        "fidelity_gate": 1.0,
+        "ec_signal": 1.0,
+        "effective_logical": 1.0
+      },
+      "readiness": {
+        "readiness": 86.73729766356647,
+        "fidelity_progress": 1.0,
+        "ec_progress": 1.0,
+        "scale_progress": 0.336864883178323,
+        "_meaning": "progress toward preconditions; NOT distance to breaking RSA"
+      },
+      "input_confidence": {
+        "level": "high",
+        "by_field": {
+          "logical_qubits": "peer_reviewed",
+          "two_qubit_gate_fidelity": "peer_reviewed",
+          "error_correction_below_threshold": "peer_reviewed",
+          "physical_qubits": "peer_reviewed"
+        }
+      },
+      "flags": [
+        "below-threshold EC demonstrated (load-bearing signal; opens fidelity gate)"
+      ],
+      "disclaimer_keys": [
+        "press_vs_paper",
+        "logical_qubits_are_demos",
+        "modality_not_comparable"
+      ],
+      "provenance": {
+        "physical_qubits": {
+          "value": 105,
+          "source": "https://www.nature.com/articles/s41586-024-08449-y",
+          "confidence": "peer_reviewed",
+          "method": "device_specification",
+          "as_of": "2024-12",
+          "notes": null
+        },
+        "logical_qubits": {
+          "value": 1,
+          "source": "https://www.nature.com/articles/s41586-024-08449-y",
+          "confidence": "peer_reviewed",
+          "method": "surface_code_demonstration",
+          "as_of": "2024-12",
+          "notes": "Distance-7 surface code: a single logical qubit from 101 physical qubits, 0.143% error per cycle, beyond breakeven (2.4x its best physical qubit lifetime). This is a demonstration of one below-threshold logical qubit, not a multi-logical-qubit standing register. Recorded as 1 with this explicit caveat rather than 0, because the below-threshold demonstration is the load-bearing signal for the formula."
+        },
+        "two_qubit_gate_fidelity": {
+          "value": null,
+          "source": "https://www.nature.com/articles/s41586-024-08449-y",
+          "confidence": "peer_reviewed",
+          "method": "XEB_and_logical_error_per_cycle",
+          "as_of": "2024-12",
+          "notes": "Google does NOT headline an isolated 2Q RB fidelity. It leads with logical error-per-cycle (0.143% d=7) and random-circuit-sampling XEB. The load-bearing signal for this system is error_correction_below_threshold = true, not a single 2Q gate number. Left null rather than back-converting an XEB figure into a misleadingly comparable 'fidelity'."
+        },
+        "single_qubit_gate_fidelity": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "t1_coherence_us": {
+          "value": 68,
+          "source": "https://www.nature.com/articles/s41586-024-08449-y",
+          "confidence": "peer_reviewed",
+          "method": "mean_T1",
+          "as_of": "2024-12",
+          "notes": "Nature paper: mean T1 = 68 us (+/- 13). NOTE press_vs_paper: Google's own blog says 'approaching 100 us'; we cite the peer-reviewed 68 us, not the marketing figure."
+        },
+        "t2_coherence_us": {
+          "value": 89,
+          "source": "https://www.nature.com/articles/s41586-024-08449-y",
+          "confidence": "peer_reviewed",
+          "method": "T2_CPMG",
+          "as_of": "2024-12",
+          "notes": "T2,CPMG = 89 us."
+        },
+        "error_correction_below_threshold": {
+          "value": true,
+          "source": "https://www.nature.com/articles/s41586-024-08449-y",
+          "confidence": "peer_reviewed",
+          "method": "surface_code_lambda_2.14",
+          "as_of": "2024-12",
+          "notes": "First clear below-threshold demonstration: logical error suppressed by Lambda = 2.14 +/- 0.02 per +2 code distance, d=3 -> d=5 -> d=7. Strongest such published evidence of any system in this set. Load-bearing for the scoring formula."
+        },
+        "cloud_available": {
+          "value": false,
+          "source": "https://www.nature.com/articles/s41586-024-08449-y",
+          "confidence": "peer_reviewed",
+          "method": null,
+          "as_of": null,
+          "notes": "Research device; not a general-access cloud machine at publication."
+        }
+      },
+      "release_year": 2024,
+      "topology": "2D square grid of transmons (surface-code oriented)",
+      "notes": "Google's blog describes coherence as approaching 100 microseconds, while the peer-reviewed paper reports a mean T1 of 68 microseconds; the published figure is shown here. Willow's defining result is its demonstrated below-threshold error correction, not any single gate-fidelity number.",
+      "presentation": {}
+    },
+    {
+      "vendor": "Quantinuum",
+      "system_name": "H2-1",
+      "modality": "trapped_ion",
+      "threat_score": 0.0,
+      "na_reason": null,
+      "threat_components": {
+        "logical_capacity": 0.0,
+        "fidelity_gate": 0.7547299213576093,
+        "ec_signal": 0.15,
+        "effective_logical": 0.0
+      },
+      "readiness": {
+        "readiness": 36.01649027765838,
+        "fidelity_progress": 0.7547299213576093,
+        "ec_progress": 0.0,
+        "scale_progress": 0.2913646711677001,
+        "_meaning": "progress toward preconditions; NOT distance to breaking RSA"
+      },
+      "input_confidence": {
+        "level": "low",
+        "by_field": {
+          "logical_qubits": null,
+          "two_qubit_gate_fidelity": "peer_reviewed",
+          "error_correction_below_threshold": null,
+          "physical_qubits": "vendor_published"
+        }
+      },
+      "flags": [
+        "2Q fidelity method = randomized_benchmarking; not directly comparable across vendors"
+      ],
+      "disclaimer_keys": [
+        "press_vs_paper",
+        "logical_qubits_are_demos",
+        "modality_not_comparable"
+      ],
+      "provenance": {
+        "physical_qubits": {
+          "value": 56,
+          "source": "https://docs.quantinuum.com/systems/data_sheets/Quantinuum%20H2%20Product%20Data%20Sheet.pdf",
+          "confidence": "vendor_published",
+          "method": "device_specification",
+          "as_of": "2024-06",
+          "notes": null
+        },
+        "logical_qubits": {
+          "value": 0,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "The widely-cited '4 logical qubits, 800x error reduction' is a Microsoft/Quantinuum QEC demonstration using Azure's qubit-virtualization layer, not a standing always-on property of the hardware. Recorded as 0 standing; demo noted here."
+        },
+        "two_qubit_gate_fidelity": {
+          "value": 0.99843,
+          "source": "https://arxiv.org/abs/2406.02501",
+          "confidence": "peer_reviewed",
+          "method": "randomized_benchmarking",
+          "as_of": "2024-06",
+          "notes": "Paper value 99.843(5)%. NOTE press_vs_paper: Quantinuum's own press release rounds to '99.9% / three nines'; we cite the peer-reviewed 99.843%."
+        },
+        "single_qubit_gate_fidelity": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "Quantinuum reports single-qubit fidelity >99.99% in materials; left null pending a paired peer-reviewed/spec-sheet value with a clean method tag rather than a rounded press figure."
+        },
+        "t1_coherence_us": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "Quantinuum's H2 data sheet does not list per-system T1/T2 in microseconds. Trapped-ion 171Yb+ hyperfine qubits have intrinsic coherence on the second-to-minute scale \u2014 orders of magnitude longer than the microsecond-scale T1/T2 reported by superconducting systems \u2014 but this is a property of the ion physics, not a system-specific calibration figure that meets our sourcing bar. Left null in the microsecond column to preserve cross-system comparability."
+        },
+        "t2_coherence_us": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "Quantinuum's H2 data sheet does not list per-system T1/T2 in microseconds. Trapped-ion 171Yb+ hyperfine qubits have intrinsic coherence on the second-to-minute scale \u2014 orders of magnitude longer than the microsecond-scale T1/T2 reported by superconducting systems \u2014 but this is a property of the ion physics, not a system-specific calibration figure that meets our sourcing bar. Left null in the microsecond column to preserve cross-system comparability."
+        },
+        "error_correction_below_threshold": {
+          "value": false,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "QEC demonstrations exist (with partners) but below-threshold surface-code scaling in the Willow sense is not the claim here."
+        },
+        "cloud_available": {
+          "value": true,
+          "source": "https://docs.quantinuum.com/systems/data_sheets/Quantinuum%20H2%20Product%20Data%20Sheet.pdf",
+          "confidence": "vendor_published",
+          "method": null,
+          "as_of": null,
+          "notes": null
+        }
+      },
+      "release_year": 2024,
+      "topology": "QCCD, all-to-all connectivity (dynamic ion shuttling)",
+      "notes": "With all-to-all connectivity from trapped-ion shuttling, a 56-qubit H2-1 is not meaningfully \"100 qubits behind\" a 156-qubit superconducting machine \u2014 connectivity and gate fidelity trade against raw qubit count. Comparing qubit counts across these architectures is misleading.",
+      "presentation": {}
+    },
+    {
+      "vendor": "IonQ",
+      "system_name": "Forte",
+      "modality": "trapped_ion",
+      "threat_score": 0.0,
+      "na_reason": null,
+      "threat_components": {
+        "logical_capacity": 0.0,
+        "fidelity_gate": 0.6899744811276126,
+        "ec_signal": 0.15,
+        "effective_logical": 0.0
+      },
+      "readiness": {
+        "readiness": 32.78665424766213,
+        "fidelity_progress": 0.6899744811276126,
+        "ec_progress": 0.0,
+        "scale_progress": 0.25938375012788123,
+        "_meaning": "progress toward preconditions; NOT distance to breaking RSA"
+      },
+      "input_confidence": {
+        "level": "low",
+        "by_field": {
+          "logical_qubits": "vendor_published",
+          "two_qubit_gate_fidelity": "vendor_published",
+          "error_correction_below_threshold": null,
+          "physical_qubits": "vendor_published"
+        }
+      },
+      "flags": [
+        "2Q fidelity method = direct_RB; not directly comparable across vendors"
+      ],
+      "disclaimer_keys": [
+        "aq_not_qubit_count",
+        "modality_not_comparable"
+      ],
+      "provenance": {
+        "physical_qubits": {
+          "value": 36,
+          "source": "https://www.ionq.com/quantum-systems/forte",
+          "confidence": "vendor_published",
+          "method": "device_specification",
+          "as_of": "2023",
+          "notes": "36 physical Yb-171 ion qubits. DO NOT confuse with #AQ 36 (Algorithmic Qubits) \u2014 a coincidentally-equal application benchmark SCORE, not a qubit count. See aq_not_qubit_count."
+        },
+        "logical_qubits": {
+          "value": 0,
+          "source": "https://www.ionq.com/roadmap",
+          "confidence": "vendor_published",
+          "method": null,
+          "as_of": null,
+          "notes": "IonQ logical qubits are roadmap, not present on Forte."
+        },
+        "two_qubit_gate_fidelity": {
+          "value": 0.996,
+          "source": "https://www.ionq.com/quantum-systems/forte-enterprise",
+          "confidence": "vendor_published",
+          "method": "direct_RB",
+          "as_of": "2024",
+          "notes": "Vendor page: 2Q gate error ~0.4% -> ~99.6% fidelity, measured by Direct Randomized Benchmarking. Corroborated by peer-reviewed benchmarking of Forte at 30q/#AQ29 (arXiv:2308.05071, DRB across 435 gate pairs)."
+        },
+        "single_qubit_gate_fidelity": {
+          "value": 0.9998,
+          "source": "https://www.ionq.com/quantum-systems/forte-enterprise",
+          "confidence": "vendor_published",
+          "method": "clifford_RB",
+          "as_of": "2024",
+          "notes": "1Q gate error ~0.02% -> ~99.98%, Clifford RB."
+        },
+        "t1_coherence_us": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "IonQ's Forte page describes what T1 and T2 mean but does not publish numerical values for the system. Trapped-ion 171Yb+ qubits have intrinsic coherence on the second scale \u2014 orders of magnitude longer than superconducting microsecond-scale times \u2014 but no Forte-specific number meets our sourcing bar (vendor data sheet or peer-reviewed paper). Vendor does separately publish a SPAM error of ~0.5%."
+        },
+        "t2_coherence_us": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "IonQ's Forte page describes what T1 and T2 mean but does not publish numerical values for the system. Trapped-ion 171Yb+ qubits have intrinsic coherence on the second scale \u2014 orders of magnitude longer than superconducting microsecond-scale times \u2014 but no Forte-specific number meets our sourcing bar (vendor data sheet or peer-reviewed paper). Vendor does separately publish a SPAM error of ~0.5%."
+        },
+        "error_correction_below_threshold": {
+          "value": false,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "cloud_available": {
+          "value": true,
+          "source": "https://www.ionq.com/quantum-systems/forte",
+          "confidence": "vendor_published",
+          "method": null,
+          "as_of": null,
+          "notes": null
+        }
+      },
+      "release_year": 2023,
+      "topology": "single-chain Yb-171, all-to-all connectivity",
+      "notes": "IonQ's \"#AQ 36\" is an application-level benchmark score, not a count of qubits; that it happens to equal Forte's 36 physical qubits is a coincidence. The two are unrelated quantities and should not be conflated.",
+      "presentation": {}
+    },
+    {
+      "vendor": "IQM",
+      "system_name": "Garnet",
+      "modality": "superconducting",
+      "threat_score": 0.0,
+      "na_reason": null,
+      "threat_components": {
+        "logical_capacity": 0.0,
+        "fidelity_gate": 0.6637386974043525,
+        "ec_signal": 0.15,
+        "effective_logical": 0.0
+      },
+      "readiness": {
+        "readiness": 30.88631454838737,
+        "fidelity_progress": 0.6637386974043525,
+        "ec_progress": 0.0,
+        "scale_progress": 0.21683833261066354,
+        "_meaning": "progress toward preconditions; NOT distance to breaking RSA"
+      },
+      "input_confidence": {
+        "level": "medium",
+        "by_field": {
+          "logical_qubits": null,
+          "two_qubit_gate_fidelity": "peer_reviewed",
+          "error_correction_below_threshold": null,
+          "physical_qubits": "peer_reviewed"
+        }
+      },
+      "flags": [
+        "2Q fidelity method = median_CZ_fidelity; not directly comparable across vendors"
+      ],
+      "disclaimer_keys": [
+        "press_vs_paper",
+        "modality_not_comparable"
+      ],
+      "provenance": {
+        "physical_qubits": {
+          "value": 20,
+          "source": "https://arxiv.org/abs/2408.12433",
+          "confidence": "peer_reviewed",
+          "method": "device_specification",
+          "as_of": "2024-08",
+          "notes": null
+        },
+        "logical_qubits": {
+          "value": 0,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "No standing logical qubits demonstrated on Garnet. IQM's roadmap targets 150-qubit scaling rather than near-term error correction on this device."
+        },
+        "two_qubit_gate_fidelity": {
+          "value": 0.9951,
+          "source": "https://arxiv.org/abs/2408.12433",
+          "confidence": "peer_reviewed",
+          "method": "median_CZ_fidelity",
+          "as_of": "2024-08",
+          "notes": "Median two-qubit CZ gate fidelity 99.51%, measured across 30 qubit pairs. Maximum on a single pair reaches 99.8%. This is IQM's native two-qubit gate; not directly comparable to Google's XEB, IBM's median ECR, or trapped-ion randomized benchmarking."
+        },
+        "single_qubit_gate_fidelity": {
+          "value": 0.9992,
+          "source": "https://arxiv.org/abs/2408.12433",
+          "confidence": "peer_reviewed",
+          "method": "median_single_qubit_fidelity",
+          "as_of": "2024-08",
+          "notes": null
+        },
+        "t1_coherence_us": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "The 2408.12433 paper characterizes the 20-qubit Garnet device but does not headline a single median T1 figure in microseconds for the deployed system. A separate 2024 IQM milestone reported T1 ~0.96 ms on a planar transmon test device, but that is a fabrication-quality milestone, not the 20-qubit Garnet's operating spec. Left null rather than mix the two."
+        },
+        "t2_coherence_us": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "error_correction_below_threshold": {
+          "value": false,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "Below-threshold surface-code scaling has not been demonstrated on Garnet."
+        },
+        "cloud_available": {
+          "value": true,
+          "source": "https://aws.amazon.com/blogs/quantum-computing/amazon-braket-launches-new-superconducting-quantum-processor-from-iqm/",
+          "confidence": "vendor_published",
+          "method": null,
+          "as_of": null,
+          "notes": "Available on AWS Braket (EU Stockholm region), May 2024 onwards."
+        }
+      },
+      "release_year": 2024,
+      "topology": "20 flux-tunable transmon qubits, square lattice with tunable couplers",
+      "notes": "Europe's most-deployed superconducting platform, with a peer-reviewed paper publishing every required spec. IQM separately reported a 99.91% two-qubit gate fidelity milestone on a test device in mid-2024 \u2014 that figure is for fabrication-quality demonstration, not the operating spec of the 20-qubit Garnet, and is not used here. A larger 54-qubit Emerald QPU is also available on Braket as of 2025; out of scope for this Garnet entry.",
+      "presentation": {}
+    },
+    {
+      "vendor": "QuEra",
+      "system_name": "Aquila",
+      "modality": "neutral_atom",
+      "threat_score": null,
+      "na_reason": "analog_not_gate_model",
+      "threat_components": null,
+      "readiness": null,
+      "input_confidence": {
+        "level": "low",
+        "by_field": {
+          "logical_qubits": null,
+          "two_qubit_gate_fidelity": "peer_reviewed",
+          "error_correction_below_threshold": null,
+          "physical_qubits": "peer_reviewed"
+        }
+      },
+      "flags": [
+        "analog: no gate-model Shor pathway; N/A is a category difference, not a low score"
+      ],
+      "disclaimer_keys": [
+        "analog_not_gate_model",
+        "modality_not_comparable"
+      ],
+      "provenance": {
+        "physical_qubits": {
+          "value": 256,
+          "source": "https://arxiv.org/abs/2306.11727",
+          "confidence": "peer_reviewed",
+          "method": "device_specification",
+          "as_of": "2023-06",
+          "notes": "Up to 256 neutral-atom qubits."
+        },
+        "logical_qubits": {
+          "value": 0,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "two_qubit_gate_fidelity": {
+          "value": null,
+          "source": "https://arxiv.org/abs/2306.11727",
+          "confidence": "peer_reviewed",
+          "method": "analog_not_applicable",
+          "as_of": null,
+          "notes": "Aquila is an ANALOG Hamiltonian simulator (FPQA), not a gate-model machine. It has no discrete two-qubit gate fidelity. Null is the correct, honest value here \u2014 NOT a missing number. See analog_not_gate_model."
+        },
+        "single_qubit_gate_fidelity": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": "analog_not_applicable",
+          "as_of": null,
+          "notes": null
+        },
+        "t1_coherence_us": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "t2_coherence_us": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "error_correction_below_threshold": {
+          "value": false,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "cloud_available": {
+          "value": true,
+          "source": "https://arxiv.org/abs/2306.11727",
+          "confidence": "peer_reviewed",
+          "method": null,
+          "as_of": null,
+          "notes": "Available via Amazon Braket."
+        }
+      },
+      "release_year": 2022,
+      "topology": "field-programmable qubit array (FPQA), reconfigurable, all-to-all",
+      "notes": "The largest raw qubit count in the set at 256, but Aquila is an analog Hamiltonian simulator, not a gate-model machine \u2014 it has no two-qubit gate fidelity and no gate-model pathway to factoring RSA. It is marked N/A rather than given a low score: a category difference, not a quality judgment.",
+      "presentation": {}
+    },
+    {
+      "vendor": "Pasqal",
+      "system_name": "Orion Alpha",
+      "modality": "neutral_atom",
+      "threat_score": null,
+      "na_reason": "analog_not_gate_model",
+      "threat_components": null,
+      "readiness": null,
+      "input_confidence": {
+        "level": "low",
+        "by_field": {
+          "logical_qubits": null,
+          "two_qubit_gate_fidelity": "vendor_published",
+          "error_correction_below_threshold": null,
+          "physical_qubits": "vendor_published"
+        }
+      },
+      "flags": [
+        "analog: no gate-model Shor pathway; N/A is a category difference, not a low score"
+      ],
+      "disclaimer_keys": [
+        "analog_not_gate_model",
+        "modality_not_comparable"
+      ],
+      "provenance": {
+        "physical_qubits": {
+          "value": 100,
+          "source": "https://www.pasqal.com/wp-content/uploads/2025/03/Technical-Overview-for-Advanced-Users-Orion-Beta.pdf",
+          "confidence": "vendor_published",
+          "method": "device_specification",
+          "as_of": "2025-03",
+          "notes": "100 atoms in analog mode per Pasqal's Orion Beta technical overview (Orion Alpha and Beta share the 100-qubit specification). Pasqal has experimentally trapped over 1,100 atoms in larger arrays separately."
+        },
+        "logical_qubits": {
+          "value": 0,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "two_qubit_gate_fidelity": {
+          "value": null,
+          "source": "https://www.pasqal.com/wp-content/uploads/2025/03/Technical-Overview-for-Advanced-Users-Orion-Beta.pdf",
+          "confidence": "vendor_published",
+          "method": "analog_not_applicable",
+          "as_of": null,
+          "notes": "Orion Alpha operates in analog mode (Hamiltonian evolution via Rydberg interactions), not as a gate-model machine. It has no discrete two-qubit gate fidelity in the standard sense. Pasqal's roadmap targets gate-based digital operation in future generations (Orion Gamma onwards)."
+        },
+        "single_qubit_gate_fidelity": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": "analog_not_applicable",
+          "as_of": null,
+          "notes": null
+        },
+        "t1_coherence_us": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "Pasqal reports coherence on the tens-of-milliseconds scale for neutral-atom Rydberg qubits, but does not publish a per-system T1/T2 spec in microseconds."
+        },
+        "t2_coherence_us": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "error_correction_below_threshold": {
+          "value": false,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "cloud_available": {
+          "value": true,
+          "source": "https://www.pasqal.com/newsroom/pasqal-releases-2025-roadmap/",
+          "confidence": "vendor_published",
+          "method": null,
+          "as_of": null,
+          "notes": "Available via Microsoft Azure, Google Cloud Marketplace, and Pasqal's own user portal."
+        }
+      },
+      "release_year": 2024,
+      "topology": "reconfigurable neutral-atom array (Rydberg), analog Hamiltonian evolution",
+      "notes": "Pasqal's first-generation production neutral-atom QPU, deployed in HPC centers (Genci in France, Forschungszentrum Juelich in Germany). Like QuEra Aquila, it operates as an analog Hamiltonian simulator rather than a gate-model machine \u2014 marked N/A as a category difference, not a quality judgment. Pasqal's roadmap (Orion Gamma 2026, Vela, Pegasus, Centaurus through 2030) targets gate-based digital operation with eventual logical qubits.",
+      "presentation": {}
+    },
+    {
+      "vendor": "Atom Computing",
+      "system_name": "next-gen (1,225-site array)",
+      "modality": "neutral_atom",
+      "threat_score": 0.0,
+      "na_reason": null,
+      "threat_components": {
+        "logical_capacity": 0.0,
+        "fidelity_gate": 0.6899744811276126,
+        "ec_signal": 0.15,
+        "effective_logical": 0.0
+      },
+      "readiness": {
+        "readiness": 37.83858593612492,
+        "fidelity_progress": 0.6899744811276126,
+        "ec_progress": 0.0,
+        "scale_progress": 0.5119803345510209,
+        "_meaning": "progress toward preconditions; NOT distance to breaking RSA"
+      },
+      "input_confidence": {
+        "level": "low",
+        "by_field": {
+          "logical_qubits": null,
+          "two_qubit_gate_fidelity": "vendor_published",
+          "error_correction_below_threshold": null,
+          "physical_qubits": "vendor_published"
+        }
+      },
+      "flags": [
+        "2Q fidelity method = vendor_reported_2Q_fidelity; not directly comparable across vendors"
+      ],
+      "disclaimer_keys": [
+        "milestone_not_cloud",
+        "logical_qubits_are_demos",
+        "press_vs_paper",
+        "modality_not_comparable"
+      ],
+      "provenance": {
+        "physical_qubits": {
+          "value": 1180,
+          "source": "https://www.nextbigfuture.com/2023/10/atom-computing-first-to-exceed-1000-qubits-with-1180-qubit-neutral-atom-quantum-computer.html",
+          "confidence": "vendor_published",
+          "method": "device_specification",
+          "as_of": "2023-10",
+          "notes": "1,180 atoms loaded in a 1,225-site array. First system to cross 1,000 physical qubits. Sourcing note: the announcement was carried widely in press; the underlying qubit-count and readout claims trace to Atom Computing and to the peer-reviewed PRX Quantum readout paper (Yb-171 nuclear spin). Press-only restatements do not themselves clear the bar."
+        },
+        "logical_qubits": {
+          "value": 0,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "Microsoft/Atom '24 entangled / 28 corrected logical qubits' (Nov 2024) is a QEC demonstration via Azure's virtualization layer, not standing hardware capacity. Recorded as 0 standing; demo noted."
+        },
+        "two_qubit_gate_fidelity": {
+          "value": 0.996,
+          "source": "https://azure.microsoft.com/en-us/blog/quantum/2024/11/19/microsoft-and-atom-computing-offer-a-commercial-quantum-machine-with-the-largest-number-of-entangled-logical-qubits-on-record/",
+          "confidence": "vendor_published",
+          "method": "vendor_reported_2Q_fidelity",
+          "as_of": "2024-11",
+          "notes": "99.6% reported via Microsoft (integration partner, vendor_published). This is a LATER (Nov 2024) milestone, not the spec of the Oct 2023 announcement system \u2014 _as_of reflects that. Method tag is generic ('vendor_reported') because the partner blog does not state the benchmarking protocol; flagged low-confidence-on-method accordingly."
+        },
+        "single_qubit_gate_fidelity": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "t1_coherence_us": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "Neutral-atom 171Yb nuclear-spin qubits have demonstrated coherence on the tens-of-seconds scale in vendor materials (the widely-cited 40-second figure) \u2014 far longer than superconducting microsecond-scale T1/T2 \u2014 but this is reported as a qubit-memory record, not as the system-level T1/T2 specification used here. Left null in the microsecond column rather than force a non-comparable figure into it."
+        },
+        "t2_coherence_us": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "Neutral-atom 171Yb nuclear-spin qubits have demonstrated coherence on the tens-of-seconds scale in vendor materials (the widely-cited 40-second figure) \u2014 far longer than superconducting microsecond-scale T1/T2 \u2014 but this is reported as a qubit-memory record, not as the system-level T1/T2 specification used here. Left null in the microsecond column rather than force a non-comparable figure into it."
+        },
+        "error_correction_below_threshold": {
+          "value": false,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "cloud_available": {
+          "value": false,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "The 1,180-qubit next-gen system was in development at announcement; not a general cloud machine then. Marked false with caveat rather than asserting access we cannot source."
+        }
+      },
+      "release_year": 2023,
+      "topology": "Yb-171 nuclear-spin, 1,225-site (35x35) optical tweezer array",
+      "notes": "The highest physical qubit count of any scored system. The qubit count comes from a 2023 announcement and the gate fidelity from a 2024 partner publication \u2014 different dates and sources, shown with their respective dates rather than blended into a single figure.",
+      "presentation": {}
+    },
+    {
+      "vendor": "Rigetti",
+      "system_name": "Ankaa-3",
+      "modality": "superconducting",
+      "threat_score": 0.0,
+      "na_reason": null,
+      "threat_components": {
+        "logical_capacity": 0.0,
+        "fidelity_gate": 0.5,
+        "ec_signal": 0.15,
+        "effective_logical": 0.0
+      },
+      "readiness": {
+        "readiness": 26.41426428687294,
+        "fidelity_progress": 0.5,
+        "ec_progress": 0.0,
+        "scale_progress": 0.3207132143436469,
+        "_meaning": "progress toward preconditions; NOT distance to breaking RSA"
+      },
+      "input_confidence": {
+        "level": "low",
+        "by_field": {
+          "logical_qubits": null,
+          "two_qubit_gate_fidelity": "vendor_published",
+          "error_correction_below_threshold": null,
+          "physical_qubits": "vendor_published"
+        }
+      },
+      "flags": [
+        "2Q fidelity method = median_iSWAP_fidelity; not directly comparable across vendors"
+      ],
+      "disclaimer_keys": [
+        "press_vs_paper",
+        "modality_not_comparable"
+      ],
+      "provenance": {
+        "physical_qubits": {
+          "value": 84,
+          "source": "https://investors.rigetti.com/news-releases/news-release-details/rigetti-computing-launches-84-qubit-ankaatm-3-system-achieves",
+          "confidence": "vendor_published",
+          "method": "device_specification",
+          "as_of": "2024-12",
+          "notes": null
+        },
+        "logical_qubits": {
+          "value": 0,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "two_qubit_gate_fidelity": {
+          "value": 0.99,
+          "source": "https://investors.rigetti.com/news-releases/news-release-details/rigetti-computing-launches-84-qubit-ankaatm-3-system-achieves",
+          "confidence": "vendor_published",
+          "method": "median_iSWAP_fidelity",
+          "as_of": "2024-12",
+          "notes": "Rigetti reports TWO 2Q fidelities: 99.0% median iSWAP (universal gate) and 99.5% median fSim (specialized, for RCS). Headline value here is the 99.0% iSWAP because iSWAP is the general-purpose universal gate relevant to a Shor-type circuit; the 99.5% fSim is noted but not used as the headline to avoid overstating general-purpose fidelity."
+        },
+        "single_qubit_gate_fidelity": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "t1_coherence_us": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "Rigetti cites improved T1 baseline (SQMS/Fermilab metal-deposition work) qualitatively; no paired peer-reviewed/spec numeric us value sourced to the bar. Null rather than estimate."
+        },
+        "t2_coherence_us": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "error_correction_below_threshold": {
+          "value": false,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": null
+        },
+        "cloud_available": {
+          "value": true,
+          "source": "https://investors.rigetti.com/news-releases/news-release-details/rigetti-computing-launches-84-qubit-ankaatm-3-system-achieves",
+          "confidence": "vendor_published",
+          "method": null,
+          "as_of": null,
+          "notes": "Available on Rigetti QCS at launch; Braket + Azure stated as coming Q1 2025."
+        }
+      },
+      "release_year": 2024,
+      "topology": "tunable-coupler lattice, 3D signal delivery",
+      "notes": "Specifications are vendor-published (an investor press release); no peer-reviewed paper was available for these figures. Rigetti reports two distinct two-qubit fidelities \u2014 99.0% for the general-purpose iSWAP gate and 99.5% for the specialized fSim gate. The general-purpose figure is used here.",
+      "presentation": {}
+    },
+    {
+      "vendor": "USTC (Zuchongzhi)",
+      "system_name": "Zuchongzhi 3.0",
+      "modality": "superconducting",
+      "threat_score": 0.0,
+      "na_reason": null,
+      "threat_components": {
+        "logical_capacity": 0.0,
+        "fidelity_gate": 0.6956496530565208,
+        "ec_signal": 0.15,
+        "effective_logical": 0.0
+      },
+      "readiness": {
+        "readiness": 34.563283785827295,
+        "fidelity_progress": 0.6956496530565208,
+        "ec_progress": 0.0,
+        "scale_progress": 0.336864883178323,
+        "_meaning": "progress toward preconditions; NOT distance to breaking RSA"
+      },
+      "input_confidence": {
+        "level": "medium",
+        "by_field": {
+          "logical_qubits": null,
+          "two_qubit_gate_fidelity": "peer_reviewed",
+          "error_correction_below_threshold": null,
+          "physical_qubits": "peer_reviewed"
+        }
+      },
+      "flags": [
+        "2Q fidelity method = simultaneous_gate_fidelity; not directly comparable across vendors"
+      ],
+      "disclaimer_keys": [
+        "readout_preprint_vs_published",
+        "modality_not_comparable"
+      ],
+      "provenance": {
+        "physical_qubits": {
+          "value": 105,
+          "source": "https://link.aps.org/doi/10.1103/PhysRevLett.134.090601",
+          "confidence": "peer_reviewed",
+          "method": "device_specification",
+          "as_of": "2025-03",
+          "notes": null
+        },
+        "logical_qubits": {
+          "value": 0,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "A later device, Zuchongzhi 3.2 (107q, Dec 2025), is reported to demonstrate below-threshold QEC \u2014 out of scope for this 3.0 entry but a future trajectory/scored candidate."
+        },
+        "two_qubit_gate_fidelity": {
+          "value": 0.9962,
+          "source": "https://link.aps.org/doi/10.1103/PhysRevLett.134.090601",
+          "confidence": "peer_reviewed",
+          "method": "simultaneous_gate_fidelity",
+          "as_of": "2025-03",
+          "notes": "99.62% two-qubit (simultaneous) gate fidelity per published PRL."
+        },
+        "single_qubit_gate_fidelity": {
+          "value": 0.999,
+          "source": "https://link.aps.org/doi/10.1103/PhysRevLett.134.090601",
+          "confidence": "peer_reviewed",
+          "method": "simultaneous_gate_fidelity",
+          "as_of": "2025-03",
+          "notes": null
+        },
+        "t1_coherence_us": {
+          "value": 72,
+          "source": "https://link.aps.org/doi/10.1103/PhysRevLett.134.090601",
+          "confidence": "peer_reviewed",
+          "method": "average_coherence_time",
+          "as_of": "2025-03",
+          "notes": "72 us reported as average coherence time. Reported as a single coherence figure in the paper; placed in T1 with this caveat rather than split into separate T1/T2."
+        },
+        "t2_coherence_us": {
+          "value": null,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "Paper reports an average coherence (72 us) rather than separately-stated T1 and T2. Not duplicated into T2."
+        },
+        "error_correction_below_threshold": {
+          "value": false,
+          "source": null,
+          "confidence": null,
+          "method": null,
+          "as_of": null,
+          "notes": "3.0 itself is an advantage/RCS demonstration, not below-threshold QEC. (3.2 successor reportedly is \u2014 future entry.)"
+        },
+        "cloud_available": {
+          "value": true,
+          "source": "https://link.aps.org/doi/10.1103/PhysRevLett.134.090601",
+          "confidence": "peer_reviewed",
+          "method": null,
+          "as_of": null,
+          "notes": "3.0-series reported as opened for commercial use via China Telecom's Tianyan cloud platform (Oct 2025). Access may be region-constrained; flag if a conservative stance is preferred. Set true on the basis of the cloud availability report; revisit in Chat D if region-gating warrants a separate field."
+        }
+      },
+      "release_year": 2025,
+      "topology": "15x7 rectangular lattice, 182 tunable couplers",
+      "notes": "The best-sourced entry in the set: a peer-reviewed Physical Review Letters paper reporting every required figure. Its readout fidelity differs between the preprint (99.18%) and the published version (99.13%); the published journal value is shown.",
+      "presentation": {
+        "region_gated": true,
+        "region_note": "Cloud access reported via China Telecom's Tianyan platform and may be region-constrained. Accessibility is not a threat input \u2014 it does not affect the score; shown here as a presentation-layer flag only."
+      }
+    }
+  ],
+  "announced_not_scored": [
+    {
+      "vendor": "PsiQuantum",
+      "modality": "photonic",
+      "reason": "Roadmap / fusion-based architecture targeting ~1M physical qubits; no peer-reviewed or vendor-published specs for our required fields (per-device 2Q gate fidelity, T1/T2 in our sense) on a deployed machine. Does not clear the \u00a74 bar.",
+      "disclaimer_keys": [
+        "modality_not_comparable"
+      ],
+      "notes": "Footnote only. Revisit if qualifying specs are published."
+    },
+    {
+      "vendor": "Xanadu",
+      "system_name": "Aurora / Borealis",
+      "modality": "photonic",
+      "reason": "Photonic (CV / GBS) architecture. Published work (e.g. Borealis GBS in Nature) is real but does not map onto the gate-model 2Q-fidelity / T1-T2 schema this index scores. No qualifying values for our required fields.",
+      "disclaimer_keys": [
+        "analog_not_gate_model",
+        "modality_not_comparable"
+      ],
+      "notes": "Footnote only. Photonic CV systems are a structural mismatch for the launch schema, similar in spirit to the analog caveat."
+    },
+    {
+      "vendor": "Alice & Bob",
+      "system_name": "Boson 4 (Helium / Lithium roadmap)",
+      "modality": "superconducting (cat qubit)",
+      "reason": "Boson 4, available on Google Cloud Marketplace, is a single cat-qubit chip (not a multi-qubit processor) \u2014 it demonstrates a >7-minute bit-flip suppression record but does not have the physical_qubits + two_qubit_gate_fidelity combination this schema scores. Multi-qubit follow-ons (Helium 16-qubit, Lithium) are on the roadmap, not deployed.",
+      "disclaimer_keys": [
+        "modality_not_comparable"
+      ],
+      "notes": "Important architectural alternative \u2014 cat qubits target hardware-level bit-flip protection so error correction only needs to handle phase flips. Worth revisiting when Helium or later deploys with published multi-qubit specs."
+    },
+    {
+      "vendor": "Diraq",
+      "system_name": "SiMOS silicon spin qubits",
+      "modality": "silicon spin",
+      "reason": "Diraq has a peer-reviewed Nature paper demonstrating >99% two-qubit CZ gate fidelity on industrially-fabricated silicon quantum-dot devices (collaboration with imec, 300mm CMOS) \u2014 peer-reviewed credentials, but the demonstrations are on two-qubit double-quantum-dot devices, not a deployed N-qubit processor.",
+      "disclaimer_keys": [
+        "modality_not_comparable"
+      ],
+      "notes": "Silicon spin qubits offer a manufacturing-scalability story unique among the candidates. Worth revisiting when a multi-qubit Diraq processor with published system-level specs ships."
+    }
+  ],
+  "historical_anchors": [
+    {
+      "vendor": "Google",
+      "system_name": "Sycamore",
+      "release_year": 2019,
+      "physical_qubits": 53,
+      "modality": "superconducting"
+    },
+    {
+      "vendor": "IBM",
+      "system_name": "Eagle (r1)",
+      "release_year": 2021,
+      "physical_qubits": 127,
+      "modality": "superconducting"
+    },
+    {
+      "vendor": "IBM",
+      "system_name": "Condor",
+      "release_year": 2023,
+      "physical_qubits": 1121,
+      "modality": "superconducting"
+    }
+  ],
+  "disclaimer_keys_present": [
+    "analog_not_gate_model",
+    "aq_not_qubit_count",
+    "calibration_snapshot_drifts",
+    "logical_qubits_are_demos",
+    "milestone_not_cloud",
+    "modality_not_comparable",
+    "press_vs_paper",
+    "readout_preprint_vs_published"
+  ]
+}
