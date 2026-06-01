@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
+import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 import { AuditStrip } from "@/components/data/AuditStrip";
 import { AlgorithmTable } from "@/components/data/AlgorithmTable";
 import { PresetComparisons } from "@/components/data/PresetComparisons";
@@ -81,6 +82,7 @@ export default function QShieldPage() {
         </aside>
       </main>
       <Footer />
+       <GitHubStarPopup />
     </div>
   );
 }
