@@ -1,22 +1,26 @@
 import type { Metadata } from "next";
-import { Inter_Tight, Instrument_Serif } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 
-const interTight = Inter_Tight({
+/**
+ * Typography — DM Sans is the single typeface for the whole site (matching
+ * the InferenceX register). It serves BOTH --font-sans AND --font-serif so
+ * every existing `font-serif` className keeps resolving to the intended
+ * typeface without site-wide find/replace.
+ *
+ * Geist Mono is unchanged — used for numbers, mono cells, eyebrow labels.
+ */
+const dmSans = DM_Sans({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-sans",
-  weight: ["300", "400", "500", "600"],
-});
-
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-serif",
-  weight: "400",
+  weight: ["300", "400", "500", "600", "700"],
   style: ["normal", "italic"],
 });
+
+// Alias the same font to --font-serif. next/font won't load it twice — this is
+// just a CSS-variable alias declared in globals.css. See `@layer base` there.
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://qadvantage.io"),
@@ -48,7 +52,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${interTight.variable} ${instrumentSerif.variable} ${GeistMono.variable} dark`}
+      className={`${dmSans.variable} ${GeistMono.variable} dark`}
     >
       <body className="font-sans bg-bg text-fg antialiased min-h-screen">
         {children}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
 import { SubscribeForm } from "@/components/chrome/SubscribeForm";
+import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 import { LiveShieldPreview } from "@/components/chrome/LiveShieldPreview";
 import { PresetComparisons } from "@/components/data/PresetComparisons";
 
@@ -118,12 +119,13 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <ProductCard
-              status="preview"
+              status="live"
               name="Q-Day Index"
-              tag="The threat horizon"
-              desc="A composite, transparent score for how close current quantum hardware is to breaking RSA-2048 and ECC-256. Updated as vendor specs change."
-              href="#subscribe"
-              cta="Get alerts on changes"
+              tag="The threat horizon · daily"
+              desc="A 0–100 measure of how close today's quantum hardware is to breaking RSA-2048, scored against a named, published resource estimate. Eight scored systems plus analog and footnote categories, every spec sourced."
+              href="/q-day-index"
+              cta="View Q-Day Index"
+              fullyClickable
             />
             <ProductCard
               status="live"
@@ -135,11 +137,11 @@ export default function HomePage() {
               fullyClickable
             />
             <ProductCard
-              status="soon"
+              status="preview"
               name="Q-Arena"
               tag="Algorithm leaderboard"
               desc="Real quantum algorithms run on real quantum hardware. Shor's, Grover's, VQE — success rates, circuit depths, and shot counts, fully transparent."
-              cta="Hardware leaderboard soon"
+              cta="Launching soon"
             />
           </div>
         </div>
@@ -218,6 +220,7 @@ export default function HomePage() {
       </section>
 
       <Footer />
+      <GitHubStarPopup />
     </div>
   );
 }

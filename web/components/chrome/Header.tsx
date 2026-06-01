@@ -4,14 +4,13 @@ import Link from "next/link";
  * Site header — sticky, blur backdrop, present on every page.
  *
  * Nav structure (left to right):
- *   - Brand: diamond mark + serif wordmark, links to /
- *   - Products (anchor): jumps to /#products on the home page
- *   - Methodology (anchor): jumps to /#methodology on the home page
+ *   - Brand: diamond mark + wordmark, links to /
+ *   - About
+ *   - Methodology
  *   - GitHub (external)
- *   - Q-Shield: prominent button — the live product
+ *   - Q-Day Index: prominent green button — the headline live product
+ *   - Q-Shield: prominent green button — the live benchmarking product
  *   - Subscribe: primary CTA
- *
- * The diamond mark is the same shape as the favicon (lib/icon-generator).
  */
 export function Header() {
   return (
@@ -37,10 +36,10 @@ export function Header() {
 
         <div className="flex items-center gap-5 md:gap-7">
           <Link
-            href="/#products"
+            href="/about"
             className="hidden md:inline text-sm text-fg-muted hover:text-fg transition-colors"
           >
-            Products
+            About
           </Link>
           <Link
             href="/methodology"
@@ -56,6 +55,16 @@ export function Header() {
           >
             GitHub
           </a>
+          <Link
+            href="/q-day-index"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md border border-accent/40 bg-accent/10 text-accent text-[13px] font-medium hover:bg-accent/15 hover:border-accent/60 transition-colors"
+          >
+            <span
+              className="inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse-soft flex-shrink-0"
+              aria-hidden
+            />
+            Q-Day Index
+          </Link>
           <Link
             href="/q-shield"
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md border border-accent/40 bg-accent/10 text-accent text-[13px] font-medium hover:bg-accent/15 hover:border-accent/60 transition-colors"
@@ -78,14 +87,6 @@ export function Header() {
   );
 }
 
-/**
- * The Q-Advantage diamond mark.
- *
- * 26px square rotated 45°, accent-green border, with an inner corner
- * indicating a stylized "Q". Drawn in CSS so it scales cleanly and stays
- * sharp on every screen. The favicon (app/icon.tsx) reproduces this shape
- * as a 32×32 PNG.
- */
 function DiamondMark() {
   return (
     <span

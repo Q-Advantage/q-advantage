@@ -128,3 +128,47 @@
     transform: translateY(0);
   }
 }
+
+@layer components {
+  /*
+   * Q-Day Index dashboard tokens.
+   *
+   * These are LITERAL values, not theme() lookups, because the dashboard view
+   * uses its own internal palette that doesn't need to chain through the site's
+   * Tailwind config. Fonts DO route through the site's --font-sans / --font-mono
+   * variables (declared by next/font in layout.tsx) so the dashboard inherits
+   * the site's typeface choice (DM Sans / mono).
+   *
+   * The .qday-root wrapper on the QDayIndexView component scopes these so they
+   * never leak into other pages.
+   */
+  .qday-root {
+    --qd-bg: #0a0d0b;
+    --qd-panel: #11150f;
+    --qd-panel2: #0d110c;
+    --qd-line: #1f2a20;
+    --qd-border: #26312622;
+    --qd-fg: #eef3ec;
+    --qd-fg2: #b8c4b6;
+    --qd-dim: #6f7d6e;
+    --qd-green: #4ade80;
+    --qd-serif: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    --qd-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    --qd-mono: var(--font-geist-mono), var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+}
+/*
+ * APPEND THIS to web/app/globals.css (anywhere inside @layer base, or just
+ * before the existing :root color-scheme block — order doesn't matter).
+ *
+ * Purpose: now that DM Sans is the single site typeface, alias --font-serif
+ * to --font-sans so every existing `className="font-serif"` keeps working
+ * (resolves to DM Sans), without needing to find/replace across the site.
+ */
+
+@layer base {
+  :root {
+    --font-serif: var(--font-sans);
+  }
+}
