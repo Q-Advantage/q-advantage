@@ -6,10 +6,11 @@ import { useState } from "react";
 /**
  * Site header — sticky, blur backdrop, present on every page.
  *
- * Desktop (md+): Brand · About · Methodology · GitHub · Q-Day Index · Q-Shield · Subscribe
+ * Desktop (md+): Brand · About · Methodology · GitHub · Q-Day Index · Compare · Q-Shield · Subscribe
  * Mobile (<md):  Brand · Subscribe · Hamburger (opens dropdown with all nav)
  *
  * Q-Shield gets the green pulse pill (the wedge product).
+ * Compare sits adjacent to Q-Shield since it's a Q-Shield feature.
  * Q-Day Index is a plain text link (prominent but secondary).
  */
 export function Header() {
@@ -61,6 +62,12 @@ export function Header() {
               className="text-sm text-fg-muted hover:text-fg transition-colors"
             >
               Q-Day Index
+            </Link>
+            <Link
+              href="/q-shield/compare"
+              className="text-sm text-fg-muted hover:text-fg transition-colors"
+            >
+              Compare
             </Link>
             <Link
               href="/q-shield"
@@ -117,6 +124,13 @@ export function Header() {
                 aria-hidden
               />
               Q-Shield
+            </Link>
+            <Link
+              href="/q-shield/compare"
+              onClick={() => setMenuOpen(false)}
+              className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
+            >
+              Compare
             </Link>
             <Link
               href="/q-day-index"

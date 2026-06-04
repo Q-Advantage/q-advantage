@@ -134,7 +134,7 @@ export default function HomePage() {
               status="live"
               name="Q-Day Index"
               tag="The threat horizon · daily"
-              desc="A 0–100 measure of how close today's quantum hardware is to breaking RSA-2048, scored against a named, published resource estimate. Eight scored systems plus analog and footnote categories, every spec sourced."
+              desc="A 0–100 measure of how close today’s quantum hardware is to breaking RSA-2048, scored against a named, published resource estimate. Eight scored systems plus analog and footnote categories, every spec sourced."
               href="/q-day-index"
               cta="View Q-Day Index"
               fullyClickable
@@ -150,11 +150,12 @@ export default function HomePage() {
             <div>
               <div className="eyebrow mb-5">Methodology</div>
               <h2 className="font-serif text-[clamp(36px,4.5vw,56px)] font-normal leading-[1.05] tracking-[-0.02em] mb-5">
-                Receipts, not <em className="italic">press releases.</em>
+                Every number, a commit <em className="italic">hash.</em>
               </h2>
               <p className="text-[17px] text-fg-muted leading-[1.55] font-light mt-6">
-                The quantum industry runs on press releases and analyst PDFs.
-                Q-Advantage runs on GitHub Actions logs.
+                Every Q-Shield number traces back to a public commit and a
+                reproducible GitHub Actions run. Clone the repo, run the workflow
+                yourself, get the same numbers.
               </p>
               <div className="mt-8">
                 <Link
@@ -190,9 +191,8 @@ export default function HomePage() {
       {/* ============================ SUBSCRIBE ============================ */}
       <section id="subscribe" className="py-[100px] border-t border-border text-center relative z-[2]">
         <div className="mx-auto max-w-[600px] px-6 md:px-8">
-          <div className="eyebrow mb-5">The briefing</div>
           <h2 className="font-serif text-[clamp(36px,4.5vw,56px)] font-normal leading-[1.05] tracking-[-0.02em] mb-4">
-            Signal, not <em className="italic">noise.</em>
+            The <em className="italic">briefing.</em>
           </h2>
           <p className="text-base text-fg-muted leading-[1.65] mb-4">
             One email a week. New benchmark results, Q-Day Index movements,
