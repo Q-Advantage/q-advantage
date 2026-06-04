@@ -24,11 +24,17 @@ Thumbs.db
 *~
 
 # Secrets — never commit these
-.env
-.env.local
+.env*
+!.env.example
+!.env.*.example
 *.pem
 *.key
+*.p12
+*.pfx
 aws-credentials*
+.aws/
+credentials.json
+secrets.json
 
 # Benchmark scratch
 benchmark/scratch/
