@@ -114,7 +114,7 @@ export default function HomePage() {
             </h2>
             <p className="text-[17px] text-fg-muted leading-[1.55] font-light">
               Q-Shield measures PQC performance every day. Q-Day Index scores how
-              close quantum hardware is to breaking today's encryption. Both built
+              close quantum hardware is to breaking today’s encryption. Both built
               on the same audit-grade methodology.
             </p>
           </div>
