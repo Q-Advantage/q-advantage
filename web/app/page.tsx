@@ -15,8 +15,9 @@ import { PresetComparisons } from "@/components/data/PresetComparisons";
  * Hero card is the LIVE Q-Shield preview — pulls actual benchmark data.
  * This proves the brand promise ("the data is live") on first viewport.
  *
- * Quick Comparison cards mirror the ones on /q-shield, so the home page
- * has substance, not just product cards.
+ * Q-Shield is the wedge product (featured card).
+ * Q-Day Index is prominent but secondary (plain card, second slot).
+ * Q-Arena removed — parked indefinitely.
  */
 export default function HomePage() {
   return (
@@ -37,15 +38,14 @@ export default function HomePage() {
               </div>
 
               <h1 className="reveal reveal-2 font-serif text-[clamp(48px,7vw,88px)] font-normal leading-[1.02] tracking-[-0.025em] text-fg mb-7">
-                The intelligence layer for the{" "}
-                <em className="italic opacity-95">quantum era.</em>
+                PQC performance,{" "}
+                <em className="italic opacity-95">measured.</em>
               </h1>
 
               <p className="reveal reveal-3 text-lg leading-[1.55] text-fg-muted max-w-[560px] mb-10 font-light">
-                Q-Advantage is the gateway for post-quantum cryptography
-                adoption — independent benchmarks for the technology that
-                will rewrite cryptography, redraw threat models, and rewire
-                every system built on top of both.
+                Which post-quantum algorithm should you actually deploy? We
+                measure keygen, sign, verify, encap, and decap on production
+                hardware. Every day. Every result, sourced.
               </p>
 
               <div className="reveal reveal-4 flex gap-3 items-center flex-wrap">
@@ -53,15 +53,16 @@ export default function HomePage() {
                   href="/q-shield"
                   className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-fg text-bg rounded-lg text-sm font-medium hover:-translate-y-px hover:opacity-95 transition-all"
                 >
-                  View Q-Shield benchmarks
+                  Open Q-Shield
                   <span aria-hidden>→</span>
                 </Link>
-                <a
-                  href="#subscribe"
+                <Link
+                  href="/q-shield/compare"
                   className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-transparent text-fg rounded-lg text-sm font-normal border border-border-strong hover:border-fg-muted transition-colors"
                 >
-                  Subscribe to the briefing
-                </a>
+                  Compare algorithms
+                  <span aria-hidden>→</span>
+                </Link>
               </div>
             </div>
 
@@ -107,17 +108,28 @@ export default function HomePage() {
       <section id="products" className="py-20 md:py-[100px] border-t border-border relative z-[2]">
         <div className="mx-auto max-w-[1200px] px-6 md:px-8">
           <div className="text-center max-w-[720px] mx-auto mb-[72px]">
-            <div className="eyebrow mb-5">What we measure</div>
+            <div className="eyebrow mb-5">What we publish</div>
             <h2 className="font-serif text-[clamp(36px,4.5vw,56px)] font-normal leading-[1.05] tracking-[-0.02em] mb-5">
-              Three benchmarks that <em className="italic">matter.</em>
+              Two products. One <em className="italic">source of truth.</em>
             </h2>
             <p className="text-[17px] text-fg-muted leading-[1.55] font-light">
-              From the threat horizon to the cryptography that replaces what
-              quantum will break — measured, scored, and made public.
+              Q-Shield measures PQC performance every day. Q-Day Index scores how
+              close quantum hardware is to breaking today's encryption. Both built
+              on the same audit-grade methodology.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ProductCard
+              status="live"
+              name="Q-Shield"
+              tag="PQC benchmarks · daily"
+              desc="Independent performance benchmarks for ML-KEM, ML-DSA, and SLH-DSA. Latency, throughput, key sizes — measured on auditable infrastructure. Every result links to the GitHub Actions run that produced it."
+              href="/q-shield"
+              cta="View live dashboard"
+              featured
+              fullyClickable
+            />
             <ProductCard
               status="live"
               name="Q-Day Index"
@@ -126,22 +138,6 @@ export default function HomePage() {
               href="/q-day-index"
               cta="View Q-Day Index"
               fullyClickable
-            />
-            <ProductCard
-              status="live"
-              name="Q-Shield"
-              tag="PQC benchmarks · daily"
-              desc="Independent performance benchmarks for ML-KEM, ML-DSA, and SLH-DSA. Latency, throughput, key sizes — measured on auditable infrastructure."
-              href="/q-shield"
-              cta="View live dashboard"
-              fullyClickable
-            />
-            <ProductCard
-              status="preview"
-              name="Q-Arena"
-              tag="Algorithm leaderboard"
-              desc="Real quantum algorithms run on real quantum hardware. Shor's, Grover's, VQE — success rates, circuit depths, and shot counts, fully transparent."
-              cta="Launching soon"
             />
           </div>
         </div>
@@ -237,6 +233,7 @@ function ProductCard({
   href,
   cta,
   fullyClickable,
+  featured,
 }: {
   status: "live" | "preview" | "soon";
   name: string;
@@ -245,6 +242,7 @@ function ProductCard({
   href?: string;
   cta: string;
   fullyClickable?: boolean;
+  featured?: boolean;
 }) {
   const statusLabel =
     status === "live" ? "Live" : status === "preview" ? "In preview" : "Launching soon";
@@ -255,8 +253,6 @@ function ProductCard({
         ? "text-status-warn border-status-warn/30 before:bg-status-warn before:shadow-[0_0_6px_rgba(251,191,36,0.5)]"
         : "text-fg-subtle border-border-strong";
 
-  // If fullyClickable + has href: the entire tile becomes a link.
-  // Otherwise: tile is a div, only the CTA link is clickable.
   const Inner = (
     <>
       <div
@@ -291,8 +287,9 @@ function ProductCard({
     </>
   );
 
-  const baseClass =
-    "bg-bg-card border border-border rounded-xl p-7 md:p-8 relative overflow-hidden hover:border-border-strong hover:-translate-y-0.5 transition-all";
+  const baseClass = featured
+    ? "bg-bg-card border-[1.5px] border-accent/40 rounded-xl p-7 md:p-8 relative overflow-hidden hover:border-accent/60 hover:-translate-y-0.5 transition-all"
+    : "bg-bg-card border border-border rounded-xl p-7 md:p-8 relative overflow-hidden hover:border-border-strong hover:-translate-y-0.5 transition-all";
 
   if (fullyClickable && href) {
     return (

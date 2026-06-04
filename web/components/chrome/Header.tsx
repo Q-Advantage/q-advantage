@@ -8,6 +8,9 @@ import { useState } from "react";
  *
  * Desktop (md+): Brand · About · Methodology · GitHub · Q-Day Index · Q-Shield · Subscribe
  * Mobile (<md):  Brand · Subscribe · Hamburger (opens dropdown with all nav)
+ *
+ * Q-Shield gets the green pulse pill (the wedge product).
+ * Q-Day Index is a plain text link (prominent but secondary).
  */
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -55,12 +58,8 @@ export function Header() {
             </a>
             <Link
               href="/q-day-index"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md border border-accent/40 bg-accent/10 text-accent text-[13px] font-medium hover:bg-accent/15 hover:border-accent/60 transition-colors"
+              className="text-sm text-fg-muted hover:text-fg transition-colors"
             >
-              <span
-                className="inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse-soft flex-shrink-0"
-                aria-hidden
-              />
               Q-Day Index
             </Link>
             <Link
@@ -109,17 +108,6 @@ export function Header() {
         >
           <div className="mx-auto max-w-[1200px] px-6 py-3 flex flex-col gap-1">
             <Link
-              href="/q-day-index"
-              onClick={() => setMenuOpen(false)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-md border border-accent/40 bg-accent/10 text-accent text-sm font-medium"
-            >
-              <span
-                className="inline-block w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0"
-                aria-hidden
-              />
-              Q-Day Index
-            </Link>
-            <Link
               href="/q-shield"
               onClick={() => setMenuOpen(false)}
               className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-md border border-accent/40 bg-accent/10 text-accent text-sm font-medium"
@@ -129,6 +117,13 @@ export function Header() {
                 aria-hidden
               />
               Q-Shield
+            </Link>
+            <Link
+              href="/q-day-index"
+              onClick={() => setMenuOpen(false)}
+              className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
+            >
+              Q-Day Index
             </Link>
             <Link
               href="/about"
