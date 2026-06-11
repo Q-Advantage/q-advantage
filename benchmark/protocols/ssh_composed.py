@@ -89,7 +89,17 @@ def main() -> None:
     for rec in results["suites"].values():
         common.validate_result(rec, schema)
 
-    print(json.dumps(results, indent=2))
+    out = json.dumps(results, indent=2)
+    if args.output_dir:
+        os.makedirs(args.output_dir, exist_ok=True)
+        date = results["environment"]["iso_timestamp"][:10]
+        gh = (results["environment"]["git_commit"] or "nogit")[:7]
+        path = os.path.join(args.output_dir, f"ssh-composed-{date}-{gh}.json")
+        with open(path, "w") as fh:
+            fh.write(out)
+        print(f"wrote {path}")
+    else:
+        print(out)
 
 
 if __name__ == "__main__":
