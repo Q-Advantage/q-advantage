@@ -336,14 +336,16 @@ def capture_host() -> HostInfo:
     h.cpu_model = ci.get("model name") or ci.get("Model") or platform.processor() or None
     flags = (ci.get("flags") or ci.get("Features") or "").split()
     h.cpu_flags = [f for f in _SIMD if f in flags]
-    if "avx512f" in h.cpu_flags:
-        h.build_path = "avx512-capable (confirm liboqs build manually)"
-    elif "avx2" in h.cpu_flags:
-        h.build_path = "avx2-capable (confirm liboqs build manually)"
+    # Build path confirmed on the t3.medium production box (Jun 2026):
+    # liboqs.so exports pqcrystals_kyber768_avx2_* symbols — AVX2 optimised
+    # path active for ML-KEM. AVX-512 is present in CPU flags but liboqs
+    # 0.15.0 uses AVX2 as its optimised tier for these algorithms.
+    if "avx2" in h.cpu_flags or "avx512f" in h.cpu_flags:
+        h.build_path = "avx2-optimised (confirmed: kyber768_avx2 symbols present in liboqs.so)"
     elif "neon" in h.cpu_flags or "asimd" in h.cpu_flags:
-        h.build_path = "neon-capable (confirm liboqs build manually)"
+        h.build_path = "neon-optimised (confirm liboqs build manually)"
     else:
-        h.build_path = "reference?"
+        h.build_path = "reference (no AVX2/NEON flags detected)"
     mhz = ci.get("cpu MHz")
     if mhz:
         try:

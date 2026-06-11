@@ -21,7 +21,7 @@ jobs:
   benchmark:
     name: Run Q-Shield benchmark on dedicated hardware
     runs-on: [self-hosted, q-advantage-bench]
-    timeout-minutes: 120
+    timeout-minutes: 180
 
     steps:
       - name: Checkout repo
@@ -38,10 +38,28 @@ jobs:
           echo "Kernel: $(uname -r)"
           uptime
 
-      - name: Run benchmark
+      - name: Run benchmark — primitives
         run: |
           source ~/q-advantage/venv/bin/activate
           python3 benchmark/benchmark.py
+
+      - name: Run benchmark — TLS composed (Layer A)
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/protocols/tls_composed.py \
+            --output-dir benchmark/results/protocols
+
+      - name: Run benchmark — SSH composed (Layer A)
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/protocols/ssh_composed.py \
+            --output-dir benchmark/results/protocols
+
+      - name: Run benchmark — signature track (Job 2)
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/protocols/sig_track.py \
+            --output-dir benchmark/results/protocols
 
       - name: Commit results
         run: |
@@ -57,8 +75,7 @@ jobs:
           git commit -m "chore: daily benchmark run $(date -u +%Y-%m-%d) [skip ci]"
 
           # The runner's local main may have fallen behind remote during the
-          # 49-minute benchmark window (e.g. a developer pushed docs while
-          # we were running). Rebase-on-fail handles this cleanly: the only
+          # benchmark window. Rebase-on-fail handles this cleanly: the only
           # file the runner ever writes is benchmark/results/, which no human
           # edits, so conflicts are not expected. If a conflict somehow
           # occurs, fail loudly rather than papering over it.
@@ -86,4 +103,3 @@ jobs:
             echo "## Latest benchmark results" >> $GITHUB_STEP_SUMMARY
             cat benchmark/results/RESULTS.md >> $GITHUB_STEP_SUMMARY
           fi
-
