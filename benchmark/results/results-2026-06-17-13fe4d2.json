@@ -1,0 +1,357 @@
+{
+  "environment": {
+    "iso_timestamp": "2026-06-17T10:46:31Z",
+    "cpu_model": "Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz",
+    "cpu_cores_logical": 2,
+    "cpu_cores_physical": 1,
+    "ram_total_gb": 4.02,
+    "kernel": "6.17.0-1012-aws",
+    "os_release": "Ubuntu 24.04.4 LTS",
+    "python_version": "3.12.3",
+    "liboqs_version": "0.15.0",
+    "liboqs_python_version": "0.15.0",
+    "ec2_instance_type": "t3.medium",
+    "git_commit": "13fe4d2f504acfa1b6f51943610a1b303eba10ca",
+    "git_branch": "main",
+    "script_args": []
+  },
+  "runtime_metrics": {
+    "wall_clock_seconds": 2971.66,
+    "cpu_steal_jiffies": 1225,
+    "cpu_steal_seconds": 12.25,
+    "loadavg_start": [
+      0.17,
+      0.04,
+      0.01
+    ],
+    "loadavg_end": [
+      1.0,
+      1.01,
+      1.0
+    ],
+    "instance_type": "t3.medium",
+    "burstable": true
+  },
+  "algorithms": {
+    "ML-KEM-512": {
+      "status": "ok",
+      "type": "kem",
+      "pubkey_bytes": 800,
+      "privkey_bytes": 1632,
+      "ciphertext_bytes": 768,
+      "keygen": {
+        "mean_us": 18.085,
+        "median_us": 18.543,
+        "p95_us": 24.019,
+        "p99_us": 44.361,
+        "stdev_us": 6.468,
+        "min_us": 12.674,
+        "max_us": 102.123,
+        "ops_per_sec": 55295.05,
+        "n_iterations": 1000
+      },
+      "encap": {
+        "mean_us": 26.51,
+        "median_us": 25.523,
+        "p95_us": 29.52,
+        "p99_us": 45.331,
+        "stdev_us": 6.947,
+        "min_us": 20.223,
+        "max_us": 199.777,
+        "ops_per_sec": 37722.05,
+        "n_iterations": 1000
+      },
+      "decap": {
+        "mean_us": 26.093,
+        "median_us": 25.506,
+        "p95_us": 28.388,
+        "p99_us": 44.298,
+        "stdev_us": 4.23,
+        "min_us": 17.852,
+        "max_us": 94.391,
+        "ops_per_sec": 38325.13,
+        "n_iterations": 1000
+      }
+    },
+    "ML-KEM-768": {
+      "status": "ok",
+      "type": "kem",
+      "pubkey_bytes": 1184,
+      "privkey_bytes": 2400,
+      "ciphertext_bytes": 1088,
+      "keygen": {
+        "mean_us": 18.628,
+        "median_us": 18.233,
+        "p95_us": 19.065,
+        "p99_us": 26.926,
+        "stdev_us": 3.303,
+        "min_us": 17.964,
+        "max_us": 111.197,
+        "ops_per_sec": 53683.35,
+        "n_iterations": 1000
+      },
+      "encap": {
+        "mean_us": 20.81,
+        "median_us": 19.978,
+        "p95_us": 27.261,
+        "p99_us": 36.431,
+        "stdev_us": 4.862,
+        "min_us": 19.763,
+        "max_us": 141.568,
+        "ops_per_sec": 48054.19,
+        "n_iterations": 1000
+      },
+      "decap": {
+        "mean_us": 21.173,
+        "median_us": 20.971,
+        "p95_us": 21.345,
+        "p99_us": 28.274,
+        "stdev_us": 1.222,
+        "min_us": 20.809,
+        "max_us": 36.358,
+        "ops_per_sec": 47229.89,
+        "n_iterations": 1000
+      }
+    },
+    "ML-KEM-1024": {
+      "status": "ok",
+      "type": "kem",
+      "pubkey_bytes": 1568,
+      "privkey_bytes": 3168,
+      "ciphertext_bytes": 1568,
+      "keygen": {
+        "mean_us": 23.047,
+        "median_us": 22.596,
+        "p95_us": 23.591,
+        "p99_us": 31.004,
+        "stdev_us": 3.397,
+        "min_us": 22.328,
+        "max_us": 118.248,
+        "ops_per_sec": 43389.92,
+        "n_iterations": 1000
+      },
+      "encap": {
+        "mean_us": 25.376,
+        "median_us": 24.947,
+        "p95_us": 25.988,
+        "p99_us": 33.131,
+        "stdev_us": 4.414,
+        "min_us": 24.622,
+        "max_us": 155.768,
+        "ops_per_sec": 39407.68,
+        "n_iterations": 1000
+      },
+      "decap": {
+        "mean_us": 39.74,
+        "median_us": 44.177,
+        "p95_us": 51.694,
+        "p99_us": 67.028,
+        "stdev_us": 10.504,
+        "min_us": 27.146,
+        "max_us": 82.512,
+        "ops_per_sec": 25163.56,
+        "n_iterations": 1000
+      }
+    },
+    "ML-DSA-44": {
+      "status": "ok",
+      "type": "sig",
+      "pubkey_bytes": 1312,
+      "privkey_bytes": 2560,
+      "signature_bytes": 2420,
+      "keygen": {
+        "mean_us": 42.321,
+        "median_us": 32.139,
+        "p95_us": 58.031,
+        "p99_us": 80.875,
+        "stdev_us": 13.156,
+        "min_us": 30.844,
+        "max_us": 189.948,
+        "ops_per_sec": 23628.68,
+        "n_iterations": 1000
+      },
+      "sign": {
+        "mean_us": 102.921,
+        "median_us": 84.841,
+        "p95_us": 214.336,
+        "p99_us": 293.712,
+        "stdev_us": 60.614,
+        "min_us": 46.925,
+        "max_us": 578.818,
+        "ops_per_sec": 9716.19,
+        "n_iterations": 1000
+      },
+      "verify": {
+        "mean_us": 32.827,
+        "median_us": 32.152,
+        "p95_us": 39.34,
+        "p99_us": 45.058,
+        "stdev_us": 2.793,
+        "min_us": 31.91,
+        "max_us": 68.055,
+        "ops_per_sec": 30462.78,
+        "n_iterations": 1000
+      }
+    },
+    "ML-DSA-65": {
+      "status": "ok",
+      "type": "sig",
+      "pubkey_bytes": 1952,
+      "privkey_bytes": 4032,
+      "signature_bytes": 3309,
+      "keygen": {
+        "mean_us": 82.491,
+        "median_us": 87.88,
+        "p95_us": 106.42,
+        "p99_us": 118.389,
+        "stdev_us": 18.384,
+        "min_us": 51.017,
+        "max_us": 209.609,
+        "ops_per_sec": 12122.52,
+        "n_iterations": 1000
+      },
+      "sign": {
+        "mean_us": 264.293,
+        "median_us": 216.633,
+        "p95_us": 553.943,
+        "p99_us": 749.443,
+        "stdev_us": 153.534,
+        "min_us": 107.564,
+        "max_us": 1571.185,
+        "ops_per_sec": 3783.68,
+        "n_iterations": 1000
+      },
+      "verify": {
+        "mean_us": 54.971,
+        "median_us": 50.097,
+        "p95_us": 91.417,
+        "p99_us": 104.125,
+        "stdev_us": 14.112,
+        "min_us": 49.716,
+        "max_us": 226.598,
+        "ops_per_sec": 18191.49,
+        "n_iterations": 1000
+      }
+    },
+    "ML-DSA-87": {
+      "status": "ok",
+      "type": "sig",
+      "pubkey_bytes": 2592,
+      "privkey_bytes": 4896,
+      "signature_bytes": 4627,
+      "keygen": {
+        "mean_us": 77.17,
+        "median_us": 75.007,
+        "p95_us": 82.784,
+        "p99_us": 116.2,
+        "stdev_us": 15.674,
+        "min_us": 73.794,
+        "max_us": 511.996,
+        "ops_per_sec": 12958.35,
+        "n_iterations": 1000
+      },
+      "sign": {
+        "mean_us": 174.692,
+        "median_us": 148.64,
+        "p95_us": 344.155,
+        "p99_us": 454.463,
+        "stdev_us": 83.006,
+        "min_us": 97.801,
+        "max_us": 606.779,
+        "ops_per_sec": 5724.37,
+        "n_iterations": 1000
+      },
+      "verify": {
+        "mean_us": 76.363,
+        "median_us": 72.9,
+        "p95_us": 89.199,
+        "p99_us": 132.706,
+        "stdev_us": 11.939,
+        "min_us": 72.482,
+        "max_us": 170.238,
+        "ops_per_sec": 13095.39,
+        "n_iterations": 1000
+      }
+    },
+    "SLH_DSA_PURE_SHAKE_128S": {
+      "status": "ok",
+      "type": "sig",
+      "pubkey_bytes": 32,
+      "privkey_bytes": 64,
+      "signature_bytes": 7856,
+      "keygen": {
+        "mean_us": 169036.446,
+        "median_us": 167581.002,
+        "p95_us": 173614.111,
+        "p99_us": 190848.342,
+        "stdev_us": 5911.774,
+        "min_us": 166792.918,
+        "max_us": 287225.63,
+        "ops_per_sec": 5.92,
+        "n_iterations": 1000
+      },
+      "sign": {
+        "mean_us": 1292682.082,
+        "median_us": 1287270.899,
+        "p95_us": 1320792.596,
+        "p99_us": 1406687.545,
+        "stdev_us": 27379.403,
+        "min_us": 1278005.512,
+        "max_us": 1831914.417,
+        "ops_per_sec": 0.77,
+        "n_iterations": 1000
+      },
+      "verify": {
+        "mean_us": 1300.103,
+        "median_us": 1285.37,
+        "p95_us": 1378.379,
+        "p99_us": 1761.427,
+        "stdev_us": 116.065,
+        "min_us": 1136.371,
+        "max_us": 2758.851,
+        "ops_per_sec": 769.17,
+        "n_iterations": 1000
+      }
+    },
+    "SLH_DSA_PURE_SHAKE_128F": {
+      "status": "ok",
+      "type": "sig",
+      "pubkey_bytes": 32,
+      "privkey_bytes": 64,
+      "signature_bytes": 17088,
+      "keygen": {
+        "mean_us": 2654.588,
+        "median_us": 2616.414,
+        "p95_us": 2711.084,
+        "p99_us": 4467.011,
+        "stdev_us": 244.288,
+        "min_us": 2596.351,
+        "max_us": 4957.244,
+        "ops_per_sec": 376.71,
+        "n_iterations": 1000
+      },
+      "sign": {
+        "mean_us": 61775.651,
+        "median_us": 61389.804,
+        "p95_us": 64352.697,
+        "p99_us": 67196.29,
+        "stdev_us": 1552.93,
+        "min_us": 61095.51,
+        "max_us": 88731.379,
+        "ops_per_sec": 16.19,
+        "n_iterations": 1000
+      },
+      "verify": {
+        "mean_us": 3698.057,
+        "median_us": 3658.8,
+        "p95_us": 3877.934,
+        "p99_us": 4860.315,
+        "stdev_us": 294.86,
+        "min_us": 3434.664,
+        "max_us": 7371.975,
+        "ops_per_sec": 270.41,
+        "n_iterations": 1000
+      }
+    }
+  }
+}
