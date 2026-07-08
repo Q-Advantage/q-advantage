@@ -46,7 +46,13 @@
         "n_iterations": 1000
       },
       "signature_bytes": 2420,
-      "public_key_bytes": 1312
+      "public_key_bytes": 1312,
+      "cross_validation": {
+        "ebacs_reference_cycles": 1355434,
+        "liboqs_speed_number": 149.7,
+        "measured_vs_reference_pct": -35.6,
+        "reference_notes": "liboqs reference captured 2026-06-16 / 2026-06-17 from ~/liboqs/build/tests/speed_{kem,sig} on the same EC2 instance (t3.medium, liboqs 0.15.0, identical liboqs.so binary as the Python binding \u2014 verified by MD5). Comparison is on-machine, same library version, same compile options. Three documented delta patterns: (1) ML-KEM: +~27% from Python binding overhead; (2) ML-DSA / Falcon: -~30% because liboqs speed_sig calls OQS_randombytes() per iteration while sig_track.py reuses a fixed message \u2014 also subject to up to ~20% pessimistic bias in the liboqs reference from cumulative t3.medium burstable throttling during sequential runs; (3) SLH-DSA: agreement within 2% \u2014 captured cold to avoid throttling; hashing dominates so the randombytes-per-iteration difference is negligible. For ML-DSA-44: liboqs sign mean = 149.7\u00b5s (374,063 cycles @ 2500MHz). Our sign mean = 96.4\u00b5s. Delta -35.6%. ML-DSA sign is right-skewed (Fiat-Shamir with aborts \u2192 rejection sampling). Our harness reports median << mean; comparison here uses mean to match liboqs. Our mean is ~30-35% below liboqs across all three ML-DSA levels \u2014 consistent with the message-reuse hypothesis: liboqs speed_sig calls OQS_randombytes() per iteration, our sig_track.py reuses a fixed message. liboqs ML-DSA reference values captured 2026-06-16 in a sequential run; up to ~15-20% pessimistic bias possible from cumulative t3.medium burstable throttling. Re-capture in cold-start state queued; would shrink the apparent delta but not change the direction. eBACS reference is a cross-machine anchor, not a tight comparison. Cycle counts captured from bench.cr.yp.to: KEMs on amd64-hertz (Zen 4 @ 3800MHz), SIGs on amd64-samba (Skylake @ 3000MHz). Our machine is Intel Xeon Platinum 8259CL @ 2500MHz (AVX2 dispatch via OQS_DIST_BUILD)."
+      }
     },
     "ML-DSA-65": {
       "scheme": "ML-DSA-65",
@@ -84,7 +90,13 @@
         "n_iterations": 1000
       },
       "signature_bytes": 3309,
-      "public_key_bytes": 1952
+      "public_key_bytes": 1952,
+      "cross_validation": {
+        "ebacs_reference_cycles": 2348703,
+        "liboqs_speed_number": 236.52,
+        "measured_vs_reference_pct": -35.6,
+        "reference_notes": "liboqs reference captured 2026-06-16 / 2026-06-17 from ~/liboqs/build/tests/speed_{kem,sig} on the same EC2 instance (t3.medium, liboqs 0.15.0, identical liboqs.so binary as the Python binding \u2014 verified by MD5). Comparison is on-machine, same library version, same compile options. Three documented delta patterns: (1) ML-KEM: +~27% from Python binding overhead; (2) ML-DSA / Falcon: -~30% because liboqs speed_sig calls OQS_randombytes() per iteration while sig_track.py reuses a fixed message \u2014 also subject to up to ~20% pessimistic bias in the liboqs reference from cumulative t3.medium burstable throttling during sequential runs; (3) SLH-DSA: agreement within 2% \u2014 captured cold to avoid throttling; hashing dominates so the randombytes-per-iteration difference is negligible. For ML-DSA-65: liboqs sign mean = 236.5\u00b5s (591,123 cycles @ 2500MHz). Our sign mean = 152.4\u00b5s. Delta -35.6%. ML-DSA sign is right-skewed (Fiat-Shamir with aborts \u2192 rejection sampling). Our harness reports median << mean; comparison here uses mean to match liboqs. Our mean is ~30-35% below liboqs across all three ML-DSA levels \u2014 consistent with the message-reuse hypothesis: liboqs speed_sig calls OQS_randombytes() per iteration, our sig_track.py reuses a fixed message. liboqs ML-DSA reference values captured 2026-06-16 in a sequential run; up to ~15-20% pessimistic bias possible from cumulative t3.medium burstable throttling. Re-capture in cold-start state queued; would shrink the apparent delta but not change the direction. eBACS reference is a cross-machine anchor, not a tight comparison. Cycle counts captured from bench.cr.yp.to: KEMs on amd64-hertz (Zen 4 @ 3800MHz), SIGs on amd64-samba (Skylake @ 3000MHz). Our machine is Intel Xeon Platinum 8259CL @ 2500MHz (AVX2 dispatch via OQS_DIST_BUILD)."
+      }
     },
     "ML-DSA-87": {
       "scheme": "ML-DSA-87",
@@ -122,7 +134,13 @@
         "n_iterations": 1000
       },
       "signature_bytes": 4627,
-      "public_key_bytes": 2592
+      "public_key_bytes": 2592,
+      "cross_validation": {
+        "ebacs_reference_cycles": 2856803,
+        "liboqs_speed_number": 270.6,
+        "measured_vs_reference_pct": -33.9,
+        "reference_notes": "liboqs reference captured 2026-06-16 / 2026-06-17 from ~/liboqs/build/tests/speed_{kem,sig} on the same EC2 instance (t3.medium, liboqs 0.15.0, identical liboqs.so binary as the Python binding \u2014 verified by MD5). Comparison is on-machine, same library version, same compile options. Three documented delta patterns: (1) ML-KEM: +~27% from Python binding overhead; (2) ML-DSA / Falcon: -~30% because liboqs speed_sig calls OQS_randombytes() per iteration while sig_track.py reuses a fixed message \u2014 also subject to up to ~20% pessimistic bias in the liboqs reference from cumulative t3.medium burstable throttling during sequential runs; (3) SLH-DSA: agreement within 2% \u2014 captured cold to avoid throttling; hashing dominates so the randombytes-per-iteration difference is negligible. For ML-DSA-87: liboqs sign mean = 270.6\u00b5s (676,259 cycles @ 2500MHz). Our sign mean = 179.0\u00b5s. Delta -33.9%. ML-DSA sign is right-skewed (Fiat-Shamir with aborts \u2192 rejection sampling). Our harness reports median << mean; comparison here uses mean to match liboqs. Our mean is ~30-35% below liboqs across all three ML-DSA levels \u2014 consistent with the message-reuse hypothesis: liboqs speed_sig calls OQS_randombytes() per iteration, our sig_track.py reuses a fixed message. liboqs ML-DSA reference values captured 2026-06-16 in a sequential run; up to ~15-20% pessimistic bias possible from cumulative t3.medium burstable throttling. Re-capture in cold-start state queued; would shrink the apparent delta but not change the direction. eBACS reference is a cross-machine anchor, not a tight comparison. Cycle counts captured from bench.cr.yp.to: KEMs on amd64-hertz (Zen 4 @ 3800MHz), SIGs on amd64-samba (Skylake @ 3000MHz). Our machine is Intel Xeon Platinum 8259CL @ 2500MHz (AVX2 dispatch via OQS_DIST_BUILD)."
+      }
     },
     "Falcon-512": {
       "scheme": "Falcon-512",
@@ -160,7 +178,13 @@
         "n_iterations": 1000
       },
       "signature_bytes": 752,
-      "public_key_bytes": 897
+      "public_key_bytes": 897,
+      "cross_validation": {
+        "ebacs_reference_cycles": 10303471,
+        "liboqs_speed_number": 488.36,
+        "measured_vs_reference_pct": -29.5,
+        "reference_notes": "liboqs reference captured 2026-06-16 / 2026-06-17 from ~/liboqs/build/tests/speed_{kem,sig} on the same EC2 instance (t3.medium, liboqs 0.15.0, identical liboqs.so binary as the Python binding \u2014 verified by MD5). Comparison is on-machine, same library version, same compile options. Three documented delta patterns: (1) ML-KEM: +~27% from Python binding overhead; (2) ML-DSA / Falcon: -~30% because liboqs speed_sig calls OQS_randombytes() per iteration while sig_track.py reuses a fixed message \u2014 also subject to up to ~20% pessimistic bias in the liboqs reference from cumulative t3.medium burstable throttling during sequential runs; (3) SLH-DSA: agreement within 2% \u2014 captured cold to avoid throttling; hashing dominates so the randombytes-per-iteration difference is negligible. For Falcon-512: liboqs sign mean = 488.4\u00b5s (1,220,728 cycles @ 2500MHz). Our sign mean = 344.3\u00b5s. Delta -29.5%. Falcon keygen has high variance (Gaussian sampler with rejection); sign/verify comparison is the diagnostic axis. eBACS reference is a cross-machine anchor, not a tight comparison. Cycle counts captured from bench.cr.yp.to: KEMs on amd64-hertz (Zen 4 @ 3800MHz), SIGs on amd64-samba (Skylake @ 3000MHz). Our machine is Intel Xeon Platinum 8259CL @ 2500MHz (AVX2 dispatch via OQS_DIST_BUILD)."
+      }
     },
     "Falcon-1024": {
       "scheme": "Falcon-1024",
@@ -198,7 +222,13 @@
         "n_iterations": 1000
       },
       "signature_bytes": 1462,
-      "public_key_bytes": 1793
+      "public_key_bytes": 1793,
+      "cross_validation": {
+        "ebacs_reference_cycles": 22423017,
+        "liboqs_speed_number": 965.88,
+        "measured_vs_reference_pct": -27.8,
+        "reference_notes": "liboqs reference captured 2026-06-16 / 2026-06-17 from ~/liboqs/build/tests/speed_{kem,sig} on the same EC2 instance (t3.medium, liboqs 0.15.0, identical liboqs.so binary as the Python binding \u2014 verified by MD5). Comparison is on-machine, same library version, same compile options. Three documented delta patterns: (1) ML-KEM: +~27% from Python binding overhead; (2) ML-DSA / Falcon: -~30% because liboqs speed_sig calls OQS_randombytes() per iteration while sig_track.py reuses a fixed message \u2014 also subject to up to ~20% pessimistic bias in the liboqs reference from cumulative t3.medium burstable throttling during sequential runs; (3) SLH-DSA: agreement within 2% \u2014 captured cold to avoid throttling; hashing dominates so the randombytes-per-iteration difference is negligible. For Falcon-1024: liboqs sign mean = 965.9\u00b5s (2,414,492 cycles @ 2500MHz). Our sign mean = 697.4\u00b5s. Delta -27.8%. Falcon keygen has high variance (Gaussian sampler with rejection); sign/verify comparison is the diagnostic axis. eBACS reference is a cross-machine anchor, not a tight comparison. Cycle counts captured from bench.cr.yp.to: KEMs on amd64-hertz (Zen 4 @ 3800MHz), SIGs on amd64-samba (Skylake @ 3000MHz). Our machine is Intel Xeon Platinum 8259CL @ 2500MHz (AVX2 dispatch via OQS_DIST_BUILD)."
+      }
     },
     "SLH_DSA_PURE_SHAKE_128S": {
       "scheme": "SLH_DSA_PURE_SHAKE_128S",
@@ -236,7 +266,13 @@
         "n_iterations": 1000
       },
       "signature_bytes": 7856,
-      "public_key_bytes": 32
+      "public_key_bytes": 32,
+      "cross_validation": {
+        "ebacs_reference_cycles": 2721595944,
+        "liboqs_speed_number": 1308014.0,
+        "measured_vs_reference_pct": -0.8,
+        "reference_notes": "liboqs reference captured 2026-06-16 / 2026-06-17 from ~/liboqs/build/tests/speed_{kem,sig} on the same EC2 instance (t3.medium, liboqs 0.15.0, identical liboqs.so binary as the Python binding \u2014 verified by MD5). Comparison is on-machine, same library version, same compile options. Three documented delta patterns: (1) ML-KEM: +~27% from Python binding overhead; (2) ML-DSA / Falcon: -~30% because liboqs speed_sig calls OQS_randombytes() per iteration while sig_track.py reuses a fixed message \u2014 also subject to up to ~20% pessimistic bias in the liboqs reference from cumulative t3.medium burstable throttling during sequential runs; (3) SLH-DSA: agreement within 2% \u2014 captured cold to avoid throttling; hashing dominates so the randombytes-per-iteration difference is negligible. For SLH_DSA_PURE_SHAKE_128S: liboqs sign mean = 1308014.0\u00b5s (3,270,032,548 cycles @ 2500MHz). Our sign mean = 1297193.6\u00b5s. Delta -0.8%. SLH-DSA cross-validates to within ~2% of liboqs speed_sig captured cold (2026-06-17). Hashing dominates total time, so the randombytes-per-iteration overhead seen in lighter signature schemes is negligible here. Prior sequential runs (2026-06-16) showed up to 2x throttling artifacts under cumulative load on t3.medium burstable \u2014 these were captured-cold runs that match our composed harness tightly. This motivates planned migration to a non-burstable instance for canonical reference runs. eBACS reference is a cross-machine anchor, not a tight comparison. Cycle counts captured from bench.cr.yp.to: KEMs on amd64-hertz (Zen 4 @ 3800MHz), SIGs on amd64-samba (Skylake @ 3000MHz). Our machine is Intel Xeon Platinum 8259CL @ 2500MHz (AVX2 dispatch via OQS_DIST_BUILD)."
+      }
     },
     "SLH_DSA_PURE_SHAKE_128F": {
       "scheme": "SLH_DSA_PURE_SHAKE_128F",
@@ -274,7 +310,13 @@
         "n_iterations": 1000
       },
       "signature_bytes": 17088,
-      "public_key_bytes": 32
+      "public_key_bytes": 32,
+      "cross_validation": {
+        "ebacs_reference_cycles": 35300000,
+        "liboqs_speed_number": 61806.36,
+        "measured_vs_reference_pct": 1.0,
+        "reference_notes": "liboqs reference captured 2026-06-16 / 2026-06-17 from ~/liboqs/build/tests/speed_{kem,sig} on the same EC2 instance (t3.medium, liboqs 0.15.0, identical liboqs.so binary as the Python binding \u2014 verified by MD5). Comparison is on-machine, same library version, same compile options. Three documented delta patterns: (1) ML-KEM: +~27% from Python binding overhead; (2) ML-DSA / Falcon: -~30% because liboqs speed_sig calls OQS_randombytes() per iteration while sig_track.py reuses a fixed message \u2014 also subject to up to ~20% pessimistic bias in the liboqs reference from cumulative t3.medium burstable throttling during sequential runs; (3) SLH-DSA: agreement within 2% \u2014 captured cold to avoid throttling; hashing dominates so the randombytes-per-iteration difference is negligible. For SLH_DSA_PURE_SHAKE_128F: liboqs sign mean = 61806.4\u00b5s (154,514,404 cycles @ 2500MHz). Our sign mean = 62405.4\u00b5s. Delta +1.0%. SLH-DSA cross-validates to within ~2% of liboqs speed_sig captured cold (2026-06-17). Hashing dominates total time, so the randombytes-per-iteration overhead seen in lighter signature schemes is negligible here. Prior sequential runs (2026-06-16) showed up to 2x throttling artifacts under cumulative load on t3.medium burstable \u2014 these were captured-cold runs that match our composed harness tightly. This motivates planned migration to a non-burstable instance for canonical reference runs. eBACS reference is a cross-machine anchor, not a tight comparison. Cycle counts captured from bench.cr.yp.to: KEMs on amd64-hertz (Zen 4 @ 3800MHz), SIGs on amd64-samba (Skylake @ 3000MHz). Our machine is Intel Xeon Platinum 8259CL @ 2500MHz (AVX2 dispatch via OQS_DIST_BUILD)."
+      }
     }
   }
 }

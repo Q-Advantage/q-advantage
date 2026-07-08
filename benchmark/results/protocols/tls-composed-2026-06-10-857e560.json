@@ -34,10 +34,10 @@
         "pct_over_classical": 37.4
       },
       "cross_validation": {
-        "ebacs_reference_cycles": null,
-        "liboqs_speed_number": null,
-        "measured_vs_reference_pct": null,
-        "reference_notes": "no reference value curated for this primitive yet"
+        "ebacs_reference_cycles": 90821,
+        "liboqs_speed_number": 48.28,
+        "measured_vs_reference_pct": 24.7,
+        "reference_notes": "liboqs reference captured 2026-06-16 / 2026-06-17 from ~/liboqs/build/tests/speed_{kem,sig} on the same EC2 instance (t3.medium, liboqs 0.15.0, identical liboqs.so binary as the Python binding \u2014 verified by MD5). Comparison is on-machine, same library version, same compile options. Three documented delta patterns: (1) ML-KEM: +~27% from Python binding overhead; (2) ML-DSA / Falcon: -~30% because liboqs speed_sig calls OQS_randombytes() per iteration while sig_track.py reuses a fixed message \u2014 also subject to up to ~20% pessimistic bias in the liboqs reference from cumulative t3.medium burstable throttling during sequential runs; (3) SLH-DSA: agreement within 2% \u2014 captured cold to avoid throttling; hashing dominates so the randombytes-per-iteration difference is negligible. For ML-KEM-768: liboqs total = 48.3\u00b5s (kg 15.0 + enc 15.6 + dec 17.7). Our composed ML-KEM phases total = 60.2\u00b5s (medians). Delta +24.7% reflects Python binding overhead. eBACS reference is a cross-machine anchor, not a tight comparison. Cycle counts captured from bench.cr.yp.to: KEMs on amd64-hertz (Zen 4 @ 3800MHz), SIGs on amd64-samba (Skylake @ 3000MHz). Our machine is Intel Xeon Platinum 8259CL @ 2500MHz (AVX2 dispatch via OQS_DIST_BUILD)."
       },
       "auth": null,
       "toolchain": {
@@ -149,10 +149,10 @@
         "pct_over_classical": 32.0
       },
       "cross_validation": {
-        "ebacs_reference_cycles": null,
-        "liboqs_speed_number": null,
-        "measured_vs_reference_pct": null,
-        "reference_notes": "no reference value curated for this primitive yet"
+        "ebacs_reference_cycles": 90821,
+        "liboqs_speed_number": 48.28,
+        "measured_vs_reference_pct": 24.4,
+        "reference_notes": "liboqs reference captured 2026-06-16 / 2026-06-17 from ~/liboqs/build/tests/speed_{kem,sig} on the same EC2 instance (t3.medium, liboqs 0.15.0, identical liboqs.so binary as the Python binding \u2014 verified by MD5). Comparison is on-machine, same library version, same compile options. Three documented delta patterns: (1) ML-KEM: +~27% from Python binding overhead; (2) ML-DSA / Falcon: -~30% because liboqs speed_sig calls OQS_randombytes() per iteration while sig_track.py reuses a fixed message \u2014 also subject to up to ~20% pessimistic bias in the liboqs reference from cumulative t3.medium burstable throttling during sequential runs; (3) SLH-DSA: agreement within 2% \u2014 captured cold to avoid throttling; hashing dominates so the randombytes-per-iteration difference is negligible. For ML-KEM-768: liboqs total = 48.3\u00b5s (kg 15.0 + enc 15.6 + dec 17.7). Our composed ML-KEM phases total = 60.1\u00b5s (medians). Delta +24.4% reflects Python binding overhead. eBACS reference is a cross-machine anchor, not a tight comparison. Cycle counts captured from bench.cr.yp.to: KEMs on amd64-hertz (Zen 4 @ 3800MHz), SIGs on amd64-samba (Skylake @ 3000MHz). Our machine is Intel Xeon Platinum 8259CL @ 2500MHz (AVX2 dispatch via OQS_DIST_BUILD)."
       },
       "auth": null,
       "toolchain": {
@@ -264,10 +264,10 @@
         "pct_over_classical": -62.8
       },
       "cross_validation": {
-        "ebacs_reference_cycles": null,
-        "liboqs_speed_number": null,
-        "measured_vs_reference_pct": null,
-        "reference_notes": "no reference value curated for this primitive yet"
+        "ebacs_reference_cycles": 90821,
+        "liboqs_speed_number": 48.28,
+        "measured_vs_reference_pct": 24.2,
+        "reference_notes": "liboqs reference captured 2026-06-16 / 2026-06-17 from ~/liboqs/build/tests/speed_{kem,sig} on the same EC2 instance (t3.medium, liboqs 0.15.0, identical liboqs.so binary as the Python binding \u2014 verified by MD5). Comparison is on-machine, same library version, same compile options. Three documented delta patterns: (1) ML-KEM: +~27% from Python binding overhead; (2) ML-DSA / Falcon: -~30% because liboqs speed_sig calls OQS_randombytes() per iteration while sig_track.py reuses a fixed message \u2014 also subject to up to ~20% pessimistic bias in the liboqs reference from cumulative t3.medium burstable throttling during sequential runs; (3) SLH-DSA: agreement within 2% \u2014 captured cold to avoid throttling; hashing dominates so the randombytes-per-iteration difference is negligible. For ML-KEM-768: liboqs total = 48.3\u00b5s (kg 15.0 + enc 15.6 + dec 17.7). Our composed ML-KEM phases total = 60.0\u00b5s (medians). Delta +24.2% reflects Python binding overhead. eBACS reference is a cross-machine anchor, not a tight comparison. Cycle counts captured from bench.cr.yp.to: KEMs on amd64-hertz (Zen 4 @ 3800MHz), SIGs on amd64-samba (Skylake @ 3000MHz). Our machine is Intel Xeon Platinum 8259CL @ 2500MHz (AVX2 dispatch via OQS_DIST_BUILD)."
       },
       "auth": null,
       "toolchain": {
@@ -360,7 +360,7 @@
         "ebacs_reference_cycles": null,
         "liboqs_speed_number": null,
         "measured_vs_reference_pct": null,
-        "reference_notes": "no reference value curated for this primitive yet"
+        "reference_notes": "Classical-only suite ('X25519'). No PQC primitive to cross-validate. X25519 is measured via the cryptography/OpenSSL EVP path and is included as a baseline for delta computation, not as a cross-validation target."
       },
       "auth": null,
       "toolchain": {
