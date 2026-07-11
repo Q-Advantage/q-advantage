@@ -457,9 +457,9 @@ export function ProtocolsView({ data }: { data: ProtocolsData }) {
   const sshSuites = Object.values(data.ssh?.suites ?? {});
 
   const tabs: { id: Tab; label: string; count: number }[] = [
-    { id: "tls", label: "TLS", count: tlsSuites.length },
-    { id: "signatures", label: "Signatures", count: sigSchemes.length },
-    { id: "ssh", label: "SSH", count: sshSuites.length },
+    { id: "tls" as Tab, label: "TLS", count: tlsSuites.length },
+    { id: "signatures" as Tab, label: "Signatures", count: sigSchemes.length },
+    { id: "ssh" as Tab, label: "SSH", count: sshSuites.length },
   ].filter((t) => t.count > 0);
 
   return (
