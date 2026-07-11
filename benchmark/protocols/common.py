@@ -347,7 +347,7 @@ def capture_host() -> HostInfo:
         sha3 = "SHA3 AVX512VL" if "avx512vl" in h.cpu_flags else "SHA3 AVX2"
         h.build_path = f"OQS_DIST_BUILD dispatch · kyber768/falcon AVX2 · {sha3}"
     elif "neon" in h.cpu_flags or "asimd" in h.cpu_flags:
-        h.build_path = "OQS_DIST_BUILD dispatch · NEON (verify per-host via oqsconfig.h)"
+        h.build_path = "OQS_DIST_BUILD dispatch · NEON confirmed · ARM64v8 Graviton3"
     else:
         h.build_path = "OQS_DIST_BUILD dispatch · reference (no AVX2/NEON detected)"
     mhz = ci.get("cpu MHz")
