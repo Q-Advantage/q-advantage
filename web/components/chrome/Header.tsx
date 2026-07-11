@@ -64,6 +64,12 @@ export function Header() {
               Q-Day Index
             </Link>
             <Link
+              href="/q-shield/protocols"
+              className="text-sm text-fg-muted hover:text-fg transition-colors"
+            >
+              Protocols
+            </Link>
+            <Link
               href="/q-shield/compare"
               className="text-sm text-fg-muted hover:text-fg transition-colors"
             >
@@ -124,6 +130,13 @@ export function Header() {
                 aria-hidden
               />
               Q-Shield
+            </Link>
+            <Link
+              href="/q-shield/protocols"
+              onClick={() => setMenuOpen(false)}
+              className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
+            >
+              Protocols
             </Link>
             <Link
               href="/q-shield/compare"

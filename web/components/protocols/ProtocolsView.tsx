@@ -1,9 +1,9 @@
 "use client";
 // web/components/protocols/ProtocolsView.tsx
 //
-// Client component so we can use useState for tab switching and collapsibles.
-// All data is passed in as props — loaded at build time in the Server Component.
-// No fetches, no loading states in production.
+// Rebuilt to match the real qadvantage.io design language:
+// semantic tokens (fg / fg-muted / fg-subtle / border / bg-inset / accent),
+// .eyebrow labels, .num mono cells, font-serif for display numerals.
 
 import { useState } from "react";
 import type {
@@ -13,413 +13,310 @@ import type {
   CrossValidation,
 } from "@/lib/protocols/types";
 
-// ── formatting helpers ────────────────────────────────────────────────────────
+// ── formatting ────────────────────────────────────────────────────────────────
 
-function fmt(n: number | undefined, decimals = 1): string {
+function fmt(n: number | undefined, d = 1): string {
   if (n == null) return "—";
-  return n.toFixed(decimals);
+  return n.toFixed(d);
 }
-
 function fmtBytes(n: number | undefined): string {
   if (n == null) return "—";
   if (n >= 1024) return `${(n / 1024).toFixed(1)} KB`;
   return `${n} B`;
 }
-
 function fmtPct(n: number | undefined): string {
   if (n == null) return "—";
-  const sign = n > 0 ? "+" : "";
-  return `${sign}${n.toFixed(1)}%`;
+  const s = n > 0 ? "+" : "";
+  return `${s}${n.toFixed(1)}%`;
 }
 
-function pctClass(n: number | undefined): string {
-  if (n == null) return "text-[var(--color-text-secondary)]";
-  // For protocol overhead: positive = PQC slower = warning; negative = PQC faster = good
-  if (n > 0) return "text-[var(--color-text-warning)]";
-  return "text-[var(--color-text-success)]";
-}
+// ── small primitives ──────────────────────────────────────────────────────────
 
-// ── sub-components ────────────────────────────────────────────────────────────
-
-function MetaRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex gap-3 text-xs">
-      <span className="text-[var(--color-text-tertiary)] shrink-0 w-28">{label}</span>
-      <span className="font-mono text-[var(--color-text-secondary)] break-all">{value}</span>
-    </div>
-  );
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="text-[11px] font-medium uppercase tracking-wider text-[var(--color-text-secondary)] mt-5 mb-2">
-      {children}
-    </div>
-  );
-}
-
-function StatCell({
-  label,
-  value,
-  sub,
-  className = "",
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  className?: string;
-}) {
+function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-[11px] text-[var(--color-text-tertiary)]">{label}</span>
-      <span className={`font-mono text-sm font-medium text-[var(--color-text-primary)] ${className}`}>
-        {value}
-      </span>
-      {sub && <span className="text-[11px] text-[var(--color-text-tertiary)]">{sub}</span>}
+      <span className="text-2xs uppercase tracking-eyebrow text-fg-subtle font-mono">{label}</span>
+      <span className="num text-sm text-fg">{value}</span>
+      {sub && <span className="text-2xs text-fg-subtle num">{sub}</span>}
     </div>
   );
 }
 
-function Pill({ children, variant = "default" }: { children: React.ReactNode; variant?: "default" | "success" | "warning" | "info" }) {
-  const cls = {
-    default: "bg-[var(--color-background-secondary)] text-[var(--color-text-secondary)]",
-    success: "bg-[var(--color-background-success)] text-[var(--color-text-success)]",
-    warning: "bg-[var(--color-background-warning)] text-[var(--color-text-warning)]",
-    info:    "bg-[var(--color-background-info)] text-[var(--color-text-info)]",
-  }[variant];
+function Meta({ label, value }: { label: string; value: string }) {
   return (
-    <span className={`inline-block text-[11px] px-2 py-0.5 rounded-full font-medium ${cls}`}>
-      {children}
-    </span>
-  );
-}
-
-function CollapsibleNote({ notes }: { notes: string }) {
-  const [open, setOpen] = useState(false);
-  const preview = notes.slice(0, 120) + (notes.length > 120 ? "…" : "");
-  return (
-    <div className="mt-2 text-xs text-[var(--color-text-secondary)] leading-relaxed">
-      <span>{open ? notes : preview}</span>{" "}
-      {notes.length > 120 && (
-        <button
-          onClick={() => setOpen(!open)}
-          className="text-[var(--color-text-info)] underline-offset-2 hover:underline"
-        >
-          {open ? "collapse" : "full methodology"}
-        </button>
-      )}
+    <div className="flex gap-3 text-xs">
+      <span className="text-fg-subtle shrink-0 w-24">{label}</span>
+      <span className="num text-fg-muted break-all">{value}</span>
     </div>
   );
 }
 
-function XValBlock({ xval }: { xval?: CrossValidation }) {
-  if (!xval) return null;
+function SectionHead({ title, caption }: { title: string; caption: string }) {
   return (
-    <div className="mt-3 rounded-lg border border-[var(--color-border-tertiary)] bg-[var(--color-background-secondary)] p-3">
-      <div className="text-[11px] font-medium uppercase tracking-wider text-[var(--color-text-secondary)] mb-2">
-        Cross-validation
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {xval.liboqs_speed_number != null && (
-          <StatCell label="liboqs speed" value={`${fmt(xval.liboqs_speed_number)} µs`} />
-        )}
-        {xval.ebacs_reference_cycles != null && (
-          <StatCell label="eBACS cycles" value={xval.ebacs_reference_cycles.toLocaleString()} />
-        )}
-        {xval.measured_vs_reference_pct != null && (
-          <StatCell
-            label="vs. liboqs ref"
-            value={fmtPct(xval.measured_vs_reference_pct)}
-            className={pctClass(-xval.measured_vs_reference_pct)}
-          />
-        )}
-      </div>
-      {xval.reference_notes && <CollapsibleNote notes={xval.reference_notes} />}
+    <div className="flex flex-col gap-1.5 mb-4">
+      <h2 className="font-serif text-[clamp(22px,3vw,30px)] font-normal leading-tight tracking-[-0.01em] text-fg">
+        {title}
+      </h2>
+      <p className="text-sm text-fg-muted max-w-2xl leading-relaxed font-light">{caption}</p>
     </div>
   );
 }
 
-// ── ML-KEM vs X25519 disclosure ───────────────────────────────────────────────
-// Required DoD item: inline caveat on the counterintuitive ML-KEM > X25519 result.
+function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="border border-border rounded-md bg-bg-inset px-5 py-4">{children}</div>
+  );
+}
 
-function MLKEMDisclosure() {
+function Disclosure({ label, children }: { label: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-lg border border-[var(--color-border-info)] bg-[var(--color-background-info)] p-3 mt-3 text-xs text-[var(--color-text-info)] leading-relaxed">
-      <strong>Build-path context:</strong> ML-KEM-768 timing uses liboqs 0.15.0 with{" "}
-      <code className="font-mono">OQS_DIST_BUILD</code> AVX2 runtime dispatch. X25519 timing
-      uses the <code className="font-mono">cryptography</code> library via OpenSSL EVP. These
-      are not identical measurement contexts — the delta reflects both algorithm efficiency and
-      library path. Raw liboqs{" "}
-      <code className="font-mono">speed_kem</code> confirms ML-KEM-768 at 48.3 µs total
-      (keygen + encaps + decaps) vs X25519 at 161.3 µs under the same binary.{" "}
+    <div>
       <button
         onClick={() => setOpen(!open)}
-        className="underline underline-offset-2 hover:opacity-80"
+        className="text-xs text-fg-muted hover:text-fg transition-colors underline decoration-border-strong hover:decoration-accent underline-offset-2"
       >
-        {open ? "hide" : "full methodology"}
+        {open ? `Hide ${label}` : label}
       </button>
-      {open && (
-        <p className="mt-2">
-          Cross-validation: our Python harness measures ML-KEM-768 at 60.2 µs median total
-          (keygen + encaps + decaps), +24.7% over the liboqs reference — consistent with Python
-          binding overhead. The X25519 EVP path carries its own per-call overhead not present in
-          a raw liboqs comparison. The directional result (ML-KEM faster than X25519 in this
-          deployment configuration) holds in both the Python harness and the raw liboqs binary.
-          See <a href="/methodology#cross-validation" className="underline">Methodology §8</a> for
-          the full three-pattern cross-validation story.
-        </p>
+      {open && <div className="mt-2">{children}</div>}
+    </div>
+  );
+}
+
+// ── cross-validation ──────────────────────────────────────────────────────────
+
+function XVal({ xval }: { xval?: CrossValidation }) {
+  if (!xval) return null;
+  return (
+    <div className="mt-4 pt-4 border-t border-border">
+      <div className="eyebrow mb-2">Cross-validation</div>
+      <div className="grid grid-cols-3 gap-4">
+        {xval.liboqs_speed_number != null && (
+          <Stat label="liboqs speed" value={`${fmt(xval.liboqs_speed_number)} µs`} />
+        )}
+        {xval.ebacs_reference_cycles != null && (
+          <Stat label="eBACS cycles" value={xval.ebacs_reference_cycles.toLocaleString()} />
+        )}
+        {xval.measured_vs_reference_pct != null && (
+          <Stat label="vs. liboqs ref" value={fmtPct(xval.measured_vs_reference_pct)} />
+        )}
+      </div>
+      {xval.reference_notes && (
+        <div className="mt-3">
+          <Disclosure label="Reference methodology">
+            <p className="text-xs text-fg-muted leading-relaxed font-light">
+              {xval.reference_notes}
+            </p>
+          </Disclosure>
+        </div>
       )}
     </div>
   );
 }
 
-// ── TLS suite card ────────────────────────────────────────────────────────────
+// ── ML-KEM vs X25519 disclosure (required DoD item) ──────────────────────────
 
-function TLSSuiteCard({ suite }: { suite: ComposedSuite }) {
-  const [phasesOpen, setPhasesOpen] = useState(false);
-  const isMLKEMvsX25519 =
-    suite.identity.suite === "X25519MLKEM768" &&
-    suite.baseline?.baseline_suite === "X25519";
-  const pctOver = suite.baseline?.pct_over_classical;
+function MLKEMNote() {
+  return (
+    <div className="mt-3 border-l-2 border-accent/40 pl-3 py-1 text-xs text-fg-muted leading-relaxed font-light">
+      <span className="text-fg">Build-path context.</span> ML-KEM-768 timing uses
+      liboqs 0.15.0 with <span className="num text-fg-muted">OQS_DIST_BUILD</span> AVX2
+      runtime dispatch; X25519 uses the <span className="num text-fg-muted">cryptography</span>{" "}
+      library via OpenSSL EVP. These aren&apos;t identical measurement contexts &mdash; the
+      delta reflects both algorithm efficiency and library path. Raw liboqs{" "}
+      <span className="num text-fg-muted">speed_kem</span> confirms ML-KEM-768 at 48.3 µs
+      total (keygen + encaps + decaps) vs X25519 at 161.3 µs under the same binary, so the
+      direction holds independent of the harness.{" "}
+      <a
+        href="/methodology#cross-validation"
+        className="text-fg hover:text-accent transition-colors underline decoration-border-strong hover:decoration-accent underline-offset-2"
+      >
+        Full methodology
+      </a>
+      .
+    </div>
+  );
+}
+
+// ── suite card (TLS / SSH) ────────────────────────────────────────────────────
+
+function SuiteCard({ suite }: { suite: ComposedSuite }) {
+  const pct = suite.baseline?.pct_over_classical;
+  const isPureMLKEM = suite.identity.suite === "MLKEM768";
+  const showNote = isPureMLKEM || (pct != null && pct < 0);
 
   return (
-    <div className="rounded-xl border border-[var(--color-border-tertiary)] bg-[var(--color-background-primary)] p-4">
-      {/* header */}
-      <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
-        <div>
-          <span className="font-mono font-medium text-[var(--color-text-primary)]">
-            {suite.identity.suite}
-          </span>
+    <Card>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="num text-fg font-medium">{suite.identity.suite}</span>
           {suite.host?.arch && (
-            <Pill variant="default">{suite.host.arch}</Pill>
+            <span className="text-2xs num text-fg-subtle border border-border rounded px-1.5 py-0.5">
+              {suite.host.arch}
+            </span>
           )}
         </div>
-        {pctOver != null && (
+        {pct != null && (
           <div className="flex flex-col items-end">
-            <span className={`font-mono text-lg font-semibold ${pctClass(pctOver)}`}>
-              {fmtPct(pctOver)}
-            </span>
-            <span className="text-[11px] text-[var(--color-text-tertiary)]">
-              vs {suite.baseline?.baseline_suite}
-            </span>
+            <span className="font-serif text-2xl leading-none text-fg">{fmtPct(pct)}</span>
+            <span className="text-2xs text-fg-subtle mt-1">vs {suite.baseline?.baseline_suite}</span>
           </div>
         )}
       </div>
 
-      {/* ML-KEM > X25519 disclosure — required DoD item */}
-      {isMLKEMvsX25519 && pctOver != null && pctOver < 0 && <MLKEMDisclosure />}
-      {/* Also show if the suite IS "pure ML-KEM" compared to X25519 */}
-      {suite.identity.suite === "ML-KEM-768" && <MLKEMDisclosure />}
+      {showNote && <MLKEMNote />}
 
-      {/* timing */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
-        <StatCell label="median" value={`${fmt(suite.timing.median_us)} µs`} />
-        <StatCell label="p95" value={`${fmt(suite.timing.p95_us)} µs`} />
-        <StatCell label="p99" value={`${fmt(suite.timing.p99_us)} µs`} />
-        <StatCell label="n" value={suite.timing.n_iterations.toLocaleString()} />
+      <div className="grid grid-cols-4 gap-4 mt-4">
+        <Stat label="median" value={`${fmt(suite.timing.median_us)} µs`} />
+        <Stat label="p95" value={`${fmt(suite.timing.p95_us)} µs`} />
+        <Stat label="p99" value={`${fmt(suite.timing.p99_us)} µs`} />
+        <Stat label="n" value={suite.timing.n_iterations.toLocaleString()} />
       </div>
 
-      {/* size */}
       {suite.size && (
-        <div className="grid grid-cols-3 gap-3 mt-3">
-          <StatCell label="client → server" value={fmtBytes(suite.size.bytes_client_to_server)} />
-          <StatCell label="server → client" value={fmtBytes(suite.size.bytes_server_to_client)} />
-          <StatCell label="total on wire" value={fmtBytes(suite.size.bytes_total)} />
+        <div className="grid grid-cols-3 gap-4 mt-4">
+          <Stat label="client → server" value={fmtBytes(suite.size.bytes_client_to_server)} />
+          <Stat label="server → client" value={fmtBytes(suite.size.bytes_server_to_client)} />
+          <Stat label="on wire" value={fmtBytes(suite.size.bytes_total)} />
         </div>
       )}
 
-      {/* phase decomposition */}
       {suite.phases && Object.keys(suite.phases).length > 0 && (
-        <div className="mt-3">
-          <button
-            onClick={() => setPhasesOpen(!phasesOpen)}
-            className="text-xs text-[var(--color-text-info)] hover:underline underline-offset-2"
-          >
-            {phasesOpen ? "▾ hide phase decomposition" : "▸ phase decomposition"}
-          </button>
-          {phasesOpen && (
-            <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {Object.entries(suite.phases).map(([phaseName, timing]) => (
-                <StatCell
-                  key={phaseName}
-                  label={phaseName.replace(/_/g, " ")}
-                  value={`${fmt(timing.median_us)} µs`}
-                  sub={`p95 ${fmt(timing.p95_us)}`}
+        <div className="mt-4">
+          <Disclosure label="Phase decomposition">
+            <div className="grid grid-cols-3 gap-4">
+              {Object.entries(suite.phases).map(([name, t]) => (
+                <Stat
+                  key={name}
+                  label={name.replace(/_/g, " ")}
+                  value={`${fmt(t.median_us)} µs`}
+                  sub={`p95 ${fmt(t.p95_us)}`}
                 />
               ))}
             </div>
-          )}
+          </Disclosure>
         </div>
       )}
 
-      {/* cross-validation */}
-      <XValBlock xval={suite.cross_validation} />
+      <XVal xval={suite.cross_validation} />
 
-      {/* audit */}
       {suite.audit && (
-        <div className="mt-3 space-y-1">
-          {suite.audit.git_commit && (
-            <MetaRow label="commit" value={suite.audit.git_commit.slice(0, 12)} />
-          )}
-          {suite.audit.timestamp_utc && (
-            <MetaRow label="captured" value={suite.audit.timestamp_utc} />
-          )}
-          {suite.host?.build_path && (
-            <MetaRow label="build path" value={suite.host.build_path} />
-          )}
+        <div className="mt-4 pt-4 border-t border-border space-y-1">
+          {suite.audit.git_commit && <Meta label="commit" value={suite.audit.git_commit.slice(0, 12)} />}
+          {suite.audit.timestamp_utc && <Meta label="captured" value={suite.audit.timestamp_utc} />}
+          {suite.host?.build_path && <Meta label="build path" value={suite.host.build_path} />}
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
-// ── signature scheme card ─────────────────────────────────────────────────────
+// ── signature card ────────────────────────────────────────────────────────────
 
-function SigSchemeCard({ scheme }: { scheme: SigScheme }) {
-  // Flag the SLH-DSA size story prominently
-  const isSLH = scheme.scheme.startsWith("SLH-DSA");
-  const isFalcon = scheme.scheme.startsWith("Falcon");
-
+function SigCard({ scheme }: { scheme: SigScheme }) {
   return (
-    <div className="rounded-xl border border-[var(--color-border-tertiary)] bg-[var(--color-background-primary)] p-4">
-      {/* header */}
-      <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
-        <span className="font-mono font-medium text-[var(--color-text-primary)]">
-          {scheme.scheme}
-        </span>
-        <div className="flex gap-2 flex-wrap">
-          {isSLH && <Pill variant="warning">large sigs</Pill>}
-          {isFalcon && <Pill variant="success">smallest sigs</Pill>}
-        </div>
+    <Card>
+      <div className="flex items-center justify-between">
+        <span className="num text-fg font-medium">{scheme.scheme}</span>
       </div>
 
-      {/* timing grid */}
-      <div className="grid grid-cols-3 gap-3">
-        <div>
-          <div className="text-[11px] text-[var(--color-text-tertiary)] mb-1">keygen</div>
-          <StatCell label="median" value={`${fmt(scheme.keygen.median_us)} µs`} />
-        </div>
-        <div>
-          <div className="text-[11px] text-[var(--color-text-tertiary)] mb-1">sign</div>
-          <StatCell label="median" value={`${fmt(scheme.sign.median_us)} µs`} />
-          <span className="text-[11px] text-[var(--color-text-tertiary)]">
-            mean {fmt(scheme.sign.mean_us)} µs
+      <div className="grid grid-cols-3 gap-4 mt-4">
+        <Stat label="keygen" value={`${fmt(scheme.keygen.median_us)} µs`} />
+        <Stat
+          label="sign"
+          value={`${fmt(scheme.sign.median_us)} µs`}
+          sub={`mean ${fmt(scheme.sign.mean_us)}`}
+        />
+        <Stat label="verify" value={`${fmt(scheme.verify.median_us)} µs`} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-border">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-2xs uppercase tracking-eyebrow text-fg-subtle font-mono">
+            signature size
+          </span>
+          <span className="font-serif text-xl leading-none text-fg mt-0.5">
+            {fmtBytes(scheme.signature_bytes)}
           </span>
         </div>
-        <div>
-          <div className="text-[11px] text-[var(--color-text-tertiary)] mb-1">verify</div>
-          <StatCell label="median" value={`${fmt(scheme.verify.median_us)} µs`} />
+        <div className="flex flex-col gap-0.5">
+          <span className="text-2xs uppercase tracking-eyebrow text-fg-subtle font-mono">
+            public key size
+          </span>
+          <span className="font-serif text-xl leading-none text-fg mt-0.5">
+            {fmtBytes(scheme.public_key_bytes)}
+          </span>
         </div>
       </div>
 
-      {/* sizes — first-class */}
-      <div className="grid grid-cols-2 gap-3 mt-3 rounded-lg bg-[var(--color-background-secondary)] p-3">
-        <StatCell
-          label="signature size"
-          value={fmtBytes(scheme.signature_bytes)}
-          className={isSLH ? "text-[var(--color-text-warning)]" : isFalcon ? "text-[var(--color-text-success)]" : ""}
-        />
-        <StatCell label="public key size" value={fmtBytes(scheme.public_key_bytes)} />
-      </div>
-
-      {/* ML-DSA sign note: right-skewed due to rejection sampling */}
       {scheme.scheme.startsWith("ML-DSA") && (
-        <div className="mt-2 text-[11px] text-[var(--color-text-tertiary)] leading-relaxed">
-          Sign is right-skewed (Fiat-Shamir with aborts → rejection sampling).
-          Mean significantly exceeds median; p99 reflects worst-case abort chains.
-        </div>
+        <p className="mt-3 text-2xs text-fg-subtle leading-relaxed font-light">
+          Sign is right-skewed (Fiat-Shamir with aborts → rejection sampling); mean exceeds
+          median, and p99 reflects worst-case abort chains. Median is the representative figure.
+        </p>
       )}
 
-      <XValBlock xval={scheme.cross_validation} />
-    </div>
+      <XVal xval={scheme.cross_validation} />
+    </Card>
   );
 }
 
-// ── hero stat strip ───────────────────────────────────────────────────────────
+// ── hero strip ────────────────────────────────────────────────────────────────
 
-function HeroStrip({ data }: { data: ProtocolsData }) {
-  // Surface the four headline numbers at the top.
-  const tlsSuites = data.tls?.suites ?? {};
-  const sigSchemes = data.sig?.schemes ?? {};
+function Hero({ data }: { data: ProtocolsData }) {
+  const tls = data.tls?.suites ?? {};
+  const sigs = data.sig?.schemes ?? {};
 
-  const x25519mlkem = tlsSuites["X25519MLKEM768"];
-  const falcon512 = sigSchemes["Falcon-512"];
-  const slhDsa128s = sigSchemes["SLH-DSA-128s"] ?? sigSchemes["SLH-DSA-SHAKE-128s"];
-  const mlKem768 = tlsSuites["ML-KEM-768"];
-  const x25519 = tlsSuites["X25519"];
+  const hybrid = tls["X25519MLKEM768"];
+  const falcon = sigs["Falcon-512"];
+  const slh = sigs["SLH_DSA_PURE_SHAKE_128S"] ?? sigs["SLH_DSA_PURE_SHAKE_128F"];
+  const mlkem = tls["MLKEM768"];
+  const x25519 = tls["X25519"];
 
-  const heroes: { label: string; value: string; note: string; variant: "success" | "warning" | "info" | "default" }[] = [];
+  type H = { value: string; label: string; note: string };
+  const heroes: H[] = [];
 
-  if (x25519mlkem) {
+  if (hybrid) {
     heroes.push({
+      value: fmtPct(hybrid.baseline?.pct_over_classical),
       label: "X25519+ML-KEM-768 TLS overhead",
-      value: fmtPct(x25519mlkem.baseline?.pct_over_classical),
-      note: `${fmt(x25519mlkem.timing.median_us)} µs median · ${fmtBytes(x25519mlkem.size?.bytes_total)} on wire`,
-      variant: "warning",
+      note: `${fmt(hybrid.timing.median_us)} µs median · ${fmtBytes(hybrid.size?.bytes_total)} on wire`,
     });
   }
-
-  if (falcon512) {
+  if (falcon) {
     heroes.push({
-      label: "Falcon-512 signature size",
-      value: fmtBytes(falcon512.signature_bytes),
-      note: `verify ${fmt(falcon512.verify.median_us)} µs median`,
-      variant: "success",
+      value: fmtBytes(falcon.signature_bytes),
+      label: "Falcon-512 signature",
+      note: `verify ${fmt(falcon.verify.median_us)} µs · smallest PQC signature`,
     });
   }
-
-  if (slhDsa128s) {
+  if (slh) {
     heroes.push({
-      label: "SLH-DSA-128S signature size",
-      value: fmtBytes(slhDsa128s.signature_bytes),
-      note: `sign ${fmt(slhDsa128s.sign.median_us)} µs median`,
-      variant: "warning",
+      value: fmtBytes(slh.signature_bytes),
+      label: `${slh.scheme.replace(/_/g, "-")} signature`,
+      note: `sign ${fmt(slh.sign.median_us)} µs · conservative hash-based`,
     });
   }
-
-  if (mlKem768 && x25519) {
-    const mlkemMedian = mlKem768.timing.median_us;
-    const x25519Median = x25519.timing.median_us;
-    const pct = ((mlkemMedian - x25519Median) / x25519Median) * 100;
+  if (mlkem && x25519) {
+    const pct = ((mlkem.timing.median_us - x25519.timing.median_us) / x25519.timing.median_us) * 100;
     heroes.push({
-      label: "ML-KEM-768 vs X25519",
       value: fmtPct(pct),
-      note: `${fmt(mlkemMedian)} µs vs ${fmt(x25519Median)} µs · AVX2 dispatch`,
-      variant: pct < 0 ? "success" : "warning",
+      label: "ML-KEM-768 vs X25519",
+      note: `${fmt(mlkem.timing.median_us)} µs vs ${fmt(x25519.timing.median_us)} µs · AVX2 dispatch`,
     });
   }
 
-  if (heroes.length === 0) return null;
+  if (!heroes.length) return null;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border rounded-md overflow-hidden">
       {heroes.map((h) => (
-        <div
-          key={h.label}
-          className={`rounded-xl p-4 border ${
-            h.variant === "success"
-              ? "border-[var(--color-border-success)] bg-[var(--color-background-success)]"
-              : h.variant === "warning"
-              ? "border-[var(--color-border-warning)] bg-[var(--color-background-warning)]"
-              : "border-[var(--color-border-info)] bg-[var(--color-background-info)]"
-          }`}
-        >
-          <div
-            className={`font-mono text-2xl font-bold mb-1 ${
-              h.variant === "success"
-                ? "text-[var(--color-text-success)]"
-                : h.variant === "warning"
-                ? "text-[var(--color-text-warning)]"
-                : "text-[var(--color-text-info)]"
-            }`}
-          >
+        <div key={h.label} className="bg-bg-inset px-5 py-5 flex flex-col gap-2">
+          <span className="font-serif text-[clamp(28px,4vw,40px)] leading-none text-fg">
             {h.value}
-          </div>
-          <div className="text-xs font-medium text-[var(--color-text-primary)] mb-1">
-            {h.label}
-          </div>
-          <div className="text-[11px] text-[var(--color-text-secondary)]">{h.note}</div>
+          </span>
+          <span className="text-sm text-fg font-medium leading-tight">{h.label}</span>
+          <span className="text-2xs text-fg-subtle num leading-relaxed">{h.note}</span>
         </div>
       ))}
     </div>
@@ -428,156 +325,135 @@ function HeroStrip({ data }: { data: ProtocolsData }) {
 
 // ── empty state ───────────────────────────────────────────────────────────────
 
-function EmptyState() {
+function Empty() {
   return (
-    <div className="rounded-xl border border-[var(--color-border-tertiary)] bg-[var(--color-background-secondary)] p-8 text-center">
-      <div className="text-[var(--color-text-secondary)] text-sm mb-2">
-        Protocol benchmark data not yet available.
-      </div>
-      <div className="text-[var(--color-text-tertiary)] text-xs">
-        The daily benchmark run will populate this page automatically.
-        Data is committed to the repository at 06:00 UTC.
-      </div>
+    <div className="border border-border rounded-md bg-bg-inset px-6 py-10 text-center">
+      <p className="text-sm text-fg-muted">Protocol benchmark data not yet available.</p>
+      <p className="text-xs text-fg-subtle mt-1">
+        The daily run populates this page automatically at 06:00 UTC.
+      </p>
     </div>
   );
 }
 
-// ── main view ─────────────────────────────────────────────────────────────────
+// ── main ──────────────────────────────────────────────────────────────────────
 
 type Tab = "tls" | "signatures" | "ssh";
 
 export function ProtocolsView({ data }: { data: ProtocolsData }) {
-  const [activeTab, setActiveTab] = useState<Tab>("tls");
-
-  const hasAnyData = data.tls || data.sig || data.ssh;
-  const manifest = data.manifest;
+  const [tab, setTab] = useState<Tab>("tls");
 
   const tlsSuites = Object.values(data.tls?.suites ?? {});
   const sigSchemes = Object.values(data.sig?.schemes ?? {});
   const sshSuites = Object.values(data.ssh?.suites ?? {});
+  const hasData = tlsSuites.length || sigSchemes.length || sshSuites.length;
+  const manifest = data.manifest;
 
-  const tabs: { id: Tab; label: string; count: number }[] = [
-    { id: "tls" as Tab, label: "TLS", count: tlsSuites.length },
-    { id: "signatures" as Tab, label: "Signatures", count: sigSchemes.length },
-    { id: "ssh" as Tab, label: "SSH", count: sshSuites.length },
-  ].filter((t) => t.count > 0);
+  const tabs = (
+    [
+      { id: "tls" as Tab, label: "TLS", count: tlsSuites.length },
+      { id: "signatures" as Tab, label: "Signatures", count: sigSchemes.length },
+      { id: "ssh" as Tab, label: "SSH", count: sshSuites.length },
+    ] as { id: Tab; label: string; count: number }[]
+  ).filter((t) => t.count > 0);
+
+  const active = tabs.find((t) => t.id === tab) ? tab : tabs[0]?.id;
+
+  const cpu =
+    tlsSuites[0]?.host?.cpu_model ?? data.sig?.environment?.cpu_model ?? "production hardware";
+
+  if (!hasData) return <Empty />;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      {/* page header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-1">
-          Protocol Benchmarks
-        </h1>
-        <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed max-w-2xl">
-          Post-quantum TLS and SSH handshake performance measured in context — timing,
-          bytes on wire, phase decomposition, and cross-validation against liboqs and eBACS
-          reference data. Measured daily on{" "}
-          {data.tls?.suites
-            ? Object.values(data.tls.suites)[0]?.host?.cpu_model ?? "production hardware"
-            : "production hardware"}
-          .
-        </p>
-        {manifest && (
-          <div className="mt-3 flex flex-wrap gap-4 text-xs text-[var(--color-text-tertiary)]">
-            <span>Generated {manifest.generated_utc}</span>
-            {manifest.files["tls-composed"] && (
-              <span>
-                Data commit{" "}
-                <a
-                  href={`https://github.com/Q-Advantage/q-advantage/commit/${manifest.files["tls-composed"].commit}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono text-[var(--color-text-info)] hover:underline"
-                >
-                  {manifest.files["tls-composed"].commit}
-                </a>
-              </span>
-            )}
-            <a
-              href="/data/protocols/manifest.json"
-              className="text-[var(--color-text-info)] hover:underline"
+    <div className="space-y-8">
+      {/* provenance line — echoes the AuditStrip idea in one row */}
+      {manifest && (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-fg-subtle border-y border-border py-3">
+          <span className="num">{cpu}</span>
+          <span>Generated {manifest.generated_utc}</span>
+          {manifest.files["tls-composed"] && (
+            <span>
+              Commit{" "}
+              <a
+                href={`https://github.com/Q-Advantage/q-advantage/commit/${manifest.files["tls-composed"].commit}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="num text-fg-muted hover:text-accent transition-colors"
+              >
+                {manifest.files["tls-composed"].commit}
+              </a>
+            </span>
+          )}
+          <a
+            href="/data/protocols/manifest.json"
+            className="text-fg-muted hover:text-accent transition-colors ml-auto"
+          >
+            Raw JSON ↗
+          </a>
+        </div>
+      )}
+
+      <Hero data={data} />
+
+      {tabs.length > 1 && (
+        <div className="flex gap-2 flex-wrap border-b border-border">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`px-4 py-2.5 text-sm -mb-px border-b-2 transition-colors ${
+                active === t.id
+                  ? "border-accent text-fg"
+                  : "border-transparent text-fg-muted hover:text-fg"
+              }`}
             >
-              raw JSON ↗
-            </a>
+              {t.label}
+              <span className="ml-1.5 text-2xs num text-fg-subtle">{t.count}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {active === "tls" && tlsSuites.length > 0 && (
+        <div>
+          <SectionHead
+            title="TLS handshake"
+            caption="Composed crypto cost (Layer A): the actual operations a TLS handshake performs, built from liboqs primitives plus a classical X25519 reference. Fully in-process — isolates the PQC-attributable cost and enables the phase decomposition below."
+          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {tlsSuites.map((s) => (
+              <SuiteCard key={s.identity.suite} suite={s} />
+            ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {!hasAnyData ? (
-        <EmptyState />
-      ) : (
-        <>
-          <HeroStrip data={data} />
+      {active === "signatures" && sigSchemes.length > 0 && (
+        <div>
+          <SectionHead
+            title="Signature track"
+            caption="Authentication schemes measured for keygen / sign / verify timing and — the figure that decides on-chain and certificate viability — signature and public-key size. Falcon is smallest; SLH-DSA is the conservative hash-based option at a size cost; ML-DSA sits between."
+          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {sigSchemes.map((s) => (
+              <SigCard key={s.scheme} scheme={s} />
+            ))}
+          </div>
+        </div>
+      )}
 
-          {/* tab bar */}
-          {tabs.length > 1 && (
-            <div className="flex gap-2 mb-5 flex-wrap">
-              {tabs.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.id)}
-                  className={`px-4 py-1.5 rounded-lg text-sm border transition-colors ${
-                    activeTab === t.id
-                      ? "bg-[var(--color-background-primary)] text-[var(--color-text-primary)] border-[var(--color-border-primary)] font-medium"
-                      : "bg-[var(--color-background-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border-tertiary)]"
-                  }`}
-                >
-                  {t.label}
-                  <span className="ml-1.5 text-[11px] opacity-60">{t.count}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* TLS panel */}
-          {(activeTab === "tls" || tabs.length === 1) && tlsSuites.length > 0 && (
-            <div>
-              <SectionLabel>TLS handshake — composed crypto cost (Layer A)</SectionLabel>
-              <div className="text-xs text-[var(--color-text-secondary)] mb-3 leading-relaxed max-w-2xl">
-                Measures the actual crypto operations a TLS handshake performs, composed from
-                liboqs-python primitives and a classical X25519 reference. Fully in-process —
-                isolates PQC-attributable cost and enables phase decomposition. Not a live
-                handshake (Layer B is on the roadmap).
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {tlsSuites.map((s) => (
-                  <TLSSuiteCard key={s.identity.suite} suite={s} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Signatures panel */}
-          {activeTab === "signatures" && sigSchemes.length > 0 && (
-            <div>
-              <SectionLabel>Signature track — authentication + on-chain sizing</SectionLabel>
-              <div className="text-xs text-[var(--color-text-secondary)] mb-3 leading-relaxed max-w-2xl">
-                Post-quantum signature schemes measured for keygen / sign / verify timing and —
-                critically — signature and public key sizes. Size is the deciding factor for
-                on-chain use and certificate overhead. ML-DSA sign is right-skewed due to
-                rejection sampling; median is the representative figure.
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {sigSchemes.map((s) => (
-                  <SigSchemeCard key={s.scheme} scheme={s} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* SSH panel */}
-          {activeTab === "ssh" && sshSuites.length > 0 && (
-            <div>
-              <SectionLabel>SSH key exchange — composed crypto cost (Layer A)</SectionLabel>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {sshSuites.map((s) => (
-                  <TLSSuiteCard key={s.identity.suite} suite={s} />
-                ))}
-              </div>
-            </div>
-          )}
-        </>
+      {active === "ssh" && sshSuites.length > 0 && (
+        <div>
+          <SectionHead
+            title="SSH key exchange"
+            caption="The same composed-cost measurement applied to SSH KEX: the OpenSSH 10 default hybrid against the classical curve25519 baseline."
+          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {sshSuites.map((s) => (
+              <SuiteCard key={s.identity.suite} suite={s} />
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
