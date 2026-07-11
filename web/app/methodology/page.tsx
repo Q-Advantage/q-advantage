@@ -204,7 +204,7 @@ export default function MethodologyPage() {
           <Prose>
             <p>
               <code>liboqs</code> 0.15.0, built from source with{" "}
-              <code>-DOQS_DIST_BUILD=ON</code> for runtime AVX2 detection. <code>liboqs-python</code>
+              <code>-DOQS_DIST_BUILD=ON</code> for runtime CPU dispatch. <code>liboqs-python</code>
               {" "}is pinned to the matching 0.15.0 in a Python 3.12 virtual environment to avoid the
               version-skew warnings that older mismatched pairs produce. The exact versions for the
               latest run appear in the &ldquo;Environment&rdquo; table above and in every result
@@ -218,7 +218,60 @@ export default function MethodologyPage() {
             </p>
           </Prose>
 
-          <H3 id="q-shield-algorithms">Algorithms covered</H3>
+          <H3 id="q-shield-cross-validation">Cross-validation and measurement context</H3>
+          <Prose>
+            <p>
+              Three patterns emerge when Q-Shield results are compared against eBACS/SUPERCOP
+              reference cycle counts for the same liboqs 0.15.0 primitives. Understanding them
+              is necessary to read the numbers correctly.
+            </p>
+            <p>
+              <strong>ML-KEM: measured faster than eBACS reference (+24&ndash;27%).</strong>{" "}
+              ML-KEM-768 decapsulation measures ~48&thinsp;&mu;s on the production box, faster than
+              X25519 (~161&thinsp;&mu;s). This is real: AVX2-dispatched lattice arithmetic genuinely
+              outperforms elliptic-curve scalar multiplication for this operation, confirmed by
+              liboqs reference data. The +24&ndash;27% delta versus eBACS is a methodology
+              difference: our harness reuses pre-allocated key material across iterations, whereas
+              the liboqs <code>speed_kem</code> tool includes fresh keygen in its timing loop.
+              We measure the encapsulation and decapsulation operations in isolation; eBACS
+              includes keygen overhead. Net result: our Python harness, despite its binding
+              overhead, reports lower latency for encaps/decaps than the eBACS figure.
+            </p>
+            <p>
+              <strong>ML-DSA and Falcon: measured slower than eBACS reference (&minus;28 to &minus;36%).</strong>{" "}
+              ML-DSA-44 sign median is 105&thinsp;&mu;s; Falcon-512 sign median is
+              343&thinsp;&mu;s. Two causes compound. First, our harness reuses a fixed message
+              across iterations; the liboqs <code>speed_sig</code> tool calls{" "}
+              <code>OQS_randombytes()</code> per iteration, inflating its reported sign time with
+              randomness generation cost. Our times should therefore be <em>lower</em> than eBACS
+              &mdash; the fact that they are higher reveals the second cause: t3.medium burstable
+              CPU throttling. Under the sustained sequential load of 1,000-iteration loops, CPU
+              steal time degrades throughput and the 2.50&thinsp;GHz nominal clock is not
+              reliably available. This manifests as elevated sign times and high p99 variance
+              (ML-DSA-44 sign p99: 416&thinsp;&mu;s vs. median 105&thinsp;&mu;s &mdash; a 4&times;
+              spread). Sign operations are more throttle-sensitive than verify because they are
+              compute-heavier. Verify times and keygen times are reliable on the production box;
+              sign times for lattice schemes should be read as upper bounds.
+            </p>
+            <p>
+              <strong>SLH-DSA: tight cross-validation (&plusmn;1%).</strong>{" "}
+              SLH-DSA-SHAKE-128S sign median is 1,289&thinsp;ms on the production box &mdash; slow
+              by design for the small-signature parameter set. The tight agreement with eBACS is
+              expected: SLH-DSA is dominated by Keccak/SHA3 hashing, and the SHA3 path on this
+              host dispatches to AVX512VL (<code>OQS_USE_SHA3_AVX512VL=1</code>, confirmed in{" "}
+              <code>oqsconfig.h</code>) &mdash; the same well-optimised route eBACS exercises.
+              Hashing is also less sensitive to burstable throttling than lattice operations.
+              The 128F (fast) variant signs in ~61&thinsp;ms at the cost of a larger signature
+              (17&thinsp;KB vs. 7.9&thinsp;KB for 128S).
+            </p>
+            <p>
+              The planned migration to a c7i.large dedicated-core instance will eliminate the
+              burstable-throttle caveat on lattice sign times. Results before and after migration
+              will be annotated as a measurement-environment change, not treated as a continuous
+              series.
+            </p>
+          </Prose>
+	  <H3 id="q-shield-algorithms">Algorithms covered</H3>
           <p className="text-fg-muted leading-[1.7] mb-4">
             Q-Shield benchmarks the NIST-standardized post-quantum cryptographic algorithms
             finalized in August 2024 to replace RSA and elliptic-curve cryptography against the

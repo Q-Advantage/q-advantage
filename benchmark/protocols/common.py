@@ -313,7 +313,7 @@ class HostInfo:
     steal_time_pct: float | None = None
 
 
-_SIMD = ("avx512f", "avx2", "sse4_2", "neon", "asimd")
+_SIMD = ("avx512vl", "avx512f", "avx2", "sse4_2", "neon", "asimd")
 
 
 def _cpuinfo() -> dict[str, str]:
@@ -336,16 +336,20 @@ def capture_host() -> HostInfo:
     h.cpu_model = ci.get("model name") or ci.get("Model") or platform.processor() or None
     flags = (ci.get("flags") or ci.get("Features") or "").split()
     h.cpu_flags = [f for f in _SIMD if f in flags]
-    # Build path confirmed on the t3.medium production box (Jun 2026):
-    # liboqs.so exports pqcrystals_kyber768_avx2_* symbols — AVX2 optimised
-    # path active for ML-KEM. AVX-512 is present in CPU flags but liboqs
-    # 0.15.0 uses AVX2 as its optimised tier for these algorithms.
+    # Build path — liboqs 0.15.0 OQS_DIST_BUILD (runtime CPUID dispatch).
+    # Confirmed from oqsconfig.h on each host:
+    #   x86 Cascade Lake: kyber768/falcon dispatch to AVX2; SHA3/Keccak to
+    #     AVX512VL (OQS_USE_SHA3_AVX512VL=1), so SLH-DSA tracks eBACS tightly.
+    #   ARM Graviton: NEON paths compiled; verify per-host via oqsconfig.h.
+    # OQS_USE_*_INSTRUCTIONS macros are undef under OQS_DIST_BUILD by design
+    # (those govern CPU-pinned target builds); dispatch is always runtime here.
     if "avx2" in h.cpu_flags or "avx512f" in h.cpu_flags:
-        h.build_path = "avx2-optimised (confirmed: kyber768_avx2 symbols present in liboqs.so)"
+        sha3 = "SHA3 AVX512VL" if "avx512vl" in h.cpu_flags else "SHA3 AVX2"
+        h.build_path = f"OQS_DIST_BUILD dispatch · kyber768/falcon AVX2 · {sha3}"
     elif "neon" in h.cpu_flags or "asimd" in h.cpu_flags:
-        h.build_path = "neon-optimised (confirm liboqs build manually)"
+        h.build_path = "OQS_DIST_BUILD dispatch · NEON (verify per-host via oqsconfig.h)"
     else:
-        h.build_path = "reference (no AVX2/NEON flags detected)"
+        h.build_path = "OQS_DIST_BUILD dispatch · reference (no AVX2/NEON detected)"
     mhz = ci.get("cpu MHz")
     if mhz:
         try:
