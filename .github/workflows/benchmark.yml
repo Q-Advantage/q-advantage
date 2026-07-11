@@ -61,11 +61,16 @@ jobs:
           python3 benchmark/protocols/sig_track.py \
             --output-dir benchmark/results/protocols
 
+      - name: Build protocol manifest for web
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/build_manifest.py
+
       - name: Commit results
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add benchmark/results/
+          git add benchmark/results/ web/public/data/protocols/
 
           if git diff --staged --quiet; then
             echo "No result changes to commit"
