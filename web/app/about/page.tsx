@@ -8,8 +8,8 @@ import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 export const metadata: Metadata = {
   title: "About — Q-Advantage",
   description:
-    "Q-Advantage is an independent, vendor-neutral benchmarking platform for the quantum era. " +
-    "Q-Day Index, Q-Shield, Q-Arena — every spec sourced, every run public, every result auditable on GitHub.",
+    "Independent, vendor-neutral benchmarks and analysis for the post-quantum transition. " +
+    "Q-Shield measures how the standardized PQC algorithms actually perform, every day.",
 };
 
 const GITHUB_ORG = "https://github.com/Q-Advantage";
@@ -73,15 +73,6 @@ export default function AboutPage() {
               methodology="Each algorithm is benchmarked across keygen, encap/decap (KEMs) and sign/verify (signatures) on a self-hosted GitHub Actions runner. CPU pinned to a single core, garbage collection disabled during measurement, 1,000 timed iterations per operation after 50 warmups. Full environment captured per run — CPU model, kernel version, liboqs version, git SHA, instance type — so every result is reproducible bit-for-bit. CPU steal-time and load average are captured so burstable-instance throttling is visible in the audit trail."
               status_note="Re-runs daily at 06:00 UTC. Every data point on the dashboard deep-links to the exact Actions run that produced it."
             />
-            <ProductBlock
-              status="preview"
-              name="Q-Arena"
-              tag="Algorithm leaderboard"
-              href={null}
-              measures="Real quantum algorithms executed on real quantum hardware — the same circuit run across multiple machines so machines can be compared on what they actually do, not what their data sheets claim."
-              methodology="Standardised circuits (initially Bell-state preparation and small entanglement-witness tests) run on AWS Braket simulators and on real hardware via the IBM Quantum free tier. For each (circuit, machine) pair: success rate, gate count, queue time, and circuit depth recorded. Real-hardware results compared against simulator-ideal so noise can be isolated from algorithmic structure."
-              status_note="In design. Exact circuit list and machine roster will be finalised as we begin running them — anything stated here in advance is a plan, not a promise."
-            />
           </div>
         </section>
 
@@ -106,7 +97,7 @@ export default function AboutPage() {
             <Pillar
               num="02"
               title="Runs on real hardware."
-              desc="Q-Shield benchmarks execute on a self-hosted GitHub Actions runner with CPU pinning and GC disabled during measurement. Q-Arena targets cloud quantum hardware (AWS Braket, IBM Quantum)."
+              desc="Q-Shield benchmarks execute on a self-hosted GitHub Actions runner with CPU pinning and GC disabled during measurement. Full environment captured per run — CPU model, kernel version, liboqs version, git SHA — so every result is reproducible bit-for-bit."
             />
             <Pillar
               num="03"
@@ -160,10 +151,11 @@ export default function AboutPage() {
 
           <div className="divide-y divide-border">
             <Faq q="What is Q-Advantage?">
-              An independent, vendor-neutral benchmarking platform for the quantum era. It publishes
-              three measurement products — the Q-Day Index (distance to breaking RSA-2048), Q-Shield
-              (PQC algorithm performance), and Q-Arena (real algorithms on real quantum hardware).
-              Every result is sourced, reproducible, and auditable end-to-end on GitHub.
+              Independent, vendor-neutral benchmarks and analysis for the post-quantum transition.
+              Q-Shield measures how the standardized PQC algorithms actually perform, on production
+              hardware, every day. The Q-Day Index tracks distance to a cryptographically relevant
+              quantum computer. Independent data and analysis for the teams building, buying, and
+              regulating post-quantum cryptography.
             </Faq>
             <Faq q="Who runs Q-Advantage?">
               Q-Advantage is currently built without external funding. The codebase, data, methodology,

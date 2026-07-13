@@ -17,7 +17,6 @@ import { PresetComparisons } from "@/components/data/PresetComparisons";
  *
  * Q-Shield is the wedge product (featured card).
  * Q-Day Index is prominent but secondary (plain card, second slot).
- * Q-Arena removed — parked indefinitely.
  */
 export default function HomePage() {
   return (

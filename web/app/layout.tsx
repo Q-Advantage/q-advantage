@@ -25,22 +25,22 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL("https://qadvantage.io"),
   title: {
-    default: "Q-Advantage — The intelligence layer for the quantum era",
+    default: "Q-Advantage — The intelligence layer for post-quantum cryptography",
     template: "%s · Q-Advantage",
   },
   description:
-    "Q-Advantage builds independent, public benchmarks for the quantum era. Q-Day Index, Q-Shield, Q-Arena — measurable signal, transparent methodology, daily on GitHub.",
+    "Independent, vendor-neutral benchmarks and analysis for the post-quantum transition. Q-Shield measures how the standardized PQC algorithms actually perform, every day.",
   openGraph: {
     type: "website",
     siteName: "Q-Advantage",
-    title: "Q-Advantage — The intelligence layer for the quantum era",
-    description: "Daily benchmarks. Open methodology. Auditable on GitHub.",
+    title: "Q-Advantage — The intelligence layer for post-quantum cryptography",
+    description: "Independent, vendor-neutral benchmarks and analysis for the post-quantum transition. Q-Shield measures standardized PQC algorithms every day; the Q-Day Index tracks quantum threat readiness.",
     url: "https://qadvantage.io",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Q-Advantage — The intelligence layer for the quantum era",
-    description: "Daily benchmarks. Open methodology. Auditable on GitHub.",
+    title: "Q-Advantage — The intelligence layer for post-quantum cryptography",
+    description: "Independent, vendor-neutral benchmarks and analysis for the post-quantum transition. Q-Shield measures standardized PQC algorithms every day; the Q-Day Index tracks quantum threat readiness.",
   },
 };
 

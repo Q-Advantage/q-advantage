@@ -363,7 +363,7 @@ export function ProtocolsView({ data }: { data: ProtocolsData }) {
         <div>
           <SectionHead
             title="TLS handshake"
-            caption="Composed crypto cost (Layer A): the actual operations a TLS handshake performs, built from liboqs primitives plus a classical X25519 reference. Measured on every arch we cover."
+            caption="The real cost of running post-quantum key exchange inside a TLS handshake — measured phase by phase against the classical baseline everyone already runs. Every suite on both x86 and ARM."
           />
           <div className="grid grid-cols-1 gap-5">
             {Object.entries(tlsGrouped).map(([name, byArch]) => (
@@ -377,7 +377,7 @@ export function ProtocolsView({ data }: { data: ProtocolsData }) {
         <div>
           <SectionHead
             title="Signature track"
-            caption="Authentication schemes measured for keygen / sign / verify timing and — the figure that decides on-chain and certificate viability — signature and public-key size."
+            caption="Signature schemes measured for keygen, sign, and verify — and for the number that decides whether they fit on a certificate or on a blockchain: signature size."
           />
           <div className="grid grid-cols-1 gap-5">
             {Object.entries(sigGrouped).map(([name, byArch]) => (
@@ -391,7 +391,7 @@ export function ProtocolsView({ data }: { data: ProtocolsData }) {
         <div>
           <SectionHead
             title="SSH key exchange"
-            caption="The same composed-cost measurement applied to SSH KEX: the OpenSSH 10 default hybrid against the classical curve25519 baseline."
+            caption="The same measurement, in SSH: OpenSSH 10&apos;s post-quantum default versus the classical curve25519 that&apos;s been the standard for a decade."
           />
           <div className="grid grid-cols-1 gap-5">
             {Object.entries(sshGrouped).map(([name, byArch]) => (

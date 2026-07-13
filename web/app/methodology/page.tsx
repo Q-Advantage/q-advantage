@@ -58,7 +58,6 @@ export default function MethodologyPage() {
               <li><a href="#three-pillars" className="text-fg-muted hover:text-accent transition-colors">Three pillars</a></li>
               <li><a href="#q-shield" className="text-fg-muted hover:text-accent transition-colors">Q-Shield methodology</a></li>
               <li><a href="#q-day-index" className="text-fg-muted hover:text-accent transition-colors">Q-Day Index methodology</a></li>
-              <li><a href="#q-arena" className="text-fg-muted hover:text-accent transition-colors">Q-Arena (in design)</a></li>
               <li><a href="#glossary" className="text-fg-muted hover:text-accent transition-colors">Measurement-method glossary</a></li>
               <li><a href="#challenge" className="text-fg-muted hover:text-accent transition-colors">Challenge a result</a></li>
             </ul>
@@ -585,33 +584,6 @@ export default function MethodologyPage() {
               <span aria-hidden>→</span>
             </Link>
           </div>
-        </section>
-
-        {/* ====================================================================== */}
-        {/* ============ Q-ARENA ============ */}
-        {/* ====================================================================== */}
-        <section id="q-arena" className="mb-20 scroll-mt-20">
-          <div className="eyebrow mb-3">Section 3</div>
-          <h2 className="font-serif text-[clamp(32px,4.5vw,44px)] font-normal leading-[1.1] tracking-[-0.02em] text-fg mb-6">
-            Q-Arena — algorithms on real hardware (in design)
-          </h2>
-          <Prose>
-            <p>
-              Q-Arena will run standardised quantum circuits — Bell-state preparation and small
-              entanglement-witness tests initially — across multiple machines, so machines can be
-              compared on what they actually do rather than what their data sheets claim. Targets
-              are AWS Braket simulators and the IBM Quantum free tier for real hardware. For each
-              (circuit, machine) pair, we will record success rate, gate count, queue time, and
-              circuit depth, and compare real-hardware results against simulator-ideal so noise
-              can be isolated from algorithmic structure.
-            </p>
-            <p>
-              <strong>Q-Arena is not yet running.</strong> This section is a stub describing
-              intent. Exact circuit list, machine roster, and run cadence will be finalised as we
-              begin running them. Anything stated here in advance is a plan, not a promise; this
-              section will be updated when the first runs ship.
-            </p>
-          </Prose>
         </section>
 
         {/* ====================================================================== */}
