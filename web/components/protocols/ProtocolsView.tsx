@@ -124,7 +124,7 @@ function SuiteArchColumn({ suite }: { suite: ComposedSuite }) {
         <Disclosure label="Phases">
           <div className="grid grid-cols-2 gap-3">
             {Object.entries(suite.phases).map(([name, t]) => (
-              <Stat key={name} label={name.replace(/_/g, " ")} value={`${fmt(t.median_us)} µs`} />
+              <Stat key={name} label={name.split("_").join(" ")} value={`${fmt(t.median_us)} µs`} />
             ))}
           </div>
         </Disclosure>
@@ -245,7 +245,7 @@ function Hero({ data }: { data: ProtocolsData }) {
   if (slh) {
     heroes.push({
       value: fmtBytes(slh.signature_bytes),
-      label: `${slh.scheme.replace(/_/g, "-")} signature`,
+      label: `${slh.scheme.split("_").join("-")} signature`,
       note: `sign ${fmt(slh.sign.median_us)} µs · conservative hash-based`,
     });
   }
