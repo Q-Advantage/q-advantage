@@ -328,6 +328,7 @@ export function ProtocolsView({ data }: { data: ProtocolsData }) {
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-fg-subtle border-y border-border py-3">
           <span className="num">{arches.length > 1 ? `${arches.length} architectures` : arches[0]}</span>
           <span>Generated {manifest.generated_utc}</span>
+          <a
           
             href="/data/protocols/manifest.json"
             className="text-fg-muted hover:text-accent transition-colors ml-auto"
