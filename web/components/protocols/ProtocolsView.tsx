@@ -1,9 +1,7 @@
 "use client";
 // web/components/protocols/ProtocolsView.tsx
-//
-// Rebuilt to match the real qadvantage.io design language:
-// semantic tokens (fg / fg-muted / fg-subtle / border / bg-inset / accent),
-// .eyebrow labels, .num mono cells, font-serif for display numerals.
+// Arch-aware: renders both x86_64 and aarch64 side-by-side per suite card.
+// Percentage delta shows explicit "slower"/"faster" labels; negative = green.
 
 import { useState } from "react";
 import type {
@@ -11,6 +9,7 @@ import type {
   ComposedSuite,
   SigScheme,
   CrossValidation,
+  ArchBucket,
 } from "@/lib/protocols/types";
 
 // ── formatting ────────────────────────────────────────────────────────────────
@@ -24,10 +23,21 @@ function fmtBytes(n: number | undefined): string {
   if (n >= 1024) return `${(n / 1024).toFixed(1)} KB`;
   return `${n} B`;
 }
-function fmtPct(n: number | undefined): string {
-  if (n == null) return "—";
-  const s = n > 0 ? "+" : "";
-  return `${s}${n.toFixed(1)}%`;
+
+function DeltaPct({ pct, baseline }: { pct: number | undefined; baseline?: string }) {
+  if (pct == null) return null;
+  const faster = pct < 0;
+  const abs = Math.abs(pct).toFixed(1);
+  const label = faster ? "faster" : "slower";
+  const cls = faster ? "text-emerald-500" : "text-fg";
+  return (
+    <div className="flex flex-col items-end">
+      <span className={`font-serif text-2xl leading-none ${cls}`}>
+        {abs}% <span className="text-sm font-sans">{label}</span>
+      </span>
+      {baseline && <span className="text-2xs text-fg-subtle mt-1">vs {baseline}</span>}
+    </div>
+  );
 }
 
 // ── small primitives ──────────────────────────────────────────────────────────
@@ -83,180 +93,118 @@ function Disclosure({ label, children }: { label: string; children: React.ReactN
   );
 }
 
-// ── cross-validation ──────────────────────────────────────────────────────────
+// ── arch pill ─────────────────────────────────────────────────────────────────
 
-function XVal({ xval }: { xval?: CrossValidation }) {
-  if (!xval) return null;
+function ArchChip({ arch }: { arch: string }) {
+  const label = arch === "x86_64" ? "x86 · Intel Xeon" : arch === "aarch64" ? "ARM · Graviton3" : arch;
   return (
-    <div className="mt-4 pt-4 border-t border-border">
-      <div className="eyebrow mb-2">Cross-validation</div>
-      <div className="grid grid-cols-3 gap-4">
-        {xval.liboqs_speed_number != null && (
-          <Stat label="liboqs speed" value={`${fmt(xval.liboqs_speed_number)} µs`} />
-        )}
-        {xval.ebacs_reference_cycles != null && (
-          <Stat label="eBACS cycles" value={xval.ebacs_reference_cycles.toLocaleString()} />
-        )}
-        {xval.measured_vs_reference_pct != null && (
-          <Stat label="vs. liboqs ref" value={fmtPct(xval.measured_vs_reference_pct)} />
-        )}
+    <span className="text-2xs num text-fg-muted border border-border rounded px-1.5 py-0.5">
+      {label}
+    </span>
+  );
+}
+
+// ── per-arch column for suite cards ───────────────────────────────────────────
+
+function SuiteArchColumn({ suite }: { suite: ComposedSuite }) {
+  const arch = suite.host?.arch ?? "unknown";
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <ArchChip arch={arch} />
+        <DeltaPct pct={suite.baseline?.pct_over_classical} baseline={suite.baseline?.baseline_suite} />
       </div>
-      {xval.reference_notes && (
-        <div className="mt-3">
-          <Disclosure label="Reference methodology">
-            <p className="text-xs text-fg-muted leading-relaxed font-light">
-              {xval.reference_notes}
-            </p>
-          </Disclosure>
-        </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Stat label="median" value={`${fmt(suite.timing.median_us)} µs`} />
+        <Stat label="p95" value={`${fmt(suite.timing.p95_us)} µs`} />
+      </div>
+
+      {suite.phases && Object.keys(suite.phases).length > 0 && (
+        <Disclosure label="Phases">
+          <div className="grid grid-cols-2 gap-3">
+            {Object.entries(suite.phases).map(([name, t]) => (
+              <Stat key={name} label={name.replace(/_/g, " ")} value={`${fmt(t.median_us)} µs`} />
+            ))}
+          </div>
+        </Disclosure>
+      )}
+
+      {suite.host?.build_path && (
+        <div className="text-2xs num text-fg-subtle break-all">{suite.host.build_path}</div>
       )}
     </div>
   );
 }
 
-// ── ML-KEM vs X25519 disclosure (required DoD item) ──────────────────────────
+// ── suite card grouping same suite across arches ─────────────────────────────
 
-function MLKEMNote() {
-  return (
-    <div className="mt-3 border-l-2 border-accent/40 pl-3 py-1 text-xs text-fg-muted leading-relaxed font-light">
-      <span className="text-fg">Build-path context.</span> ML-KEM-768 timing uses
-      liboqs 0.15.0 with <span className="num text-fg-muted">OQS_DIST_BUILD</span> AVX2
-      runtime dispatch; X25519 uses the <span className="num text-fg-muted">cryptography</span>{" "}
-      library via OpenSSL EVP. These aren&apos;t identical measurement contexts &mdash; the
-      delta reflects both algorithm efficiency and library path. Raw liboqs{" "}
-      <span className="num text-fg-muted">speed_kem</span> confirms ML-KEM-768 at 48.3 µs
-      total (keygen + encaps + decaps) vs X25519 at 161.3 µs under the same binary, so the
-      direction holds independent of the harness.{" "}
-      <a
-        href="/methodology#cross-validation"
-        className="text-fg hover:text-accent transition-colors underline decoration-border-strong hover:decoration-accent underline-offset-2"
-      >
-        Full methodology
-      </a>
-      .
-    </div>
-  );
-}
-
-// ── suite card (TLS / SSH) ────────────────────────────────────────────────────
-
-function SuiteCard({ suite }: { suite: ComposedSuite }) {
-  const pct = suite.baseline?.pct_over_classical;
-  const isPureMLKEM = suite.identity.suite === "MLKEM768";
-  const showNote = isPureMLKEM || (pct != null && pct < 0);
+function SuiteCard({ suiteName, byArch }: { suiteName: string; byArch: Record<string, ComposedSuite> }) {
+  const arches = Object.keys(byArch);
+  const anySuite = Object.values(byArch)[0];
+  if (!anySuite) return null;
 
   return (
     <Card>
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="num text-fg font-medium">{suite.identity.suite}</span>
-          {suite.host?.arch && (
-            <span className="text-2xs num text-fg-subtle border border-border rounded px-1.5 py-0.5">
-              {suite.host.arch}
-            </span>
-          )}
-        </div>
-        {pct != null && (
-          <div className="flex flex-col items-end">
-            <span className="font-serif text-2xl leading-none text-fg">{fmtPct(pct)}</span>
-            <span className="text-2xs text-fg-subtle mt-1">vs {suite.baseline?.baseline_suite}</span>
-          </div>
+      <div className="flex items-center justify-between mb-3">
+        <span className="num text-fg font-medium">{suiteName}</span>
+        {anySuite.size && (
+          <span className="text-2xs num text-fg-subtle">{fmtBytes(anySuite.size.bytes_total)} on wire</span>
         )}
       </div>
 
-      {showNote && <MLKEMNote />}
-
-      <div className="grid grid-cols-4 gap-4 mt-4">
-        <Stat label="median" value={`${fmt(suite.timing.median_us)} µs`} />
-        <Stat label="p95" value={`${fmt(suite.timing.p95_us)} µs`} />
-        <Stat label="p99" value={`${fmt(suite.timing.p99_us)} µs`} />
-        <Stat label="n" value={suite.timing.n_iterations.toLocaleString()} />
+      <div className={`grid gap-5 ${arches.length > 1 ? "md:grid-cols-2" : "grid-cols-1"}`}>
+        {arches.map((arch) => (
+          <div key={arch} className={arches.length > 1 ? "md:border-l md:border-border md:pl-4 md:first:border-l-0 md:first:pl-0" : ""}>
+            <SuiteArchColumn suite={byArch[arch]} />
+          </div>
+        ))}
       </div>
-
-      {suite.size && (
-        <div className="grid grid-cols-3 gap-4 mt-4">
-          <Stat label="client → server" value={fmtBytes(suite.size.bytes_client_to_server)} />
-          <Stat label="server → client" value={fmtBytes(suite.size.bytes_server_to_client)} />
-          <Stat label="on wire" value={fmtBytes(suite.size.bytes_total)} />
-        </div>
-      )}
-
-      {suite.phases && Object.keys(suite.phases).length > 0 && (
-        <div className="mt-4">
-          <Disclosure label="Phase decomposition">
-            <div className="grid grid-cols-3 gap-4">
-              {Object.entries(suite.phases).map(([name, t]) => (
-                <Stat
-                  key={name}
-                  label={name.replace(/_/g, " ")}
-                  value={`${fmt(t.median_us)} µs`}
-                  sub={`p95 ${fmt(t.p95_us)}`}
-                />
-              ))}
-            </div>
-          </Disclosure>
-        </div>
-      )}
-
-      <XVal xval={suite.cross_validation} />
-
-      {suite.audit && (
-        <div className="mt-4 pt-4 border-t border-border space-y-1">
-          {suite.audit.git_commit && <Meta label="commit" value={suite.audit.git_commit.slice(0, 12)} />}
-          {suite.audit.timestamp_utc && <Meta label="captured" value={suite.audit.timestamp_utc} />}
-          {suite.host?.build_path && <Meta label="build path" value={suite.host.build_path} />}
-        </div>
-      )}
     </Card>
   );
 }
 
-// ── signature card ────────────────────────────────────────────────────────────
+// ── sig card grouping same scheme across arches ──────────────────────────────
 
-function SigCard({ scheme }: { scheme: SigScheme }) {
+function SigCard({ schemeName, byArch }: { schemeName: string; byArch: Record<string, SigScheme> }) {
+  const arches = Object.keys(byArch);
+  const anyScheme = Object.values(byArch)[0];
+  if (!anyScheme) return null;
+
   return (
     <Card>
-      <div className="flex items-center justify-between">
-        <span className="num text-fg font-medium">{scheme.scheme}</span>
-      </div>
-
-      <div className="grid grid-cols-3 gap-4 mt-4">
-        <Stat label="keygen" value={`${fmt(scheme.keygen.median_us)} µs`} />
-        <Stat
-          label="sign"
-          value={`${fmt(scheme.sign.median_us)} µs`}
-          sub={`mean ${fmt(scheme.sign.mean_us)}`}
-        />
-        <Stat label="verify" value={`${fmt(scheme.verify.median_us)} µs`} />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-border">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-2xs uppercase tracking-eyebrow text-fg-subtle font-mono">
-            signature size
-          </span>
-          <span className="font-serif text-xl leading-none text-fg mt-0.5">
-            {fmtBytes(scheme.signature_bytes)}
-          </span>
-        </div>
-        <div className="flex flex-col gap-0.5">
-          <span className="text-2xs uppercase tracking-eyebrow text-fg-subtle font-mono">
-            public key size
-          </span>
-          <span className="font-serif text-xl leading-none text-fg mt-0.5">
-            {fmtBytes(scheme.public_key_bytes)}
-          </span>
+      <div className="flex items-center justify-between mb-3">
+        <span className="num text-fg font-medium">{schemeName}</span>
+        <div className="flex gap-3 text-2xs num text-fg-subtle">
+          <span>sig {fmtBytes(anyScheme.signature_bytes)}</span>
+          <span>pk {fmtBytes(anyScheme.public_key_bytes)}</span>
         </div>
       </div>
 
-      {scheme.scheme.startsWith("ML-DSA") && (
+      <div className={`grid gap-5 ${arches.length > 1 ? "md:grid-cols-2" : "grid-cols-1"}`}>
+        {arches.map((arch) => {
+          const s = byArch[arch];
+          return (
+            <div key={arch} className={arches.length > 1 ? "md:border-l md:border-border md:pl-4 md:first:border-l-0 md:first:pl-0" : ""}>
+              <div className="mb-3">
+                <ArchChip arch={arch} />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <Stat label="keygen" value={`${fmt(s.keygen.median_us)} µs`} />
+                <Stat label="sign" value={`${fmt(s.sign.median_us)} µs`} sub={`mean ${fmt(s.sign.mean_us)}`} />
+                <Stat label="verify" value={`${fmt(s.verify.median_us)} µs`} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {schemeName.startsWith("ML-DSA") && (
         <p className="mt-3 text-2xs text-fg-subtle leading-relaxed font-light">
           Sign is right-skewed (Fiat-Shamir with aborts → rejection sampling); mean exceeds
-          median, and p99 reflects worst-case abort chains. Median is the representative figure.
+          median. Median is the representative figure.
         </p>
       )}
-
-      <XVal xval={scheme.cross_validation} />
     </Card>
   );
 }
@@ -264,23 +212,27 @@ function SigCard({ scheme }: { scheme: SigScheme }) {
 // ── hero strip ────────────────────────────────────────────────────────────────
 
 function Hero({ data }: { data: ProtocolsData }) {
-  const tls = data.tls?.suites ?? {};
-  const sigs = data.sig?.schemes ?? {};
+  const arches = Object.keys(data.byArch);
+  const primary = data.byArch["x86_64"] ?? data.byArch[arches[0]];
+  if (!primary) return null;
 
+  const tls = primary.tls?.suites ?? {};
+  const sigs = primary.sig?.schemes ?? {};
   const hybrid = tls["X25519MLKEM768"];
   const falcon = sigs["Falcon-512"];
   const slh = sigs["SLH_DSA_PURE_SHAKE_128S"] ?? sigs["SLH_DSA_PURE_SHAKE_128F"];
-  const mlkem = tls["MLKEM768"];
-  const x25519 = tls["X25519"];
 
-  type H = { value: string; label: string; note: string };
+  type H = { value: string; label: string; note: string; faster?: boolean };
   const heroes: H[] = [];
 
-  if (hybrid) {
+  if (hybrid && hybrid.baseline) {
+    const pct = hybrid.baseline.pct_over_classical;
+    const faster = pct < 0;
     heroes.push({
-      value: fmtPct(hybrid.baseline?.pct_over_classical),
-      label: "X25519+ML-KEM-768 TLS overhead",
+      value: `${Math.abs(pct).toFixed(1)}% ${faster ? "faster" : "slower"}`,
+      label: "X25519+ML-KEM-768 TLS vs classical",
       note: `${fmt(hybrid.timing.median_us)} µs median · ${fmtBytes(hybrid.size?.bytes_total)} on wire`,
+      faster,
     });
   }
   if (falcon) {
@@ -297,14 +249,11 @@ function Hero({ data }: { data: ProtocolsData }) {
       note: `sign ${fmt(slh.sign.median_us)} µs · conservative hash-based`,
     });
   }
-  if (mlkem && x25519) {
-    const pct = ((mlkem.timing.median_us - x25519.timing.median_us) / x25519.timing.median_us) * 100;
-    heroes.push({
-      value: fmtPct(pct),
-      label: "ML-KEM-768 vs X25519",
-      note: `${fmt(mlkem.timing.median_us)} µs vs ${fmt(x25519.timing.median_us)} µs · AVX2 dispatch`,
-    });
-  }
+  heroes.push({
+    value: `${arches.length} arch${arches.length > 1 ? "es" : ""}`,
+    label: "Cross-arch coverage",
+    note: arches.join(" · "),
+  });
 
   if (!heroes.length) return null;
 
@@ -312,7 +261,7 @@ function Hero({ data }: { data: ProtocolsData }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border rounded-md overflow-hidden">
       {heroes.map((h) => (
         <div key={h.label} className="bg-bg-inset px-5 py-5 flex flex-col gap-2">
-          <span className="font-serif text-[clamp(28px,4vw,40px)] leading-none text-fg">
+          <span className={`font-serif text-[clamp(24px,3.5vw,36px)] leading-none ${h.faster ? "text-emerald-500" : "text-fg"}`}>
             {h.value}
           </span>
           <span className="text-sm text-fg font-medium leading-tight">{h.label}</span>
@@ -322,8 +271,6 @@ function Hero({ data }: { data: ProtocolsData }) {
     </div>
   );
 }
-
-// ── empty state ───────────────────────────────────────────────────────────────
 
 function Empty() {
   return (
@@ -340,51 +287,50 @@ function Empty() {
 
 type Tab = "tls" | "signatures" | "ssh";
 
+// group same suite/scheme across arches
+function groupByName<T>(byArch: Record<string, ArchBucket>, extract: (b: ArchBucket) => Record<string, T> | undefined | null): Record<string, Record<string, T>> {
+  const grouped: Record<string, Record<string, T>> = {};
+  for (const [arch, bucket] of Object.entries(byArch)) {
+    const items = extract(bucket) ?? {};
+    for (const [name, item] of Object.entries(items)) {
+      if (!grouped[name]) grouped[name] = {};
+      grouped[name][arch] = item;
+    }
+  }
+  return grouped;
+}
+
 export function ProtocolsView({ data }: { data: ProtocolsData }) {
   const [tab, setTab] = useState<Tab>("tls");
 
-  const tlsSuites = Object.values(data.tls?.suites ?? {});
-  const sigSchemes = Object.values(data.sig?.schemes ?? {});
-  const sshSuites = Object.values(data.ssh?.suites ?? {});
-  const hasData = tlsSuites.length || sigSchemes.length || sshSuites.length;
+  const tlsGrouped = groupByName(data.byArch, (b) => b.tls?.suites);
+  const sigGrouped = groupByName(data.byArch, (b) => b.sig?.schemes);
+  const sshGrouped = groupByName(data.byArch, (b) => b.ssh?.suites);
+
+  const hasData = Object.keys(tlsGrouped).length || Object.keys(sigGrouped).length || Object.keys(sshGrouped).length;
   const manifest = data.manifest;
 
   const tabs = (
     [
-      { id: "tls" as Tab, label: "TLS", count: tlsSuites.length },
-      { id: "signatures" as Tab, label: "Signatures", count: sigSchemes.length },
-      { id: "ssh" as Tab, label: "SSH", count: sshSuites.length },
+      { id: "tls" as Tab, label: "TLS", count: Object.keys(tlsGrouped).length },
+      { id: "signatures" as Tab, label: "Signatures", count: Object.keys(sigGrouped).length },
+      { id: "ssh" as Tab, label: "SSH", count: Object.keys(sshGrouped).length },
     ] as { id: Tab; label: string; count: number }[]
   ).filter((t) => t.count > 0);
 
   const active = tabs.find((t) => t.id === tab) ? tab : tabs[0]?.id;
 
-  const cpu =
-    tlsSuites[0]?.host?.cpu_model ?? data.sig?.environment?.cpu_model ?? "production hardware";
-
   if (!hasData) return <Empty />;
+
+  const arches = Object.keys(data.byArch);
 
   return (
     <div className="space-y-8">
-      {/* provenance line — echoes the AuditStrip idea in one row */}
       {manifest && (
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-fg-subtle border-y border-border py-3">
-          <span className="num">{cpu}</span>
+          <span className="num">{arches.length > 1 ? `${arches.length} architectures` : arches[0]}</span>
           <span>Generated {manifest.generated_utc}</span>
-          {manifest.files["tls-composed"] && (
-            <span>
-              Commit{" "}
-              <a
-                href={`https://github.com/Q-Advantage/q-advantage/commit/${manifest.files["tls-composed"].commit}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="num text-fg-muted hover:text-accent transition-colors"
-              >
-                {manifest.files["tls-composed"].commit}
-              </a>
-            </span>
-          )}
-          <a
+          
             href="/data/protocols/manifest.json"
             className="text-fg-muted hover:text-accent transition-colors ml-auto"
           >
@@ -414,43 +360,43 @@ export function ProtocolsView({ data }: { data: ProtocolsData }) {
         </div>
       )}
 
-      {active === "tls" && tlsSuites.length > 0 && (
+      {active === "tls" && (
         <div>
           <SectionHead
             title="TLS handshake"
-            caption="Composed crypto cost (Layer A): the actual operations a TLS handshake performs, built from liboqs primitives plus a classical X25519 reference. Fully in-process — isolates the PQC-attributable cost and enables the phase decomposition below."
+            caption="Composed crypto cost (Layer A): the actual operations a TLS handshake performs, built from liboqs primitives plus a classical X25519 reference. Measured on every arch we cover."
           />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {tlsSuites.map((s) => (
-              <SuiteCard key={s.identity.suite} suite={s} />
+          <div className="grid grid-cols-1 gap-5">
+            {Object.entries(tlsGrouped).map(([name, byArch]) => (
+              <SuiteCard key={name} suiteName={name} byArch={byArch} />
             ))}
           </div>
         </div>
       )}
 
-      {active === "signatures" && sigSchemes.length > 0 && (
+      {active === "signatures" && (
         <div>
           <SectionHead
             title="Signature track"
-            caption="Authentication schemes measured for keygen / sign / verify timing and — the figure that decides on-chain and certificate viability — signature and public-key size. Falcon is smallest; SLH-DSA is the conservative hash-based option at a size cost; ML-DSA sits between."
+            caption="Authentication schemes measured for keygen / sign / verify timing and — the figure that decides on-chain and certificate viability — signature and public-key size."
           />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {sigSchemes.map((s) => (
-              <SigCard key={s.scheme} scheme={s} />
+          <div className="grid grid-cols-1 gap-5">
+            {Object.entries(sigGrouped).map(([name, byArch]) => (
+              <SigCard key={name} schemeName={name} byArch={byArch} />
             ))}
           </div>
         </div>
       )}
 
-      {active === "ssh" && sshSuites.length > 0 && (
+      {active === "ssh" && (
         <div>
           <SectionHead
             title="SSH key exchange"
             caption="The same composed-cost measurement applied to SSH KEX: the OpenSSH 10 default hybrid against the classical curve25519 baseline."
           />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {sshSuites.map((s) => (
-              <SuiteCard key={s.identity.suite} suite={s} />
+          <div className="grid grid-cols-1 gap-5">
+            {Object.entries(sshGrouped).map(([name, byArch]) => (
+              <SuiteCard key={name} suiteName={name} byArch={byArch} />
             ))}
           </div>
         </div>

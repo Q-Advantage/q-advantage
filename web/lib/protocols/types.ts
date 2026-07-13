@@ -1,28 +1,20 @@
 // web/lib/protocols/types.ts
-//
-// Types derived from the confirmed JSON schemas:
-//   tls-composed-2026-06-10-857e560.json  (suites shape)
-//   sig-track-2026-06-10-857e560.json     (schemes shape)
-//   ssh-composed mirrors tls-composed (suites shape)
-//
-// All optional fields are marked ? — the dashboard gracefully omits them
-// rather than throwing if a future run changes shape.
-
-// ── manifest ─────────────────────────────────────────────────────────────────
+// Arch-aware: manifest.files keyed "{track}::{arch}", ProtocolsData holds per-arch buckets.
 
 export interface ManifestFileEntry {
+  track: string;
+  arch: string;
   filename: string;
-  date: string;      // YYYY-MM-DD
-  commit: string;    // short hash
+  date: string;
+  commit: string;
 }
 
 export interface Manifest {
   generated_utc: string;
   tracks: string[];
+  arches: string[];
   files: Record<string, ManifestFileEntry>;
 }
-
-// ── shared timing block ───────────────────────────────────────────────────────
 
 export interface TimingBlock {
   mean_us: number;
@@ -36,35 +28,20 @@ export interface TimingBlock {
   n_iterations: number;
 }
 
-// ── cross-validation ──────────────────────────────────────────────────────────
-
 export interface CrossValidation {
   ebacs_reference_cycles?: number;
-  liboqs_speed_number?: number;       // µs from speed_kem / speed_sig
-  measured_vs_reference_pct?: number; // negative = our harness faster
-  reference_notes?: string;           // long string — render as collapsible
+  liboqs_speed_number?: number;
+  measured_vs_reference_pct?: number;
+  reference_notes?: string;
 }
 
-// ── tls-composed / ssh-composed ───────────────────────────────────────────────
-
 export interface ComposedSuite {
-  identity: {
-    protocol: string;
-    mode: string;
-    suite: string;
-  };
+  identity: { protocol: string; mode: string; suite: string };
   timing: TimingBlock;
-  size?: {
-    bytes_client_to_server: number;
-    bytes_server_to_client: number;
-    bytes_total: number;
-  };
-  baseline?: {
-    baseline_suite: string;
-    pct_over_classical: number;  // positive = PQC slower; negative = PQC faster
-  };
+  size?: { bytes_client_to_server: number; bytes_server_to_client: number; bytes_total: number };
+  baseline?: { baseline_suite: string; pct_over_classical: number };
   cross_validation?: CrossValidation;
-  auth?: null;  // null for KEM-only suites; populated when auth track added
+  auth?: null;
   toolchain?: {
     liboqs?: string;
     liboqs_python?: string;
@@ -75,17 +52,14 @@ export interface ComposedSuite {
   };
   host?: {
     cpu_model?: string;
-    arch?: string;             // "x86_64" | "aarch64" — key for multi-arch
-    build_path?: string;       // raw string from JSON; §8 rewrite fixes the text
+    arch?: string;
+    build_path?: string;
     cpu_flags?: string[];
     cpu_hz_nominal?: number;
     steal_time_pct?: number;
   };
-  audit?: {
-    git_commit?: string;
-    timestamp_utc?: string;
-  };
-  phases?: Record<string, TimingBlock>;  // kem_keygen, kem_encaps, kem_decaps, etc.
+  audit?: { git_commit?: string; timestamp_utc?: string };
+  phases?: Record<string, TimingBlock>;
 }
 
 export interface ComposedEnvironment {
@@ -101,9 +75,7 @@ export interface TLSComposedFile {
   suites: Record<string, ComposedSuite>;
 }
 
-export type SSHComposedFile = TLSComposedFile;  // same shape, different suites
-
-// ── sig-track ────────────────────────────────────────────────────────────────
+export type SSHComposedFile = TLSComposedFile;
 
 export interface SigScheme {
   scheme: string;
@@ -131,11 +103,13 @@ export interface SigTrackFile {
   schemes: Record<string, SigScheme>;
 }
 
-// ── page-level aggregate ──────────────────────────────────────────────────────
-
-export interface ProtocolsData {
-  manifest: Manifest | null;
+export interface ArchBucket {
   tls: TLSComposedFile | null;
   sig: SigTrackFile | null;
   ssh: SSHComposedFile | null;
+}
+
+export interface ProtocolsData {
+  manifest: Manifest | null;
+  byArch: Record<string, ArchBucket>;
 }

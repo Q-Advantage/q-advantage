@@ -1,0 +1,203 @@
+{
+  "environment": {
+    "iso_timestamp": "2026-07-11T23:57:57Z",
+    "liboqs_version": "0.15.0",
+    "openssh": "OpenSSH_9.6p1 Ubuntu-3ubuntu13.16, OpenSSL 3.0.13 30 Jan 2024",
+    "git_commit": "9f57fb3ad5f6aba6e3f86b6ee02a5de3173fb59d"
+  },
+  "suites": {
+    "mlkem768x25519-sha256": {
+      "identity": {
+        "protocol": "ssh",
+        "mode": "composed",
+        "suite": "mlkem768x25519-sha256"
+      },
+      "timing": {
+        "mean_us": 241.07,
+        "median_us": 238.856,
+        "p95_us": 250.056,
+        "p99_us": 262.219,
+        "stdev_us": 8.085,
+        "min_us": 237.522,
+        "max_us": 453.126,
+        "ops_per_sec": 4148.16,
+        "n_iterations": 1000
+      },
+      "size": {
+        "bytes_client_to_server": 1216,
+        "bytes_server_to_client": 1120,
+        "bytes_total": 2336
+      },
+      "baseline": {
+        "baseline_suite": "curve25519-sha256",
+        "pct_over_classical": 52.0
+      },
+      "cross_validation": {
+        "ebacs_reference_cycles": null,
+        "liboqs_speed_number": null,
+        "measured_vs_reference_pct": null,
+        "reference_notes": "no reference value curated for this primitive yet"
+      },
+      "auth": null,
+      "toolchain": {
+        "liboqs": "0.15.0",
+        "liboqs_python": "0.15.0",
+        "openssl_runtime": "OpenSSL 3.0.13 30 Jan 2024",
+        "openssl_cli": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)",
+        "oqs_provider": null,
+        "openssh": "OpenSSH_9.6p1 Ubuntu-3ubuntu13.16, OpenSSL 3.0.13 30 Jan 2024"
+      },
+      "host": {
+        "cpu_model": "aarch64",
+        "arch": "aarch64",
+        "build_path": "OQS_DIST_BUILD dispatch \u00b7 NEON confirmed \u00b7 ARM64v8 Graviton3",
+        "cpu_flags": [
+          "asimd"
+        ],
+        "cpu_hz_nominal": null,
+        "steal_time_pct": 0.0
+      },
+      "audit": {
+        "git_commit": "9f57fb3ad5f6aba6e3f86b6ee02a5de3173fb59d",
+        "timestamp_utc": "2026-07-11T23:57:57Z"
+      },
+      "phases": {
+        "kem_keygen": {
+          "mean_us": 25.618,
+          "median_us": 25.152,
+          "p95_us": 27.055,
+          "p99_us": 31.979,
+          "stdev_us": 2.406,
+          "min_us": 24.65,
+          "max_us": 87.552,
+          "ops_per_sec": 39035.49,
+          "n_iterations": 1000
+        },
+        "kem_encaps": {
+          "mean_us": 27.634,
+          "median_us": 27.159,
+          "p95_us": 31.671,
+          "p99_us": 34.69,
+          "stdev_us": 2.961,
+          "min_us": 26.814,
+          "max_us": 107.781,
+          "ops_per_sec": 36186.86,
+          "n_iterations": 1000
+        },
+        "kem_decaps": {
+          "mean_us": 29.603,
+          "median_us": 29.226,
+          "p95_us": 31.706,
+          "p99_us": 36.544,
+          "stdev_us": 1.779,
+          "min_us": 28.747,
+          "max_us": 58.061,
+          "ops_per_sec": 33780.86,
+          "n_iterations": 1000
+        },
+        "classical_keygen": {
+          "mean_us": 31.285,
+          "median_us": 30.923,
+          "p95_us": 32.831,
+          "p99_us": 37.999,
+          "stdev_us": 1.611,
+          "min_us": 30.746,
+          "max_us": 53.66,
+          "ops_per_sec": 31964.51,
+          "n_iterations": 1000
+        },
+        "classical_derive": {
+          "mean_us": 47.823,
+          "median_us": 47.599,
+          "p95_us": 50.212,
+          "p99_us": 51.572,
+          "stdev_us": 1.004,
+          "min_us": 47.222,
+          "max_us": 58.664,
+          "ops_per_sec": 20910.34,
+          "n_iterations": 1000
+        }
+      }
+    },
+    "curve25519-sha256": {
+      "identity": {
+        "protocol": "ssh",
+        "mode": "composed",
+        "suite": "curve25519-sha256"
+      },
+      "timing": {
+        "mean_us": 158.311,
+        "median_us": 157.138,
+        "p95_us": 164.175,
+        "p99_us": 176.345,
+        "stdev_us": 4.61,
+        "min_us": 155.888,
+        "max_us": 249.038,
+        "ops_per_sec": 6316.68,
+        "n_iterations": 1000
+      },
+      "size": {
+        "bytes_client_to_server": 32,
+        "bytes_server_to_client": 32,
+        "bytes_total": 64
+      },
+      "baseline": {
+        "baseline_suite": null,
+        "pct_over_classical": null
+      },
+      "cross_validation": {
+        "ebacs_reference_cycles": null,
+        "liboqs_speed_number": null,
+        "measured_vs_reference_pct": null,
+        "reference_notes": "no reference value curated for this primitive yet"
+      },
+      "auth": null,
+      "toolchain": {
+        "liboqs": "0.15.0",
+        "liboqs_python": "0.15.0",
+        "openssl_runtime": "OpenSSL 3.0.13 30 Jan 2024",
+        "openssl_cli": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)",
+        "oqs_provider": null,
+        "openssh": "OpenSSH_9.6p1 Ubuntu-3ubuntu13.16, OpenSSL 3.0.13 30 Jan 2024"
+      },
+      "host": {
+        "cpu_model": "aarch64",
+        "arch": "aarch64",
+        "build_path": "OQS_DIST_BUILD dispatch \u00b7 NEON confirmed \u00b7 ARM64v8 Graviton3",
+        "cpu_flags": [
+          "asimd"
+        ],
+        "cpu_hz_nominal": null,
+        "steal_time_pct": 0.0
+      },
+      "audit": {
+        "git_commit": "9f57fb3ad5f6aba6e3f86b6ee02a5de3173fb59d",
+        "timestamp_utc": "2026-07-11T23:57:57Z"
+      },
+      "phases": {
+        "classical_keygen": {
+          "mean_us": 31.35,
+          "median_us": 30.957,
+          "p95_us": 33.011,
+          "p99_us": 40.567,
+          "stdev_us": 1.75,
+          "min_us": 30.74,
+          "max_us": 51.787,
+          "ops_per_sec": 31897.64,
+          "n_iterations": 1000
+        },
+        "classical_derive": {
+          "mean_us": 47.805,
+          "median_us": 47.596,
+          "p95_us": 50.159,
+          "p99_us": 51.307,
+          "stdev_us": 1.112,
+          "min_us": 47.012,
+          "max_us": 72.732,
+          "ops_per_sec": 20918.2,
+          "n_iterations": 1000
+        }
+      }
+    }
+  }
+}

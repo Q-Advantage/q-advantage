@@ -277,6 +277,19 @@ export default function MethodologyPage() {
             finalized in August 2024 to replace RSA and elliptic-curve cryptography against the
             threat of cryptographically relevant quantum computers:
           </p>
+            <p>
+              <strong>Cross-arch validation on ARM.</strong>{" "}
+              The same suites re-ran on an AWS Graviton3 c7g.large (Ubuntu 24.04 arm64,
+              liboqs 0.15.0 built with <code>OQS_DIST_BUILD</code> +{" "}
+              <code>OQS_DIST_ARM64_V8_BUILD=1</code>, NEON paths confirmed active in{" "}
+              <code>oqsconfig.h</code>). The counterintuitive result &mdash; ML-KEM-768 measured
+              faster than X25519 &mdash; holds on ARM: &minus;47.7% on Graviton3 vs &minus;46.9%
+              on x86. Confirmed by the underlying liboqs <code>speed_kem</code> reference on both
+              hosts, so it is a real property of the algorithms and libraries, not a harness or
+              arch artefact. Graviton3 is non-burstable, which also removes the throttle caveat
+              on the lattice sign times noted above &mdash; ML-DSA sign medians on ARM sit tight
+              across runs where x86 shows right-skew from burst credit depletion.
+            </p>
           <ul className="text-fg-muted leading-[1.8] space-y-1 list-disc pl-6 mb-6">
             <li><strong>KEMs (FIPS 203 — ML-KEM):</strong> ML-KEM-512, ML-KEM-768, ML-KEM-1024 (NIST security levels 1, 3, 5)</li>
             <li><strong>Lattice signatures (FIPS 204 — ML-DSA):</strong> ML-DSA-44, ML-DSA-65, ML-DSA-87</li>

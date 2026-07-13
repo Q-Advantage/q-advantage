@@ -12,15 +12,15 @@ import type {
   SigTrackFile,
   SSHComposedFile,
   ProtocolsData,
+  ArchBucket,
 } from "@/lib/protocols/types";
 
 export const metadata: Metadata = {
   title: "Q-Shield — Protocol benchmarks",
   description:
-    "Post-quantum TLS and SSH handshake cost measured in real protocol context: bytes on the wire, phase-by-phase decomposition, cross-checked against liboqs and eBACS. Re-run daily, every number linked to its commit.",
+    "Post-quantum TLS and SSH handshake cost measured in real protocol context: bytes on the wire, phase-by-phase decomposition, cross-checked against liboqs and eBACS. Measured on x86 and ARM. Re-run daily, every number linked to its commit.",
 };
 
-// process.cwd() at Vercel build time = .../web (Root Directory: web)
 function dataDir(): string {
   return path.join(process.cwd(), "public", "data", "protocols");
 }
@@ -34,22 +34,32 @@ function loadData(): ProtocolsData {
   const manifestPath = path.join(dir, "manifest.json");
 
   if (!fs.existsSync(manifestPath)) {
-    return { manifest: null, tls: null, sig: null, ssh: null };
+    return { manifest: null, byArch: {} };
   }
 
   const manifest = readJson<Manifest>(manifestPath);
+  const byArch: Record<string, ArchBucket> = {};
 
-  const tls = manifest.files["tls-composed"]
-    ? readJson<TLSComposedFile>(path.join(dir, manifest.files["tls-composed"].filename))
-    : null;
-  const sig = manifest.files["sig-track"]
-    ? readJson<SigTrackFile>(path.join(dir, manifest.files["sig-track"].filename))
-    : null;
-  const ssh = manifest.files["ssh-composed"]
-    ? readJson<SSHComposedFile>(path.join(dir, manifest.files["ssh-composed"].filename))
-    : null;
+  for (const arch of manifest.arches) {
+    byArch[arch] = { tls: null, sig: null, ssh: null };
+  }
 
-  return { manifest, tls, sig, ssh };
+  for (const entry of Object.values(manifest.files)) {
+    const bucket = byArch[entry.arch];
+    if (!bucket) continue;
+    const filePath = path.join(dir, entry.filename);
+    if (!fs.existsSync(filePath)) continue;
+
+    if (entry.track === "tls-composed") {
+      bucket.tls = readJson<TLSComposedFile>(filePath);
+    } else if (entry.track === "sig-track") {
+      bucket.sig = readJson<SigTrackFile>(filePath);
+    } else if (entry.track === "ssh-composed") {
+      bucket.ssh = readJson<SSHComposedFile>(filePath);
+    }
+  }
+
+  return { manifest, byArch };
 }
 
 export default function ProtocolsPage() {
@@ -81,8 +91,9 @@ export default function ProtocolsPage() {
             X25519+ML-KEM-768, the NIST-curve variant, the classical baseline
             &mdash; decomposed phase by phase, sized to the byte, and cross-checked
             against the liboqs speed tools and eBACS reference cycles so the numbers
-            can be verified against the canonical ones. Re-run daily; every figure
-            links back to the commit that produced it.
+            can be verified against the canonical ones. Measured on both x86 (Intel
+            Xeon Platinum) and ARM (AWS Graviton3) so the numbers travel. Re-run
+            daily; every figure links back to the commit that produced it.
           </p>
         </div>
 
