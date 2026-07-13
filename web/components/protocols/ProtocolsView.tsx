@@ -315,7 +315,7 @@ export function ProtocolsView({ data }: { data: ProtocolsData }) {
       { id: "tls" as Tab, label: "TLS", count: Object.keys(tlsGrouped).length },
       { id: "signatures" as Tab, label: "Signatures", count: Object.keys(sigGrouped).length },
       { id: "ssh" as Tab, label: "SSH", count: Object.keys(sshGrouped).length },
-    ] as { id: Tab; label: string; count: number }[]
+    ]
   ).filter((t) => t.count > 0);
 
   const active = tabs.find((t) => t.id === tab) ? tab : tabs[0]?.id;
