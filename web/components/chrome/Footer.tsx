@@ -32,6 +32,12 @@ export function Footer() {
             >
               Methodology
             </a>
+            <a
+              href="/privacy"
+              className="text-sm text-fg-muted hover:text-fg transition-colors"
+            >
+              Privacy Policy
+            </a>
           </div>
         </div>
       </div>
