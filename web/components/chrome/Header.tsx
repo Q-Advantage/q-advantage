@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { BOOKING_URL } from "@/lib/constants";
 
 /**
  * Site header — sticky, blur backdrop, present on every page.
@@ -63,7 +64,7 @@ export function Header() {
           </div>
 
           <Link
-            href={process.env.NEXT_PUBLIC_BOOKING_URL!}
+            href={BOOKING_URL}
             className="hidden md:inline-flex items-center px-4 py-2 rounded-md bg-accent text-bg text-[13px] font-medium hover:opacity-90 hover:-translate-y-px transition-all flex-shrink-0"
           >
             Book a call
@@ -72,7 +73,7 @@ export function Header() {
           {/* Mobile: Book a call + Hamburger */}
           <div className="flex md:hidden items-center gap-2">
             <Link
-              href={process.env.NEXT_PUBLIC_BOOKING_URL!}
+              href={BOOKING_URL}
               className="inline-flex items-center px-3 py-1.5 rounded-md bg-accent text-bg text-[12px] font-medium"
             >
               Book a call
