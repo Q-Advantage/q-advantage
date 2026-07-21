@@ -14,6 +14,8 @@ interface PresetComparisonsProps {
   subtitle?: string;
   /** Show the "Open compare view" link in the header */
   showOpenLink?: boolean;
+  /** Render as four large cards, two per row, instead of the compact 4-up grid */
+  large?: boolean;
 }
 
 /**
@@ -36,6 +38,7 @@ export function PresetComparisons({
   eyebrow = "Quick comparisons",
   subtitle,
   showOpenLink = true,
+  large = false,
 }: PresetComparisonsProps) {
   const presets = getComparisonPresets();
   const run = getLatestRun();
@@ -78,7 +81,13 @@ export function PresetComparisons({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+      <div
+        className={
+          large
+            ? "grid grid-cols-1 sm:grid-cols-2 gap-5"
+            : "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3"
+        }
+      >
         {presets.map((p) => {
           const a = run.algorithms_by_id[p.algorithms[0]];
           const b = run.algorithms_by_id[p.algorithms[1]];
@@ -88,7 +97,11 @@ export function PresetComparisons({
             <Link
               key={p.id}
               href={`/q-shield/compare?a=${p.algorithms[0]}&b=${p.algorithms[1]}&op=${p.operation}`}
-              className="group block bg-bg-card border border-border rounded-xl p-5 hover:border-border-strong hover:-translate-y-0.5 transition-all"
+              className={
+                large
+                  ? "group block bg-bg-card border border-border rounded-xl p-7 md:p-8 hover:border-border-strong hover:-translate-y-0.5 transition-all"
+                  : "group block bg-bg-card border border-border rounded-xl p-5 hover:border-border-strong hover:-translate-y-0.5 transition-all"
+              }
             >
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="font-mono text-[10px] uppercase tracking-eyebrow text-fg-subtle">
@@ -97,7 +110,13 @@ export function PresetComparisons({
                 <ArrowUpRight className="w-3.5 h-3.5 text-fg-subtle group-hover:text-accent transition-colors flex-shrink-0" />
               </div>
 
-              <div className="font-serif text-2xl font-normal text-fg leading-tight tracking-tight mb-3">
+              <div
+                className={
+                  large
+                    ? "font-serif text-3xl md:text-4xl font-normal text-fg leading-tight tracking-tight mb-4"
+                    : "font-serif text-2xl font-normal text-fg leading-tight tracking-tight mb-3"
+                }
+              >
                 {p.headline}
               </div>
 
@@ -115,7 +134,13 @@ export function PresetComparisons({
                 <span className="font-mono text-[10px] uppercase tracking-eyebrow text-fg-subtle">
                   {p.metricLabel}
                 </span>
-                <span className="font-mono text-2xl text-accent tabular-nums">
+                <span
+                  className={
+                    large
+                      ? "font-mono text-3xl text-accent tabular-nums"
+                      : "font-mono text-2xl text-accent tabular-nums"
+                  }
+                >
                   {p.metric}
                 </span>
               </div>

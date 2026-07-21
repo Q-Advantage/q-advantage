@@ -38,26 +38,35 @@ export default function HomePage() {
 
               <h1 className="reveal reveal-2 font-serif text-[clamp(48px,7vw,88px)] font-normal leading-[1.02] tracking-[-0.025em] text-fg mb-7">
                 PQC performance,{" "}
-                <em className="italic opacity-95">measured.</em>
+                <em className="italic opacity-95 text-accent">measured.</em>
               </h1>
 
               <p className="reveal reveal-3 text-lg leading-[1.55] text-fg-muted max-w-[560px] mb-10 font-light">
-                Which post-quantum algorithm should you actually deploy? We
-                measure keygen, sign, verify, encap, and decap on production
-                hardware. Every day. Every result, sourced.
+                Which post-quantum algorithm should you actually deploy? And
+                what does turning it on cost you — in latency, in
+                throughput, in bytes on the wire? What will migration cost
+                you in time and money, on your stack? We measure it, live,
+                on production hardware. Every result, sourced.
               </p>
 
               <div className="reveal reveal-4 flex gap-3 items-center flex-wrap">
                 <Link
+                  href={process.env.NEXT_PUBLIC_BOOKING_URL!}
+                  className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-accent text-bg rounded-lg text-sm font-medium hover:-translate-y-px hover:opacity-95 transition-all"
+                >
+                  Book a call
+                  <span aria-hidden>→</span>
+                </Link>
+                <Link
                   href="/q-shield"
-                  className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-fg text-bg rounded-lg text-sm font-medium hover:-translate-y-px hover:opacity-95 transition-all"
+                  className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-transparent text-fg rounded-lg text-sm font-normal border border-accent/50 hover:border-accent transition-colors"
                 >
                   Open Q-Shield
                   <span aria-hidden>→</span>
                 </Link>
                 <Link
                   href="/q-shield/compare"
-                  className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-transparent text-fg rounded-lg text-sm font-normal border border-border-strong hover:border-fg-muted transition-colors"
+                  className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-transparent text-fg rounded-lg text-sm font-normal border border-accent/50 hover:border-accent transition-colors"
                 >
                   Compare algorithms
                   <span aria-hidden>→</span>
@@ -99,46 +108,8 @@ export default function HomePage() {
             title="The takeaways."
             subtitle="Live ratios from the latest daily benchmark. Click any card to open the full comparison."
             showOpenLink={false}
+            large
           />
-        </div>
-      </section>
-
-      {/* ============================ PRODUCTS ============================ */}
-      <section id="products" className="py-20 md:py-[100px] border-t border-border relative z-[2]">
-        <div className="mx-auto max-w-[1200px] px-6 md:px-8">
-          <div className="text-center max-w-[720px] mx-auto mb-[72px]">
-            <div className="eyebrow mb-5">What we publish</div>
-            <h2 className="font-serif text-[clamp(36px,4.5vw,56px)] font-normal leading-[1.05] tracking-[-0.02em] mb-5">
-              Two products. One <em className="italic">source of truth.</em>
-            </h2>
-            <p className="text-[17px] text-fg-muted leading-[1.55] font-light">
-              Q-Shield measures PQC performance every day. Q-Day Index scores how
-              close quantum hardware is to breaking today’s encryption. Both built
-              on the same audit-grade methodology.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ProductCard
-              status="live"
-              name="Q-Shield"
-              tag="PQC benchmarks · daily"
-              desc="Independent performance benchmarks for ML-KEM, ML-DSA, and SLH-DSA. Latency, throughput, key sizes — measured on auditable infrastructure. Every result links to the GitHub Actions run that produced it."
-              href="/q-shield"
-              cta="View live dashboard"
-              featured
-              fullyClickable
-            />
-            <ProductCard
-              status="live"
-              name="Q-Day Index"
-              tag="The threat horizon · daily"
-              desc="A 0–100 measure of how close today’s quantum hardware is to breaking RSA-2048, scored against a named, published resource estimate. Eight scored systems plus analog and footnote categories, every spec sourced."
-              href="/q-day-index"
-              cta="View Q-Day Index"
-              fullyClickable
-            />
-          </div>
         </div>
       </section>
 
@@ -191,12 +162,13 @@ export default function HomePage() {
       <section id="subscribe" className="py-[100px] border-t border-border text-center relative z-[2]">
         <div className="mx-auto max-w-[600px] px-6 md:px-8">
           <h2 className="font-serif text-[clamp(36px,4.5vw,56px)] font-normal leading-[1.05] tracking-[-0.02em] mb-4">
-            The <em className="italic">briefing.</em>
+            The <em className="italic text-accent">briefing.</em>
           </h2>
           <p className="text-base text-fg-muted leading-[1.65] mb-4">
-            One email a week. New benchmark results, Q-Day Index movements,
-            and analysis on the companies and countries shaping the quantum
-            industry.
+            If you’re investing in, building on, buying, or regulating
+            post-quantum cryptography, this is for you. One email a week —
+            new benchmark results, Q-Day Index movements, and the analysis
+            behind them.
           </p>
           <div className="font-mono text-[11px] text-fg-subtle uppercase tracking-eyebrow mb-9 flex justify-center gap-4 flex-wrap">
             <span>Security leaders</span>

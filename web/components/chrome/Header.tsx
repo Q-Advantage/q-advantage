@@ -6,12 +6,11 @@ import { useState } from "react";
 /**
  * Site header — sticky, blur backdrop, present on every page.
  *
- * Desktop (md+): Brand · About · Methodology · GitHub · Q-Day Index · Compare · Q-Shield · Subscribe
- * Mobile (<md):  Brand · Subscribe · Hamburger (opens dropdown with all nav)
+ * Desktop (md+): Brand (left) · About · Methodology · Q-Day Index · Q-Shield (centered) · Book a call (right)
+ * Mobile (<md):  Brand · Book a call · Hamburger (opens dropdown with all nav)
  *
- * Q-Shield gets the green pulse pill (the wedge product).
- * Compare sits adjacent to Q-Shield since it's a Q-Shield feature.
- * Q-Day Index is a plain text link (prominent but secondary).
+ * Book a call is the only green/filled element in the nav — the single
+ * conversion CTA. All other nav links share the same plain text style.
  */
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -26,7 +25,7 @@ export function Header() {
       }}
     >
       <div className="mx-auto max-w-[1200px] px-6 md:px-8 py-[18px]">
-        <div className="flex items-center justify-between">
+        <div className="relative flex items-center justify-between gap-4">
           <Link
             href="/"
             className="flex items-center gap-3 group flex-shrink-0"
@@ -38,8 +37,8 @@ export function Header() {
             </span>
           </Link>
 
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-5 lg:gap-7">
+          {/* Desktop nav — centered in the header regardless of brand/CTA width */}
+          <div className="hidden md:flex items-center gap-5 lg:gap-7 absolute left-1/2 -translate-x-1/2">
             <Link href="/about" className="text-sm text-fg-muted hover:text-fg transition-colors">
               About
             </Link>
@@ -49,14 +48,6 @@ export function Header() {
             >
               Methodology
             </Link>
-            <a
-              href="https://github.com/Q-Advantage"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-fg-muted hover:text-fg transition-colors"
-            >
-              GitHub
-            </a>
             <Link
               href="/q-day-index"
               className="text-sm text-fg-muted hover:text-fg transition-colors"
@@ -64,42 +55,27 @@ export function Header() {
               Q-Day Index
             </Link>
             <Link
-              href="/q-shield/protocols"
-              className="text-sm text-fg-muted hover:text-fg transition-colors"
-            >
-              Protocols
-            </Link>
-            <Link
-              href="/q-shield/compare"
-              className="text-sm text-fg-muted hover:text-fg transition-colors"
-            >
-              Compare
-            </Link>
-            <Link
               href="/q-shield"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md border border-accent/40 bg-accent/10 text-accent text-[13px] font-medium hover:bg-accent/15 hover:border-accent/60 transition-colors"
+              className="text-sm text-fg-muted hover:text-fg transition-colors"
             >
-              <span
-                className="inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse-soft flex-shrink-0"
-                aria-hidden
-              />
               Q-Shield
-            </Link>
-            <Link
-              href="/#subscribe"
-              className="inline-flex items-center px-4 py-2 rounded-md bg-fg text-bg text-[13px] font-medium hover:opacity-90 hover:-translate-y-px transition-all"
-            >
-              Subscribe
             </Link>
           </div>
 
-          {/* Mobile: Subscribe + Hamburger */}
+          <Link
+            href={process.env.NEXT_PUBLIC_BOOKING_URL!}
+            className="hidden md:inline-flex items-center px-4 py-2 rounded-md bg-accent text-bg text-[13px] font-medium hover:opacity-90 hover:-translate-y-px transition-all flex-shrink-0"
+          >
+            Book a call
+          </Link>
+
+          {/* Mobile: Book a call + Hamburger */}
           <div className="flex md:hidden items-center gap-2">
             <Link
-              href="/#subscribe"
-              className="inline-flex items-center px-3 py-1.5 rounded-md bg-fg text-bg text-[12px] font-medium"
+              href={process.env.NEXT_PUBLIC_BOOKING_URL!}
+              className="inline-flex items-center px-3 py-1.5 rounded-md bg-accent text-bg text-[12px] font-medium"
             >
-              Subscribe
+              Book a call
             </Link>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -123,27 +99,9 @@ export function Header() {
             <Link
               href="/q-shield"
               onClick={() => setMenuOpen(false)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-md border border-accent/40 bg-accent/10 text-accent text-sm font-medium"
+              className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
             >
-              <span
-                className="inline-block w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0"
-                aria-hidden
-              />
               Q-Shield
-            </Link>
-            <Link
-              href="/q-shield/protocols"
-              onClick={() => setMenuOpen(false)}
-              className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
-            >
-              Protocols
-            </Link>
-            <Link
-              href="/q-shield/compare"
-              onClick={() => setMenuOpen(false)}
-              className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
-            >
-              Compare
             </Link>
             <Link
               href="/q-day-index"
@@ -166,15 +124,6 @@ export function Header() {
             >
               Methodology
             </Link>
-            <a
-              href="https://github.com/Q-Advantage"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setMenuOpen(false)}
-              className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
-            >
-              GitHub
-            </a>
           </div>
         </div>
       )}
