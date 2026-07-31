@@ -1,0 +1,209 @@
+{
+  "environment": {
+    "iso_timestamp": "2026-07-31T09:35:22Z",
+    "liboqs_version": "0.15.0",
+    "openssh": "OpenSSH_9.6p1 Ubuntu-3ubuntu13.18, OpenSSL 3.0.13 30 Jan 2024",
+    "git_commit": "c4cd1d5e80bbaf1015d332a2828008e968dc9082"
+  },
+  "suites": {
+    "mlkem768x25519-sha256": {
+      "identity": {
+        "protocol": "ssh",
+        "mode": "composed",
+        "suite": "mlkem768x25519-sha256"
+      },
+      "timing": {
+        "mean_us": 245.019,
+        "median_us": 222.485,
+        "p95_us": 311.614,
+        "p99_us": 346.234,
+        "stdev_us": 40.495,
+        "min_us": 219.595,
+        "max_us": 725.333,
+        "ops_per_sec": 4081.31,
+        "n_iterations": 1000
+      },
+      "size": {
+        "bytes_client_to_server": 1216,
+        "bytes_server_to_client": 1120,
+        "bytes_total": 2336
+      },
+      "baseline": {
+        "baseline_suite": "curve25519-sha256",
+        "pct_over_classical": 1.1
+      },
+      "cross_validation": {
+        "ebacs_reference_cycles": null,
+        "liboqs_speed_number": null,
+        "measured_vs_reference_pct": null,
+        "reference_notes": "no reference value curated for this primitive yet"
+      },
+      "auth": null,
+      "toolchain": {
+        "liboqs": "0.15.0",
+        "liboqs_python": "0.15.0",
+        "openssl_runtime": "OpenSSL 3.0.13 30 Jan 2024",
+        "openssl_cli": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)",
+        "oqs_provider": null,
+        "openssh": "OpenSSH_9.6p1 Ubuntu-3ubuntu13.18, OpenSSL 3.0.13 30 Jan 2024"
+      },
+      "host": {
+        "cpu_model": "Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz",
+        "arch": "x86_64",
+        "build_path": "OQS_DIST_BUILD dispatch \u00b7 kyber768/falcon AVX2 \u00b7 SHA3 AVX512VL",
+        "cpu_flags": [
+          "avx512vl",
+          "avx512f",
+          "avx2",
+          "sse4_2"
+        ],
+        "cpu_hz_nominal": 2500006000.0,
+        "steal_time_pct": 0.0
+      },
+      "audit": {
+        "git_commit": "c4cd1d5e80bbaf1015d332a2828008e968dc9082",
+        "timestamp_utc": "2026-07-31T09:35:22Z"
+      },
+      "phases": {
+        "kem_keygen": {
+          "mean_us": 22.511,
+          "median_us": 18.261,
+          "p95_us": 33.12,
+          "p99_us": 46.282,
+          "stdev_us": 8.992,
+          "min_us": 17.875,
+          "max_us": 170.301,
+          "ops_per_sec": 44423.2,
+          "n_iterations": 1000
+        },
+        "kem_encaps": {
+          "mean_us": 20.816,
+          "median_us": 20.054,
+          "p95_us": 21.27,
+          "p99_us": 33.362,
+          "stdev_us": 5.977,
+          "min_us": 19.796,
+          "max_us": 152.004,
+          "ops_per_sec": 48039.69,
+          "n_iterations": 1000
+        },
+        "kem_decaps": {
+          "mean_us": 21.315,
+          "median_us": 21.041,
+          "p95_us": 21.485,
+          "p99_us": 28.605,
+          "stdev_us": 1.522,
+          "min_us": 20.822,
+          "max_us": 41.575,
+          "ops_per_sec": 46916.35,
+          "n_iterations": 1000
+        },
+        "classical_keygen": {
+          "mean_us": 49.473,
+          "median_us": 41.09,
+          "p95_us": 78.136,
+          "p99_us": 89.684,
+          "stdev_us": 15.647,
+          "min_us": 40.665,
+          "max_us": 169.182,
+          "ops_per_sec": 20213.13,
+          "n_iterations": 1000
+        },
+        "classical_derive": {
+          "mean_us": 40.716,
+          "median_us": 39.794,
+          "p95_us": 45.177,
+          "p99_us": 50.84,
+          "stdev_us": 6.889,
+          "min_us": 39.442,
+          "max_us": 148.254,
+          "ops_per_sec": 24560.24,
+          "n_iterations": 1000
+        }
+      }
+    },
+    "curve25519-sha256": {
+      "identity": {
+        "protocol": "ssh",
+        "mode": "composed",
+        "suite": "curve25519-sha256"
+      },
+      "timing": {
+        "mean_us": 166.388,
+        "median_us": 161.701,
+        "p95_us": 183.026,
+        "p99_us": 223.298,
+        "stdev_us": 24.416,
+        "min_us": 160.534,
+        "max_us": 683.634,
+        "ops_per_sec": 6010.06,
+        "n_iterations": 1000
+      },
+      "size": {
+        "bytes_client_to_server": 32,
+        "bytes_server_to_client": 32,
+        "bytes_total": 64
+      },
+      "baseline": {
+        "baseline_suite": null,
+        "pct_over_classical": null
+      },
+      "cross_validation": {
+        "ebacs_reference_cycles": null,
+        "liboqs_speed_number": null,
+        "measured_vs_reference_pct": null,
+        "reference_notes": "no reference value curated for this primitive yet"
+      },
+      "auth": null,
+      "toolchain": {
+        "liboqs": "0.15.0",
+        "liboqs_python": "0.15.0",
+        "openssl_runtime": "OpenSSL 3.0.13 30 Jan 2024",
+        "openssl_cli": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)",
+        "oqs_provider": null,
+        "openssh": "OpenSSH_9.6p1 Ubuntu-3ubuntu13.18, OpenSSL 3.0.13 30 Jan 2024"
+      },
+      "host": {
+        "cpu_model": "Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz",
+        "arch": "x86_64",
+        "build_path": "OQS_DIST_BUILD dispatch \u00b7 kyber768/falcon AVX2 \u00b7 SHA3 AVX512VL",
+        "cpu_flags": [
+          "avx512vl",
+          "avx512f",
+          "avx2",
+          "sse4_2"
+        ],
+        "cpu_hz_nominal": 2500006000.0,
+        "steal_time_pct": 0.0
+      },
+      "audit": {
+        "git_commit": "c4cd1d5e80bbaf1015d332a2828008e968dc9082",
+        "timestamp_utc": "2026-07-31T09:35:22Z"
+      },
+      "phases": {
+        "classical_keygen": {
+          "mean_us": 42.556,
+          "median_us": 41.029,
+          "p95_us": 48.211,
+          "p99_us": 64.317,
+          "stdev_us": 10.524,
+          "min_us": 40.631,
+          "max_us": 302.243,
+          "ops_per_sec": 23498.44,
+          "n_iterations": 1000
+        },
+        "classical_derive": {
+          "mean_us": 40.638,
+          "median_us": 39.787,
+          "p95_us": 44.914,
+          "p99_us": 54.956,
+          "stdev_us": 6.202,
+          "min_us": 39.368,
+          "max_us": 154.022,
+          "ops_per_sec": 24607.65,
+          "n_iterations": 1000
+        }
+      }
+    }
+  }
+}
