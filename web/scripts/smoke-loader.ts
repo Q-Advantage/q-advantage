@@ -11,6 +11,7 @@ import {
   getLatestRun,
   getAlgorithmHistory,
 } from "../lib/data/load";
+import { parseAlgorithmKey } from "../lib/data/normalize";
 import {
   formatDuration,
   formatOpsPerSec,
@@ -74,6 +75,19 @@ console.log(`\n=== ML-DSA-65 sign history (sparkline data) ===`);
 const hist = getAlgorithmHistory("ml-dsa-65", "sign");
 for (const p of hist) {
   console.log(`  ${formatRunDate(p.run.environment.iso_timestamp).padEnd(20)}  mean=${formatDuration(p.mean_us).padEnd(12)}  p95=${formatDuration(p.p95_us)}`);
+}
+
+console.log(`\n=== Unrecognized algorithm key must fail loudly, not fabricate ===`);
+const fakeKey = "XX-NOT-A-REAL-ALGORITHM-9999";
+try {
+  parseAlgorithmKey(fakeKey);
+  throw new Error(
+    `parseAlgorithmKey("${fakeKey}") should have thrown, but returned a value instead. ` +
+      `An unrecognized key must never silently get a guessed family/NIST level.`,
+  );
+} catch (err) {
+  if ((err as Error).message.includes("should have thrown")) throw err;
+  console.log(`  Correctly threw: ${(err as Error).message}`);
 }
 
 console.log(`\nOK — loader smoke test passed.`);
