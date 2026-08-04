@@ -23,9 +23,13 @@ One click, no revert commit needed. Do this first if something's visibly broken;
 
 ## Branch protection / ruleset
 
-`main` is protected by a repository ruleset (not classic branch protection) requiring a PR + passing CI status check, blocking force-push and branch deletion, with a bypass for the GitHub Actions app so the benchmark bot's direct commits keep working. Everyone else — including the founder pushing from an editor — goes through a PR.
+Two rulesets on `main`, as of this session:
+- `main-hard-gate` — **active.** Blocks force-push and branch deletion, no exceptions. Doesn't affect the benchmark bot (it only ever fast-forward pushes).
+- `main-forge-gate-evaluate` — **evaluate mode (not enforcing yet).** Would require a PR + the `web checks` CI status before merging. Not flipped to active because a safe bypass for the benchmark bot's direct `git push origin main` couldn't be verified this session — see `docs/adr/0001-forge-repo-topology.md` for the full story and the `#todo` on how to resolve it.
 
-To inspect or change it: `gh api repos/Q-Advantage/q-advantage/rulesets` (read) or the GitHub UI under repo Settings → Rules → Rulesets. Changing it is a deliberate action, not something Claude Code does as part of normal work-order execution (see `.claude/settings.json` — write access to rulesets is `ask`, not standing-allowed).
+**To check whether the bot's push would have been blocked**, after the next benchmark run completes: `gh api repos/Q-Advantage/q-advantage/rulesets/rule-suites` or GitHub UI → repo Settings → Rules → Insights. That tells you, with real evidence, whether it's safe to flip `main-forge-gate-evaluate` to `active`.
+
+To inspect or change either ruleset: `gh api repos/Q-Advantage/q-advantage/rulesets` (read) or the GitHub UI under repo Settings → Rules → Rulesets. Changing them is a deliberate action, not something Claude Code does as part of normal work-order execution (see `.claude/settings.json` — write access to rulesets is `ask`, not standing-allowed).
 
 ## Env vars
 
