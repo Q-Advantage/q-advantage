@@ -79,15 +79,15 @@ export function parseAlgorithmKey(liboqs_key: string): NameParts {
     };
   }
 
-  // Fallback for unknown algorithms — preserve key, slug-ify for URL.
-  const id = liboqs_key.toLowerCase().replace(/_/g, "-");
-  return {
-    id,
-    display_name: liboqs_key,
-    family: "ML-KEM",
-    parameter_set: liboqs_key,
-    nist_level: 1,
-  };
+  // No match — fail loudly rather than fabricate a classification. Silently
+  // defaulting to family: "ML-KEM", nist_level: 1 would render an unrecognized
+  // algorithm (e.g. from a liboqs bump) as a specific, false security claim on
+  // the public dashboard. Matches the fail-loud convention in load.ts.
+  throw new Error(
+    `Unrecognized liboqs algorithm key "${liboqs_key}". Add a case for it in ` +
+      `parseAlgorithmKey() (web/lib/data/normalize.ts) — do not let it fall ` +
+      `through to a guessed family/NIST level.`,
+  );
 }
 
 export function normalizeAlgorithm(
