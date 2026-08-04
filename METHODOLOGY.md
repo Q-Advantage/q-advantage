@@ -8,14 +8,12 @@
 > drift between the two, the website wins.
 
 Q-Advantage is an independent, vendor-neutral benchmarking platform for the
-quantum era. It publishes three measurement products:
+quantum era. It publishes two measurement products:
 
 - **Q-Shield** — performance benchmarks for the NIST-standardized
   post-quantum cryptographic algorithms.
 - **Q-Day Index** — a 0–100 score measuring how close today's quantum
   hardware is to breaking RSA-2048.
-- **Q-Arena** — real quantum algorithms executed on real quantum hardware
-  (in design).
 
 Everything below is verifiable. Clone the repo, run the workflow, and you
 should reproduce our numbers within run-to-run variance.
@@ -189,23 +187,6 @@ fit, but the model itself is held internal until defensible.
 
 → **Full Q-Day Index methodology, with the formal anchor caveats and the
 methods glossary:** <https://qadvantage.io/methodology#q-day-index>
-
----
-
-## Q-Arena (in design)
-
-Q-Arena will run standardised quantum circuits — Bell-state preparation
-and small entanglement-witness tests initially — across multiple machines,
-so machines can be compared on what they actually do rather than what
-their data sheets claim. Targets are AWS Braket simulators and the IBM
-Quantum free tier for real hardware.
-
-**Q-Arena is not yet running.** Exact circuit list, machine roster, and
-run cadence will be finalised as we begin running them. Anything stated
-here in advance is a plan, not a promise.
-
-→ **Q-Arena methodology stub on the website:**
-<https://qadvantage.io/methodology#q-arena>
 
 ---
 
