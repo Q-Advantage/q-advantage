@@ -1,7 +1,7 @@
 # Q-Advantage
 
 > Independent measurement and intelligence layer for the post-quantum cryptography transition.
-> Live at **https://qadvantage.io** · Book a call: **https://cal.com/qadvantage/intro**
+> Live at **https://qadvantage.io** · Contact: **https://qadvantage.io/contact**
 
 The PQC migration market runs on vendor claims and analyst PDFs. Q-Advantage runs on GitHub Actions logs and peer-reviewed citations. Every benchmark is public, every run is auditable, every score is reproducible.
 

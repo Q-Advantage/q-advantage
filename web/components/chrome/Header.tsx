@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { BOOKING_URL } from "@/lib/constants";
+import { ThemeToggle } from "./ThemeToggle";
 
 /**
  * Site header — sticky, blur backdrop, present on every page.
  *
- * Desktop (md+): Brand (left) · About · Methodology · Q-Day Index · Q-Shield (centered) · Book a call (right)
- * Mobile (<md):  Brand · Book a call · Hamburger (opens dropdown with all nav)
+ * Desktop (md+): Brand (left) · About · Methodology · Q-Day Index · Q-Shield (centered) · Theme toggle · Contact us (right)
+ * Mobile (<md):  Brand · Contact us · Hamburger (opens dropdown with all nav + theme toggle)
  *
- * Book a call is the only green/filled element in the nav — the single
+ * Contact us is the only green/filled element in the nav — the single
  * conversion CTA. All other nav links share the same plain text style.
  */
 export function Header() {
@@ -22,7 +22,7 @@ export function Header() {
       style={{
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
-        background: "rgba(10, 10, 11, 0.7)",
+        background: "rgb(var(--color-bg) / 0.7)",
       }}
     >
       <div className="mx-auto max-w-[1200px] px-6 md:px-8 py-[18px]">
@@ -63,20 +63,23 @@ export function Header() {
             </Link>
           </div>
 
-          <Link
-            href={BOOKING_URL}
-            className="hidden md:inline-flex items-center px-4 py-2 rounded-md bg-accent text-bg text-[13px] font-medium hover:opacity-90 hover:-translate-y-px transition-all flex-shrink-0"
-          >
-            Book a call
-          </Link>
+          <div className="hidden md:flex items-center gap-3 flex-shrink-0">
+            <ThemeToggle />
+            <Link
+              href="/contact"
+              className="inline-flex items-center px-4 py-2 rounded-md bg-accent text-accent-fg text-[13px] font-medium hover:opacity-90 hover:-translate-y-px transition-all"
+            >
+              Contact us
+            </Link>
+          </div>
 
-          {/* Mobile: Book a call + Hamburger */}
+          {/* Mobile: Contact us + Hamburger */}
           <div className="flex md:hidden items-center gap-2">
             <Link
-              href={BOOKING_URL}
-              className="inline-flex items-center px-3 py-1.5 rounded-md bg-accent text-bg text-[12px] font-medium"
+              href="/contact"
+              className="inline-flex items-center px-3 py-1.5 rounded-md bg-accent text-accent-fg text-[12px] font-medium"
             >
-              Book a call
+              Contact us
             </Link>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -94,9 +97,12 @@ export function Header() {
       {menuOpen && (
         <div
           className="md:hidden border-t border-border"
-          style={{ background: "rgba(10, 10, 11, 0.95)" }}
+          style={{ background: "rgb(var(--color-bg) / 0.95)" }}
         >
           <div className="mx-auto max-w-[1200px] px-6 py-3 flex flex-col gap-1">
+            <div className="px-3.5 py-2">
+              <ThemeToggle />
+            </div>
             <Link
               href="/q-shield"
               onClick={() => setMenuOpen(false)}
@@ -182,8 +188,8 @@ function DiamondMark() {
         className="absolute"
         style={{
           inset: "5px",
-          borderLeft: "1.5px solid #4ade80",
-          borderBottom: "1.5px solid #4ade80",
+          borderLeft: "1.5px solid rgb(var(--color-accent))",
+          borderBottom: "1.5px solid rgb(var(--color-accent))",
         }}
       />
     </span>

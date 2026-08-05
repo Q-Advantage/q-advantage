@@ -33,4 +33,4 @@ To inspect or change either ruleset: `gh api repos/Q-Advantage/q-advantage/rules
 
 ## Env vars
 
-Configured in Vercel project settings, never in the repo: `BEEHIIV_API_KEY`, `BEEHIIV_PUB_ID`. `NEXT_PUBLIC_BOOKING_URL` has a code fallback and is optional. The build does not require any of these to succeed — see `web/README.md`.
+Configured in Vercel project settings, never in the repo: `BEEHIIV_API_KEY`, `BEEHIIV_PUB_ID`. The build does not require these to succeed — see `web/README.md`. The `/contact` form and the Q-Day Index feedback form both use a client-side `mailto:` link (no server-side config, no API key).
