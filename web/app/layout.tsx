@@ -1,26 +1,29 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Inter_Tight, Instrument_Serif } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 
 /**
- * Typography — DM Sans is the single typeface for the whole site (matching
- * the InferenceX register). It serves BOTH --font-sans AND --font-serif so
- * every existing `font-serif` className keeps resolving to the intended
- * typeface without site-wide find/replace.
+ * Typography — two distinct faces, not one face doing double duty.
  *
- * Geist Mono is unchanged — used for numbers, mono cells, eyebrow labels.
+ * Inter Tight for body/UI text; Instrument Serif (italic for editorial
+ * signature phrases — "measured.", "a commit hash.") for display headings.
+ * Geist Mono for numbers, mono cells, eyebrow labels.
  */
-const dmSans = DM_Sans({
+const interTight = Inter_Tight({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-sans",
-  weight: ["300", "400", "500", "600", "700"],
-  style: ["normal", "italic"],
+  weight: ["300", "400", "500", "600"],
 });
 
-// Alias the same font to --font-serif. next/font won't load it twice — this is
-// just a CSS-variable alias declared in globals.css. See `@layer base` there.
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-serif",
+  weight: "400",
+  style: ["normal", "italic"],
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://qadvantage.io"),
@@ -44,6 +47,20 @@ export const metadata: Metadata = {
   },
 };
 
+// Runs before first paint so the stored theme choice (dark/light/navy)
+// applies immediately — otherwise the page would flash the default dark
+// theme and then jump to the visitor's saved choice.
+const THEME_INIT_SCRIPT = `
+(function () {
+  try {
+    var t = localStorage.getItem("qadv-theme");
+    if (t === "light" || t === "navy") {
+      document.documentElement.setAttribute("data-theme", t);
+    }
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: {
@@ -52,8 +69,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${GeistMono.variable} dark`}
+      className={`${interTight.variable} ${instrumentSerif.variable} ${GeistMono.variable} dark`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="font-sans bg-bg text-fg antialiased min-h-screen">
         {children}
       </body>

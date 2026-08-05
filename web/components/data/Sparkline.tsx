@@ -145,7 +145,7 @@ function ClickableDot({ cx, cy, payload, active }: DotProps) {
         cy={cy}
         r={active ? 4 : 2.5}
         fill="#4ade80"
-        stroke={active ? "#0a0a0b" : "transparent"}
+        style={{ stroke: active ? "rgb(var(--color-bg))" : "transparent" }}
         strokeWidth={active ? 2 : 0}
         pointerEvents="none"
       />

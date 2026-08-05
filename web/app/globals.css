@@ -2,14 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Theme tokens — three themes selected at runtime via `data-theme` on <html>
+ * (see components/chrome/ThemeToggle.tsx). Values are "R G B" triplets (no
+ * commas) so Tailwind's `rgb(var(--x) / <alpha-value>)` pattern in
+ * tailwind.config.ts can apply opacity modifiers (e.g. `bg-accent/10`).
+ *
+ * :root holds the "dark" defaults (unchanged from the original single-theme
+ * palette) so any page that loads before the theme-init script runs still
+ * paints correctly. [data-theme="light"] and [data-theme="navy"] only
+ * override the tokens that actually differ — data/status tokens are
+ * intentionally not redeclared per theme (see tailwind.config.ts).
+ */
 @layer base {
   :root {
     color-scheme: dark;
+
+    --color-bg: 10 10 11;
+    --color-bg-surface: 17 17 20;
+    --color-bg-card: 14 14 17;
+    --color-bg-elevated: 23 23 26;
+    --color-bg-inset: 8 8 10;
+
+    --color-fg: 237 237 237;
+    --color-fg-muted: 161 161 166;
+    --color-fg-subtle: 107 107 114;
+    --color-fg-faint: 64 64 72;
+
+    --color-border: 255 255 255;
+
+    --color-accent: 74 222 128;
+    --color-accent-dim: 45 157 95;
+    --color-accent-fg: 10 10 11;
+
+    --color-status-ok: 74 222 128;
+    --color-status-warn: 251 191 36;
+    --color-status-err: 248 113 113;
+  }
+
+  /* Light — warm paper background, editorial (SemiAnalysis / Perplexity Comet register) */
+  [data-theme="light"] {
+    color-scheme: light;
+
+    --color-bg: 250 248 244;
+    --color-bg-surface: 244 241 234;
+    --color-bg-card: 255 255 255;
+    --color-bg-elevated: 255 255 255;
+    --color-bg-inset: 238 234 225;
+
+    --color-fg: 26 23 20;
+    --color-fg-muted: 92 87 78;
+    --color-fg-subtle: 140 133 121;
+    --color-fg-faint: 199 192 178;
+
+    --color-border: 20 17 13;
+
+    --color-accent: 22 163 74;
+    --color-accent-dim: 21 128 61;
+    --color-accent-fg: 255 255 255;
+  }
+
+  /* Navy — deep blue, Bloomberg/terminal-adjacent register */
+  [data-theme="navy"] {
+    color-scheme: dark;
+
+    --color-bg: 8 13 24;
+    --color-bg-surface: 12 19 34;
+    --color-bg-card: 10 16 29;
+    --color-bg-elevated: 19 28 46;
+    --color-bg-inset: 5 9 17;
+
+    --color-fg: 226 232 240;
+    --color-fg-muted: 148 163 184;
+    --color-fg-subtle: 100 116 139;
+    --color-fg-faint: 51 65 85;
+
+    --color-border: 148 163 184;
+
+    --color-accent: 74 222 128;
+    --color-accent-dim: 45 157 95;
+    --color-accent-fg: 8 13 24;
   }
 
   html {
-    background: theme("colors.bg.DEFAULT");
-    color: theme("colors.fg.DEFAULT");
+    background: rgb(var(--color-bg));
+    color: rgb(var(--color-fg));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -32,30 +109,30 @@
 
   /* Subtle focus ring — accessibility without garish blue browser default */
   :focus-visible {
-    outline: 2px solid theme("colors.accent.DEFAULT");
+    outline: 2px solid rgb(var(--color-accent));
     outline-offset: 2px;
   }
 
   /* Selection styling */
   ::selection {
-    background: theme("colors.accent.soft");
-    color: theme("colors.fg.DEFAULT");
+    background: rgb(var(--color-accent) / 0.08);
+    color: rgb(var(--color-fg));
   }
 
-  /* Scrollbar — restrained, dark */
+  /* Scrollbar */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
   ::-webkit-scrollbar-track {
-    background: theme("colors.bg.DEFAULT");
+    background: rgb(var(--color-bg));
   }
   ::-webkit-scrollbar-thumb {
-    background: theme("colors.border.strong");
+    background: rgb(var(--color-border) / 0.14);
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: theme("colors.fg.faint");
+    background: rgb(var(--color-fg-faint));
   }
 }
 
@@ -90,7 +167,7 @@
     height: 1200px;
     background: radial-gradient(
       circle,
-      rgba(74, 222, 128, 0.06) 0%,
+      rgb(var(--color-accent) / 0.06) 0%,
       transparent 60%
     );
     pointer-events: none;
@@ -136,8 +213,8 @@
    * These are LITERAL values, not theme() lookups, because the dashboard view
    * uses its own internal palette that doesn't need to chain through the site's
    * Tailwind config. Fonts DO route through the site's --font-sans / --font-mono
-   * variables (declared by next/font in layout.tsx) so the dashboard inherits
-   * the site's typeface choice (DM Sans / mono).
+   * variables (declared by next/font in layout.tsx) — the dashboard is
+   * deliberately sans-only (dense Bloomberg-style register, no italics).
    *
    * The .qday-root wrapper on the QDayIndexView component scopes these so they
    * never leak into other pages.
@@ -157,18 +234,29 @@
     --qd-mono: var(--font-geist-mono), var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace;
   }
 
-}
-/*
- * APPEND THIS to web/app/globals.css (anywhere inside @layer base, or just
- * before the existing :root color-scheme block — order doesn't matter).
- *
- * Purpose: now that DM Sans is the single site typeface, alias --font-serif
- * to --font-sans so every existing `className="font-serif"` keeps working
- * (resolves to DM Sans), without needing to find/replace across the site.
- */
+  /* Light theme — same paper register as the rest of the site */
+  [data-theme="light"] .qday-root {
+    --qd-bg: #faf8f4;
+    --qd-panel: #ffffff;
+    --qd-panel2: #f4f1ea;
+    --qd-line: #ddd6c8;
+    --qd-border: #14110d22;
+    --qd-fg: #1a1714;
+    --qd-fg2: #5c574e;
+    --qd-dim: #8c8579;
+    --qd-green: #16a34a;
+  }
 
-@layer base {
-  :root {
-    --font-serif: var(--font-sans);
+  /* Navy theme */
+  [data-theme="navy"] .qday-root {
+    --qd-bg: #080d18;
+    --qd-panel: #0c1322;
+    --qd-panel2: #0a101d;
+    --qd-line: #1e2a3f;
+    --qd-border: #94a3b822;
+    --qd-fg: #e2e8f0;
+    --qd-fg2: #94a3b8;
+    --qd-dim: #64748b;
+    --qd-green: #4ade80;
   }
 }

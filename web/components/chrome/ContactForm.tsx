@@ -9,14 +9,30 @@ import { useState } from "react";
  * visitor's mail client (mailto:) pre-filled with the structured fields,
  * addressed to hello@qadvantage.io. No server-side form handling, no new
  * secrets to provision.
+ *
+ * Reason defaults to "Product & pricing" — most inbound contact is a
+ * prospect wanting to talk about the product — but the field exists
+ * because plenty of it isn't (corrections, press, partnerships).
  */
 
 const TO = "hello@qadvantage.io";
 const MAX_MESSAGE = 2000;
 
+const REASONS = [
+  { value: "product", label: "Product & pricing" },
+  { value: "partnership", label: "Partnership" },
+  { value: "press", label: "Press & media" },
+  { value: "correction", label: "Benchmark question or correction" },
+  { value: "other", label: "Other" },
+] as const;
+
+type ReasonValue = (typeof REASONS)[number]["value"];
+
 export function ContactForm() {
+  const [reason, setReason] = useState<ReasonValue>("product");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
   const [message, setMessage] = useState("");
 
   const remaining = MAX_MESSAGE - message.length;
@@ -27,9 +43,12 @@ export function ContactForm() {
     e.preventDefault();
     if (!canSubmit) return;
 
-    const subject = `[Contact] ${name.trim() || email}`;
+    const reasonLabel = REASONS.find((r) => r.value === reason)?.label ?? reason;
+    const subject = `[${reasonLabel}] ${name.trim() || email}`;
     const body =
+      `Reason: ${reasonLabel}\n` +
       `Name: ${name.trim() || "(not provided)"}\n` +
+      `Company: ${company.trim() || "(not provided)"}\n` +
       `From: ${email}\n\n` +
       `${message}\n\n` +
       `---\n` +
@@ -41,9 +60,24 @@ export function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} className="mt-8 space-y-5 max-w-xl">
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs text-fg-muted font-medium">Reason for contact</span>
+        <select
+          value={reason}
+          onChange={(e) => setReason(e.target.value as ReasonValue)}
+          className="bg-bg-card border border-border-strong rounded-md px-3 py-2.5 text-sm text-fg focus:outline-none focus:border-accent transition-colors"
+        >
+          {REASONS.map((r) => (
+            <option key={r.value} value={r.value}>
+              {r.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs text-fg-muted font-medium">Your name</span>
+          <span className="text-xs text-fg-muted font-medium">Name</span>
           <input
             type="text"
             placeholder="Jane Doe"
@@ -53,17 +87,28 @@ export function ContactForm() {
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-xs text-fg-muted font-medium">Your email</span>
+          <span className="text-xs text-fg-muted font-medium">Company</span>
           <input
-            type="email"
-            required
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            placeholder="Optional"
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
             className="bg-bg-card border border-border-strong rounded-md px-3 py-2.5 text-sm text-fg placeholder:text-fg-subtle focus:outline-none focus:border-accent transition-colors"
           />
         </label>
       </div>
+
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs text-fg-muted font-medium">Email</span>
+        <input
+          type="email"
+          required
+          placeholder="you@company.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="bg-bg-card border border-border-strong rounded-md px-3 py-2.5 text-sm text-fg placeholder:text-fg-subtle focus:outline-none focus:border-accent transition-colors"
+        />
+      </label>
 
       <label className="flex flex-col gap-1.5">
         <div className="flex items-baseline justify-between">
@@ -78,12 +123,12 @@ export function ContactForm() {
         </div>
         <textarea
           required
-          rows={7}
-          placeholder="What can we help with?"
+          rows={6}
+          placeholder="What do you need?"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           className="bg-bg-card border border-border-strong rounded-md px-3 py-2.5 text-sm text-fg placeholder:text-fg-subtle focus:outline-none focus:border-accent transition-colors resize-y font-sans"
-          style={{ minHeight: "160px" }}
+          style={{ minHeight: "140px" }}
         />
       </label>
 
@@ -91,13 +136,13 @@ export function ContactForm() {
         <button
           type="submit"
           disabled={!canSubmit}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-accent text-bg text-sm font-medium hover:opacity-90 hover:-translate-y-px transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-accent text-accent-fg text-sm font-medium hover:opacity-90 hover:-translate-y-px transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
         >
-          Send via your mail client
+          Send message
           <span aria-hidden>→</span>
         </button>
         <span className="text-xs text-fg-subtle">
-          Opens your email app addressed to {TO}. We never store form data on this site.
+          Opens your email app, addressed to {TO}.
         </span>
       </div>
     </form>

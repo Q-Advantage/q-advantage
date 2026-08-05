@@ -8,7 +8,7 @@ import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 export const metadata: Metadata = {
   title: "Contact — Q-Advantage",
   description:
-    "Get in touch with Q-Advantage — questions, corrections, partnership or press inquiries.",
+    "Talk to Q-Advantage about product access, benchmarking engagements, partnerships, press, or a correction to published data.",
 };
 
 export default function ContactPage() {
@@ -21,11 +21,11 @@ export default function ContactPage() {
         <div className="mt-8 mb-4">
           <div className="eyebrow mb-4">Contact</div>
           <h1 className="font-serif text-[clamp(40px,6vw,64px)] font-normal leading-[1.05] tracking-[-0.02em] text-fg mb-5">
-            Get in touch.
+            Talk to us.
           </h1>
           <p className="text-lg text-fg-muted leading-[1.6] font-light">
-            Questions, corrections, partnership or press inquiries — tell us what you need.
-            We read every message and reply from a real inbox, not a ticketing queue.
+            Product access, a custom benchmarking engagement, a partnership — or a correction
+            to something we&apos;ve published. Tell us which, and what you need.
           </p>
         </div>
 

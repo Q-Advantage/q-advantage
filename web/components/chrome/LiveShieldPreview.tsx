@@ -10,13 +10,12 @@ import {
 /**
  * Hero card on the marketing landing.
  *
- * Replaces the static "Q-Day Index preview" mock with live Q-Shield data
- * pulled from the latest benchmark run. The brand promise is "the data is
- * live" — proving it on the home page hero is the loudest possible signal.
+ * Pulls real numbers from the latest benchmark run rather than a static
+ * mock. Freshness is established by the audit footer (run date, commit
+ * SHA) — an inspectable fact, not a blinking badge.
  *
- * Renders three highlight rows from the most recent run, plus the audit
- * footer (commit SHA, run date) for credibility. Whole card is a link to
- * /q-shield.
+ * Renders three highlight rows from the most recent run. Whole card is a
+ * link to /q-shield.
  */
 export function LiveShieldPreview() {
   const run = getLatestRun();
@@ -45,13 +44,9 @@ export function LiveShieldPreview() {
       />
 
       {/* Header */}
-      <div className="flex justify-between items-center mb-6 relative">
+      <div className="mb-6 relative">
         <span className="font-mono text-[11px] uppercase tracking-eyebrow text-fg-subtle">
           Q-Shield · Latest run
-        </span>
-        <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-eyebrow text-accent px-2 py-0.5 border border-accent/30 rounded-full">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse-soft" />
-          Live
         </span>
       </div>
 

@@ -12,8 +12,8 @@ import { PresetComparisons } from "@/components/data/PresetComparisons";
  * Editorial register: Instrument Serif italic display headings, animated
  * radial gradient bg + noise overlay, reveal animations on first paint.
  *
- * Hero card is the LIVE Q-Shield preview — pulls actual benchmark data.
- * This proves the brand promise ("the data is live") on first viewport.
+ * Hero card pulls real numbers from the latest benchmark run rather than
+ * a static mock — see LiveShieldPreview.
  *
  * Q-Shield is the wedge product (featured card).
  * Q-Day Index is prominent but secondary (plain card, second slot).
@@ -28,31 +28,23 @@ export default function HomePage() {
         <div className="mx-auto max-w-[1200px] px-6 md:px-8">
           <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-12 md:gap-20 items-center">
             <div>
-              <div className="reveal reveal-1 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-eyebrow text-fg-muted px-3 py-1.5 border border-border-strong rounded-full mb-8">
-                <span
-                  className="inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse-soft"
-                  style={{ boxShadow: "0 0 8px rgba(74, 222, 128, 0.4)" }}
-                />
-                <span>Daily benchmarks · Open methodology · Auditable on GitHub</span>
-              </div>
-
-              <h1 className="reveal reveal-2 font-serif text-[clamp(48px,7vw,88px)] font-normal leading-[1.02] tracking-[-0.025em] text-fg mb-7">
+              <h1 className="reveal reveal-1 font-serif text-[clamp(48px,7vw,88px)] font-normal leading-[1.02] tracking-[-0.025em] text-fg mb-7">
                 PQC performance,{" "}
                 <em className="italic opacity-95 text-accent">measured.</em>
               </h1>
 
-              <p className="reveal reveal-3 text-lg leading-[1.55] text-fg-muted max-w-[560px] mb-10 font-light">
+              <p className="reveal reveal-2 text-lg leading-[1.55] text-fg-muted max-w-[560px] mb-10 font-light">
                 Which post-quantum algorithm should you actually deploy? And
                 what does turning it on cost you — in latency, in
                 throughput, in bytes on the wire? What will migration cost
-                you in time and money, on your stack? We measure it, live,
-                on production hardware. Every result, sourced.
+                you in time and money, on your stack? We run the numbers
+                on production hardware, daily. Every result, sourced.
               </p>
 
-              <div className="reveal reveal-4 flex gap-3 items-center flex-wrap">
+              <div className="reveal reveal-3 flex gap-3 items-center flex-wrap">
                 <Link
                   href="/contact"
-                  className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-accent text-bg rounded-lg text-sm font-medium hover:-translate-y-px hover:opacity-95 transition-all"
+                  className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-accent text-accent-fg rounded-lg text-sm font-medium hover:-translate-y-px hover:opacity-95 transition-all"
                 >
                   Contact us
                   <span aria-hidden>→</span>
@@ -74,13 +66,12 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* LIVE Q-Shield preview — replaces the sample Q-Day card */}
             <LiveShieldPreview />
           </div>
         </div>
 
         {/* Trust strip */}
-        <div className="reveal reveal-5 border-t border-b border-border py-8 mt-10 relative z-[2]">
+        <div className="reveal reveal-4 border-t border-b border-border py-8 mt-10 relative z-[2]">
           <div className="mx-auto max-w-[1200px] px-6 md:px-8 flex items-center justify-center gap-6 md:gap-12 flex-wrap">
             {[
               "Daily GitHub Actions runs",

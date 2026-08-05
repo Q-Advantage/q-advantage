@@ -10,11 +10,26 @@ import type { Config } from "tailwindcss";
  *  - Numbers / code / mono cells: Geist Mono
  *
  * Color philosophy:
- *  - Near-black background; near-white text; muted neutral borders.
- *  - GREEN accent (#4ADE80) for: chart highlights, hover states, "latest run"
+ *  - Three themes, selected at runtime via `[data-theme]` on <html>
+ *    (see ThemeToggle + globals.css): "dark" (default, near-black), "light"
+ *    (warm paper, SemiAnalysis/Comet-inspired), "navy" (deep blue).
+ *  - Every surface/text/border token below resolves through a CSS custom
+ *    property so the same Tailwind class (e.g. `bg-bg`, `text-fg-muted`)
+ *    repaints correctly under all three themes — see the `--color-*`
+ *    variable blocks in globals.css for the actual per-theme values.
+ *  - GREEN accent for: chart highlights, hover states, "latest run"
  *    pills, brand mark, primary CTAs, live pulses. NOT for body chrome.
- *  - Data palette: sequential teal/blue ramp for chart series (multi-series).
- *  - Status colors: green/amber/red, used sparingly in the audit strip.
+ *    Accent hue stays "green" in all themes but shifts lightness per theme
+ *    for contrast (bright mint on dark/navy, deeper green on light/paper).
+ *  - `accent.fg` is the text/icon color used ON TOP of an accent-colored
+ *    surface (e.g. `bg-accent text-accent-fg` buttons) — always the
+ *    correct contrast partner for that theme's accent, independent of
+ *    the page background token.
+ *  - Data palette: sequential teal/blue ramp for chart series (multi-series),
+ *    intentionally constant across themes — chart color-coding shouldn't
+ *    shift meaning when the visitor switches theme.
+ *  - Status colors: green/amber/red, used sparingly in the audit strip;
+ *    also constant across themes.
  *
  * Two design registers coexist:
  *  - Marketing (/) — editorial, serif italic headings, animated gradient bg
@@ -28,35 +43,37 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Surface ramp
+        // Surface ramp — each resolves through a CSS var so it repaints per theme.
         bg: {
-          DEFAULT: "#0a0a0b",
-          surface: "#111114",
-          card: "#0e0e11",
-          elevated: "#17171a",
-          inset: "#08080a",
+          DEFAULT: "rgb(var(--color-bg) / <alpha-value>)",
+          surface: "rgb(var(--color-bg-surface) / <alpha-value>)",
+          card: "rgb(var(--color-bg-card) / <alpha-value>)",
+          elevated: "rgb(var(--color-bg-elevated) / <alpha-value>)",
+          inset: "rgb(var(--color-bg-inset) / <alpha-value>)",
         },
         // Foreground ramp
         fg: {
-          DEFAULT: "#ededed",
-          muted: "#a1a1a6",
-          subtle: "#6b6b72",
-          faint: "#404048",
+          DEFAULT: "rgb(var(--color-fg) / <alpha-value>)",
+          muted: "rgb(var(--color-fg-muted) / <alpha-value>)",
+          subtle: "rgb(var(--color-fg-subtle) / <alpha-value>)",
+          faint: "rgb(var(--color-fg-faint) / <alpha-value>)",
         },
-        // Border ramp — tuned to marketing site's tokens
+        // Border ramp — single per-theme base color, fixed alphas per weight
         border: {
-          DEFAULT: "rgba(255, 255, 255, 0.08)",
-          strong: "rgba(255, 255, 255, 0.14)",
-          subtle: "rgba(255, 255, 255, 0.04)",
+          DEFAULT: "rgb(var(--color-border) / 0.08)",
+          strong: "rgb(var(--color-border) / 0.14)",
+          subtle: "rgb(var(--color-border) / 0.04)",
         },
-        // Brand accent — Q-Advantage green
+        // Brand accent — Q-Advantage green (lightness tuned per theme for contrast)
         accent: {
-          DEFAULT: "#4ade80",
-          dim: "#2d9d5f",
-          glow: "rgba(74, 222, 128, 0.4)",
-          soft: "rgba(74, 222, 128, 0.08)",
+          DEFAULT: "rgb(var(--color-accent) / <alpha-value>)",
+          dim: "rgb(var(--color-accent-dim) / <alpha-value>)",
+          glow: "rgb(var(--color-accent) / 0.4)",
+          soft: "rgb(var(--color-accent) / 0.08)",
+          fg: "rgb(var(--color-accent-fg) / <alpha-value>)",
         },
         // Data viz palette — sequential teal/blue ramp for chart series.
+        // Constant across themes by design; see note above.
         data: {
           1: "#7cd4d4",
           2: "#4fb3c4",
@@ -64,11 +81,11 @@ const config: Config = {
           4: "#1f5f8a",
           5: "#173f66",
         },
-        // Status colors
+        // Status colors — constant across themes.
         status: {
-          ok: "#4ade80",
-          warn: "#fbbf24",
-          err: "#f87171",
+          ok: "rgb(var(--color-status-ok) / <alpha-value>)",
+          warn: "rgb(var(--color-status-warn) / <alpha-value>)",
+          err: "rgb(var(--color-status-err) / <alpha-value>)",
         },
       },
       fontFamily: {
