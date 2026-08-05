@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 const CONTACT_EMAIL = "hello@qadvantage.io";
-const LAST_UPDATED = "July 2026";
+const LAST_UPDATED = "August 2026";
 
 /**
  * Privacy policy — legal/utility page.
@@ -140,13 +140,12 @@ export default function PrivacyPage() {
                 <strong>Vercel</strong> — our hosting provider. Vercel serves the site and, if
                 enabled, provides the aggregated usage analytics described above.
               </li>
-              <li>
-                <strong>Cal.com</strong> — our booking platform. If you use the &ldquo;Book a
-                call&rdquo; link, you leave qadvantage.io and interact directly with Cal.com, which
-                collects whatever information you provide on its own scheduling page under its own
-                privacy policy. We only see the meeting details you choose to share with us.
-              </li>
             </ul>
+            <p>
+              The contact form on this site does not submit to us or to any third party — it opens
+              a pre-filled draft in your own email client, addressed to {CONTACT_EMAIL}. We only
+              see what you choose to send.
+            </p>
             <p>
               We do not sell personal information to anyone, and we do not share it with any party
               not listed above, except where required by law.
@@ -192,9 +191,7 @@ export default function PrivacyPage() {
           <Prose>
             <p>
               The site itself does not set tracking or advertising cookies. Vercel Analytics, if
-              active, is cookie-less by design. If a third party you visit through our site (such
-              as Cal.com) sets its own cookies, that is governed by that party&apos;s own cookie
-              policy, not ours.
+              active, is cookie-less by design.
             </p>
           </Prose>
         </Section>
@@ -202,8 +199,8 @@ export default function PrivacyPage() {
         <Section title="8. International data transfers">
           <Prose>
             <p>
-              Our service providers — Beehiiv, Vercel, and Cal.com — operate infrastructure in the
-              United States. If you are located outside the United States, your information may be
+              Our service providers — Beehiiv and Vercel — operate infrastructure in the United
+              States. If you are located outside the United States, your information may be
               transferred to, stored, and processed in the United States or other countries where
               these providers or their sub-processors operate. Each provider maintains its own
               safeguards for cross-border transfers, including standard contractual clauses where

@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { BOOKING_URL } from "@/lib/constants";
 
 /**
  * Site header — sticky, blur backdrop, present on every page.
  *
- * Desktop (md+): Brand (left) · About · Methodology · Q-Day Index · Q-Shield (centered) · Book a call (right)
- * Mobile (<md):  Brand · Book a call · Hamburger (opens dropdown with all nav)
+ * Desktop (md+): Brand (left) · About · Methodology · Q-Day Index · Q-Shield (centered) · Contact us (right)
+ * Mobile (<md):  Brand · Contact us · Hamburger (opens dropdown with all nav)
  *
- * Book a call is the only green/filled element in the nav — the single
+ * Contact us is the only green/filled element in the nav — the single
  * conversion CTA. All other nav links share the same plain text style.
  */
 export function Header() {
@@ -64,19 +63,19 @@ export function Header() {
           </div>
 
           <Link
-            href={BOOKING_URL}
+            href="/contact"
             className="hidden md:inline-flex items-center px-4 py-2 rounded-md bg-accent text-bg text-[13px] font-medium hover:opacity-90 hover:-translate-y-px transition-all flex-shrink-0"
           >
-            Book a call
+            Contact us
           </Link>
 
-          {/* Mobile: Book a call + Hamburger */}
+          {/* Mobile: Contact us + Hamburger */}
           <div className="flex md:hidden items-center gap-2">
             <Link
-              href={BOOKING_URL}
+              href="/contact"
               className="inline-flex items-center px-3 py-1.5 rounded-md bg-accent text-bg text-[12px] font-medium"
             >
-              Book a call
+              Contact us
             </Link>
             <button
               onClick={() => setMenuOpen(!menuOpen)}

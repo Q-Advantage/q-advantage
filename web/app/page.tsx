@@ -5,7 +5,6 @@ import { SubscribeForm } from "@/components/chrome/SubscribeForm";
 import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 import { LiveShieldPreview } from "@/components/chrome/LiveShieldPreview";
 import { PresetComparisons } from "@/components/data/PresetComparisons";
-import { BOOKING_URL } from "@/lib/constants";
 
 /**
  * Marketing landing — qadvantage.io home.
@@ -52,10 +51,10 @@ export default function HomePage() {
 
               <div className="reveal reveal-4 flex gap-3 items-center flex-wrap">
                 <Link
-                  href={BOOKING_URL}
+                  href="/contact"
                   className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-accent text-bg rounded-lg text-sm font-medium hover:-translate-y-px hover:opacity-95 transition-all"
                 >
-                  Book a call
+                  Contact us
                   <span aria-hidden>→</span>
                 </Link>
                 <Link
