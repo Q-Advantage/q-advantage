@@ -86,3 +86,16 @@ is a GitHub org-settings action for the founder; it wasn't done as part of this 
 - If `pqc-readiness-index` is ever made public (post-Phase-2, deliberately), that's a distinct decision
   requiring its own review — auditing commit history and Actions logs for anything not meant to be
   public yet — not a default this ADR pre-approves.
+
+## Update, 2026-08-08 — build complete, one methodology note worth carrying forward
+
+Components 1–4 (target list, scanner, storage, weekly workflow) are built in the private repo.
+Recording one thing here because it bears on trusting *any* future addition to this scanner, not just
+this session's: the scanner shipped with mocked unit tests all green while a real bug made every probe
+report failure regardless of actual outcome (a stdout string check for `"CONNECTION ESTABLISHED"`,
+which only `openssl s_client -brief` prints — this code doesn't use `-brief`). It was caught only
+because a real Python interpreter was installed and the CLI was smoke-tested against a live,
+non-target server. **Mocked tests passing is not sufficient evidence a probe-style tool actually
+works — a live smoke test against a real (non-target) server, cross-checked against an independently
+captured reference, is the bar.** Worth keeping as house practice for anything in this repo that
+shells out to a live network tool, not just this one.

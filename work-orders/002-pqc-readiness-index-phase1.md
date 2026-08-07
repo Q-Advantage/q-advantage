@@ -1,5 +1,23 @@
 # 002 — PQC Readiness Index, Phase 1 (target list, scanner, storage)
 
+## Status (2026-08-08)
+
+**Components 1–4 built** in `Q-Advantage/pqc-readiness-index`. Target list: 316 institutions, sourced
+(FSB G-SIBs complete, CCADB CAs complete, FFIEC/EBA/BoE national retail banks complete for US/EU/UK,
+exchanges/CCPs still `unverified: true` pending WFE member-portal access — confirmed login-gated, not
+just fetch-blocked). Scanner: built, **verified by actually running it** — a real Python interpreter
+was installed specifically to stop relying on manual code tracing, and the first live smoke test
+caught a real bug (the connectedness check tested for a string, `"CONNECTION ESTABLISHED"`, that only
+`openssl s_client -brief` prints; this code doesn't use `-brief`, so every probe was silently reporting
+failure regardless of the real outcome, and all 37 mocked unit tests passed throughout because the
+mock fixtures shared the same wrong assumption). Fixed and re-verified — see the private repo's commit
+history for the full account. CI now runs the suite on every push. Weekly GitHub Actions workflow
+built and disjoint-scheduled per the ADR 0003 mutex design.
+
+**Not done:** endpoint discovery (every institution still has `endpoints: []` by design — this is the
+founder-reviewed pass, not autonomous), the runner-availability precondition (manual, GitHub org
+settings), and full WFE exchange-list verification.
+
 ## What this is
 
 Build Phase 1 of the PQC Readiness Index per the vault's GO decision
