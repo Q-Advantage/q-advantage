@@ -71,7 +71,13 @@ Any technical-factual claim (an OID, a security level, an algorithm identity, a 
 
 ## Context bridge to the vault
 
-`context/` is meant to be a **read-only** view of a narrow slice of the founder's knowledge vault (technical decision records, the P-CBOM spec, benchmark/measurement ethics notes, architecture notes) — never outreach, content, or pitch material. **This bridge is not implemented yet** — the sync mechanism (submodule / symlink / sync script) is undecided pending the vault's actual location. See `docs/adr/0002-context-vault-bridge-deferred.md`. Until it exists: never write to `context/` from here, and don't assume anything under it is current.
+`context/` is a **read-only** view of a narrow slice of the founder's knowledge vault (technical decision records, the P-CBOM spec, benchmark/measurement ethics notes, architecture notes) — never outreach, content, or pitch material. It is implemented as a **Windows junction** (`context/` → the vault's `50-technical/` folder on the same machine), not a symlink or git submodule. See `docs/adr/0002-context-vault-bridge-deferred.md`.
+
+Because it's a junction, anything under `context/` is not repo content — it physically lives in the vault. Treat it accordingly:
+- **Never write to anything under `context/`** from this repo. If a task seems to need vault edits, that's a vault change, not a Forge change — stop and say so rather than editing through the junction.
+- `context/` is git-ignored — nothing under it enters this public repo's history, and it must stay that way.
+- Don't assume its contents are current — it reflects whatever state the vault is in on disk right now, not a synced-and-reviewed snapshot.
+- If the junction ever breaks (vault folder moves), `context/` will read as empty or error — that's a signal to fix the junction, not to recreate its contents locally.
 
 ---
 

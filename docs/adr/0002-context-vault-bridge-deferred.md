@@ -1,8 +1,8 @@
-# ADR 0002: `context/` vault bridge deferred
+# ADR 0002: `context/` vault bridge
 
 ## Status
 
-Proposed — 2026-08-04 — deferred, not accepted, pending founder input
+Accepted — implemented 2026-08-06. Originally proposed 2026-08-04 as deferred, pending the vault's location; the founder has since supplied it.
 
 ## Context
 
@@ -12,18 +12,17 @@ This session could not locate the vault. There's an `Obsidian.lnk` shortcut on t
 
 ## Decision
 
-Defer implementation. `context/README.md` exists as a placeholder describing the intended purpose and stating plainly that the bridge isn't wired up yet. `CLAUDE.md` documents this status so no session mistakes silence for "there's nothing relevant" when the real state is "this hasn't been built."
+Implemented as a **Windows junction**: `context/` → `C:\Users\Dell\q-advantage-vault\50-technical`, created by the founder outside of any Forge session and confirmed working (resolves to the vault's technical slice — `measurement-ethics.md`, `decisions/`, etc.).
 
-## Next step (`#todo`, needs founder input)
+Of the three options this ADR originally weighed:
+- **Symlink** — not used; Windows junctions don't require the elevated privilege or Developer Mode that Windows symlinks typically do, and behave the same way for this same-machine, directory-only case.
+- **Git submodule** — rejected, per the original reasoning (submodule overhead for a solo founder, already discouraged elsewhere in this repo's governance).
+- **Sync script** — rejected as unneeded complexity when a junction satisfies the same-machine case directly.
 
-1. Founder provides the actual vault path (or confirms it's an Obsidian vault and where it's mounted).
-2. Pick a mechanism:
-   - **Symlink** — simplest, works only if the Forge and vault are on the same machine (they currently are). No sync lag, but breaks if either moves.
-   - **Git submodule** — works across machines, versioned, but adds submodule-management overhead for a solo founder (explicitly discouraged for `p-cbom` in the master governance plan for the same reason).
-   - **Sync script** — most flexible (can filter to just the allowed slice), most to maintain.
-   - Given this is one person on one machine today, a symlink is the likely right default — but that's the founder's call, not a default to silently apply.
-3. Update this ADR's status to Accepted once chosen, implement it, and add the resulting sync target to `.gitignore` if the mechanism copies rather than links (so vault content — which may name people — never enters this public repo's git history).
+`context/` is now git-ignored in full (see `.gitignore`) — nothing under it enters this repo's history. The pre-junction placeholder `context/README.md` (a real repo file) is dropped from git tracking, since that path now resolves into the vault, not the repo; a new `README.md` describing the bridge from the vault side lives at `50-technical/README.md` in the vault itself. `CLAUDE.md`'s "Context bridge to the vault" section documents the read-only rule this junction is subject to: nothing in this repo may write through it.
 
-## Consequences of deferring
+## Consequences
 
-None of the done-definition items for this session depend on `context/` being live. Work-orders can proceed without it; anything that would benefit from vault context just doesn't have it yet, same as before this session.
+- **Same-machine only.** If the Forge repo or the vault ever move to separate machines, this junction breaks and needs to be re-created (or the ADR revisited toward the sync-script option).
+- **Read-only by convention, not by OS enforcement.** A junction doesn't itself block writes — the read-only guarantee comes from `CLAUDE.md`'s rule and session discipline, same as the other repo conventions here. A session that writes through `context/` is writing directly into the vault.
+- **Freshness is whatever the vault currently holds.** There's no sync step and no review gate between a vault edit and it appearing under `context/` — treat contents as live, not as a reviewed snapshot.
