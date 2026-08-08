@@ -16,7 +16,44 @@ built and disjoint-scheduled per the ADR 0003 mutex design.
 
 **Not done:** endpoint discovery (every institution still has `endpoints: []` by design — this is the
 founder-reviewed pass, not autonomous), the runner-availability precondition (manual, GitHub org
-settings), and full WFE exchange-list verification.
+settings — since resolved, see PR #7), and full WFE exchange-list verification.
+
+## Update, 2026-08-09 — Phase 1 operating, Phase 2 fully built
+
+**Phase 1 is running for real**, not just built: a founder-approved pilot batch (all 29 G-SIBs, top
+bucket first) has sourced endpoints; 15 of them have real scan results — the first data this product
+has ever produced. Headline finding on that pilot: every certificate returned is `rsaEncryption`
+(zero PQC authentication), key exchange is mixed and varies even within one institution's own
+subdomains — exactly the KEX-moved/AUTH-didn't gap the index exists to measure.
+
+**All of Phase 2 (components D–H) is now built** in the private repo and this PR, matching the vault's
+full E/F/G/H spec, not stubs:
+- **D (scoring):** the two-track model, real-run against the pilot data
+- **E (methodology):** a full section on `q-advantage`'s methodology page, same depth as Q-Shield/
+  Q-Day Index
+- **F (right-of-reply):** contact discovery via RFC 9116 `security.txt`, data-pack generation,
+  dispatch tracking — prepares what a human sends, never sends anything itself
+- **G (corrections):** intake + disputed-status tracking in the private repo, a real `/corrections`
+  page in this PR, wired end to end (a disputed institution shows a badge on the index and a notice
+  on its own page)
+- **H (public rendering):** this PR — real index table, per-institution pages, synthetic placeholder
+  data only (see the PR description for why real data can't enter this repo pre-gate)
+
+Two real bugs shipped past 100%-passing mocked tests and were only caught by testing live against
+real, non-target servers — see the private repo's `docs/ARCHITECTURE.md` §6 for the full account and
+the house rule it sets for anything future work adds here.
+
+**Gate 4 (CA/Browser Forum ML-DSA status) is resolved**, not just researched harder: the current TLS
+Baseline Requirements (v2.2.9 §6.1.5) explicitly permit only RSA/ECDSA — "no other algorithms or key
+sizes are permitted." ML-DSA is not permitted in publicly-trusted certificates today; the enabling
+ballot hasn't even been formally numbered yet. **Gate 2's content is ready** (the corrections policy
+page in this PR matches it). **Gates 1 (entity) and 3 (legal review) remain open** — still the
+founder's to close, not something this session can do.
+
+**A consolidated architecture doc** now exists in the private repo
+(`docs/ARCHITECTURE.md`) connecting business intent → requirements → architecture → work orders →
+code → testing → production maintenance for this product specifically — start there for anything
+beyond this work-order's own scope.
 
 ## What this is
 
