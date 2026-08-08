@@ -56,6 +56,12 @@ export function Header() {
               Q-Day Index
             </Link>
             <Link
+              href="/pqc-readiness-index"
+              className="text-sm text-fg-muted hover:text-fg transition-colors"
+            >
+              PQC Readiness Index
+            </Link>
+            <Link
               href="/q-shield"
               className="text-sm text-fg-muted hover:text-fg transition-colors"
             >
@@ -116,6 +122,13 @@ export function Header() {
               className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
             >
               Q-Day Index
+            </Link>
+            <Link
+              href="/pqc-readiness-index"
+              onClick={() => setMenuOpen(false)}
+              className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
+            >
+              PQC Readiness Index
             </Link>
             <Link
               href="/about"
