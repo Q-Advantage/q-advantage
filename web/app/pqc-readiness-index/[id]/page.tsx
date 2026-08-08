@@ -43,6 +43,16 @@ export default function InstitutionPage({ params }: PageProps) {
           <h1 className="font-serif text-[clamp(28px,4.5vw,44px)] font-normal leading-[1.1] tracking-[-0.02em] text-fg mb-3">
             {inst.name}
           </h1>
+          {inst.disputed && (
+            <p className="text-sm text-status-warn mb-4">
+              <strong>Disputed.</strong> A correction report is open and under review for this
+              institution — see the{" "}
+              <Link href="/corrections" className="underline decoration-status-warn/40 hover:decoration-status-warn">
+                corrections process
+              </Link>
+              . The row below reflects our current data, pending that review.
+            </p>
+          )}
           {inst.unverified && (
             <p className="text-sm text-status-warn mb-4">
               This institution&apos;s inclusion is unverified against its category&apos;s primary
@@ -85,9 +95,14 @@ export default function InstitutionPage({ params }: PageProps) {
               )}
             </div>
 
-            <div className="border-t border-border pt-6 text-xs text-fg-subtle">
-              Sweep {data.sweep_date} · methodology v{data.methodology_version} · client config{" "}
-              <code className="font-mono">{data.client_config_hash}</code>
+            <div className="border-t border-border pt-6 text-xs text-fg-subtle flex flex-wrap items-center gap-x-4 gap-y-2">
+              <span>
+                Sweep {data.sweep_date} · methodology v{data.methodology_version} · client config{" "}
+                <code className="font-mono">{data.client_config_hash}</code>
+              </span>
+              <Link href={`/corrections?institution=${inst.id}`} className="text-fg-muted hover:text-accent transition-colors underline decoration-border-strong hover:decoration-accent underline-offset-2">
+                Request a correction →
+              </Link>
             </div>
           </>
         )}

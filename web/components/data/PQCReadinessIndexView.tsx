@@ -156,6 +156,11 @@ export default function PQCReadinessIndexView({ data }: { data: PQCReadinessInde
           methodology
         </Link>{" "}
         for the full scoring rules, sourcing bar, and what counts as &ldquo;not measurable.&rdquo;
+        {" "}Found an error?{" "}
+        <Link href="/corrections" className="text-fg-muted hover:text-accent transition-colors underline decoration-border-strong hover:decoration-accent underline-offset-2">
+          Report a correction
+        </Link>
+        .
       </p>
     </div>
   );
@@ -179,6 +184,14 @@ function Row({ inst }: { inst: PQCInstitutionEntry }) {
         <Link href={`/pqc-readiness-index/${inst.id}`} className="text-fg hover:text-accent transition-colors font-medium">
           {inst.name}
         </Link>
+        {inst.disputed && (
+          <span
+            title="A correction report is open and under review for this institution."
+            className="ml-2 inline-block px-1.5 py-0.5 rounded text-2xs uppercase tracking-eyebrow text-status-warn border border-status-warn/40"
+          >
+            disputed
+          </span>
+        )}
         {inst.unverified && (
           <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-2xs uppercase tracking-eyebrow text-fg-subtle border border-border-strong">
             unverified

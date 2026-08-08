@@ -54,6 +54,8 @@ export interface PQCInstitutionEntry {
   endpoints: PQCEndpointResult[];
   unverified?: boolean;
   excluded?: { date: string } | null;
+  /** measurement-ethics.md §8: publicly marked while a correction report is open and undetermined. */
+  disputed?: boolean;
 }
 
 export interface PQCReadinessIndexData {

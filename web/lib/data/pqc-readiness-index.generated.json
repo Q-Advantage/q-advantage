@@ -4,7 +4,7 @@
   "methodology_version": "0.1.0",
   "client_config_hash": "0000000000000000",
   "hero": {
-    "n_institutions": 8,
+    "n_institutions": 9,
     "kex_field_average": 0.42,
     "auth_field_average": 0.0
   },
@@ -133,6 +133,22 @@
         { "hostname": "clearing.sample-clearing-house.invalid", "purpose": "online_login", "connected": true, "highest_negotiated_version": "TLSv1.2", "kex_groups_supported": [], "cert_signature_algorithm": "sha1WithRSAEncryption", "cert_issuer": "C=US, O=Placeholder CA, CN=Placeholder CA R4" }
       ],
       "unverified": true
+    },
+    {
+      "id": "disputed-example-bank",
+      "name": "Disputed Example Bank (placeholder)",
+      "category": "bank_national_retail",
+      "jurisdiction": "US",
+      "kex_score": 0.5,
+      "auth_score": 0.0,
+      "measurable_endpoints": 2,
+      "total_endpoints": 2,
+      "hygiene": { "tls_1_2_accepted": false, "weak_signature_algorithm": false, "short_key": false, "expired_or_near_expiry": false },
+      "endpoints": [
+        { "hostname": "www.disputed-example-bank.invalid", "purpose": "primary_web", "connected": true, "highest_negotiated_version": "TLSv1.3", "kex_groups_supported": ["X25519MLKEM768"], "cert_signature_algorithm": "ecdsa-with-SHA256", "cert_issuer": "C=US, O=Placeholder CA, CN=Placeholder CA R1" },
+        { "hostname": "portal.disputed-example-bank.invalid", "purpose": "online_login", "connected": true, "highest_negotiated_version": "TLSv1.3", "kex_groups_supported": [], "cert_signature_algorithm": "rsaEncryption", "cert_issuer": "C=US, O=Placeholder CA, CN=Placeholder CA R1" }
+      ],
+      "disputed": true
     }
   ]
 }
