@@ -14,9 +14,15 @@ mock fixtures shared the same wrong assumption). Fixed and re-verified — see t
 history for the full account. CI now runs the suite on every push. Weekly GitHub Actions workflow
 built and disjoint-scheduled per the ADR 0003 mutex design.
 
+**Update, same day:** runner-availability precondition **resolved** — a second, independent self-hosted
+runner (`q-advantage-bench-pqc-index`) is registered on the same EC2 box, scoped only to
+`pqc-readiness-index`, per `docs/runner-setup.md` in that repo. The workflow has now actually run on
+GitHub's real infrastructure — which surfaced and fixed a second real bug (`git add data/results/` on
+a directory that doesn't exist until the first real scan writes to it; `mkdir -p` first). Confirmed
+clean: `"No result changes to commit (expected while endpoints: [] for every institution)."`
+
 **Not done:** endpoint discovery (every institution still has `endpoints: []` by design — this is the
-founder-reviewed pass, not autonomous), the runner-availability precondition (manual, GitHub org
-settings), and full WFE exchange-list verification.
+founder-reviewed pass, not autonomous) and full WFE exchange-list verification.
 
 ## What this is
 

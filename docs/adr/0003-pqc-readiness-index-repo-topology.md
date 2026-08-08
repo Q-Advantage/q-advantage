@@ -69,9 +69,10 @@ And `benchmark.yml` itself remains off-limits to modify (this repo's stack guard
 
 ### Runner availability
 
-The self-hosted runner (`q-advantage-bench`) needs to be reachable by the new private repo's Actions —
-either an org-level runner group covering both repos, or a second registration on the same box. This
-is a GitHub org-settings action for the founder; it wasn't done as part of this ADR.
+**Resolved, 2026-08-08.** A second, independent runner (`q-advantage-bench-pqc-index`) is registered
+on the same EC2 box, scoped only to `pqc-readiness-index` — the existing `q-advantage` benchmark
+runner's registration was never touched. Recipe: `pqc-readiness-index`'s `docs/runner-setup.md`.
+Verified working: the weekly workflow has run successfully on real GitHub infrastructure.
 
 ## Consequences
 
