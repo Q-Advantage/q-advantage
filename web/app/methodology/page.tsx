@@ -58,6 +58,7 @@ export default function MethodologyPage() {
               <li><a href="#three-pillars" className="text-fg-muted hover:text-accent transition-colors">Three pillars</a></li>
               <li><a href="#q-shield" className="text-fg-muted hover:text-accent transition-colors">Q-Shield methodology</a></li>
               <li><a href="#q-day-index" className="text-fg-muted hover:text-accent transition-colors">Q-Day Index methodology</a></li>
+              <li><a href="#pqc-readiness-index" className="text-fg-muted hover:text-accent transition-colors">PQC Readiness Index methodology</a></li>
               <li><a href="#glossary" className="text-fg-muted hover:text-accent transition-colors">Measurement-method glossary</a></li>
               <li><a href="#challenge" className="text-fg-muted hover:text-accent transition-colors">Challenge a result</a></li>
             </ul>
@@ -581,6 +582,197 @@ export default function MethodologyPage() {
               className="inline-flex items-center gap-2 text-sm text-accent hover:gap-3 transition-all"
             >
               See the live Q-Day Index
+              <span aria-hidden>→</span>
+            </Link>
+          </div>
+        </section>
+
+        {/* ====================================================================== */}
+        {/* ============ PQC READINESS INDEX ============ */}
+        {/* ====================================================================== */}
+        <section id="pqc-readiness-index" className="mb-20 scroll-mt-20">
+          <div className="eyebrow mb-3">Section 3</div>
+          <h2 className="font-serif text-[clamp(32px,4.5vw,44px)] font-normal leading-[1.1] tracking-[-0.02em] text-fg mb-6">
+            PQC Readiness Index — key exchange vs. authentication, named
+          </h2>
+          <p className="text-base text-fg-muted leading-[1.7] font-light mb-12">
+            A weekly, per-institution measurement of the observable post-quantum posture of named
+            banks, exchanges, card networks, and certificate authorities — negotiated TLS version,
+            key-exchange group, and certificate chain, nothing more. Two tracks, never merged into
+            one score.
+          </p>
+
+          <H3 id="pqc-what-is-measured">What is measured, and what isn&apos;t</H3>
+          <Prose>
+            <p>
+              Every measurement is an ordinary TLS handshake with a publicly-advertised hostname on
+              a standard port — the same handshake any browser completes visiting the page. We
+              record only the negotiated protocol parameters the server voluntarily presents:
+              highest negotiated TLS version, whether TLS 1.2 is still accepted, which key-exchange
+              groups the server accepts when offered, and the certificate chain&apos;s metadata
+              (signature algorithm, public key algorithm, key size, issuer, validity dates).
+            </p>
+            <p>
+              We never authenticate, never scan for vulnerabilities, never touch a non-standard
+              port, and never parse or store page content. If an endpoint blocks, rate-limits, or
+              refuses a connection, that is the answer — it is recorded as not measurable and we
+              move on. We do not work around it.
+            </p>
+          </Prose>
+
+          <H3 id="pqc-support-not-preference">Support, not preference</H3>
+          <Prose>
+            <p>
+              Key-exchange group support is measured by connecting once per candidate group and
+              observing whether the server accepts it — not by reading which group the server
+              happens to negotiate by default when several are offered. &ldquo;Accepts
+              X25519MLKEM768 when it&apos;s the only group offered&rdquo; and &ldquo;prefers it in
+              a normal handshake&rdquo; are different claims. Conflating them is the first
+              correction request we would receive, and would deserve.
+            </p>
+          </Prose>
+
+          <H3 id="pqc-two-track">The two-track model, and why it&apos;s never merged</H3>
+          <Prose>
+            <p>
+              <strong>KEX</strong> is the share of an institution&apos;s measurable endpoints that
+              accept at least one hybrid post-quantum key-exchange group
+              (<code>X25519MLKEM768</code>, <code>SecP256r1MLKEM768</code>). <strong>AUTH</strong>
+              {" "}is the share presenting a post-quantum or hybrid certificate signature. They are
+              reported side by side, always, never combined into one number.
+            </p>
+            <p>
+              The reason is the finding the whole index exists to surface: as of this methodology
+              version, ML-DSA is not permitted in publicly-trusted TLS certificates at all — the
+              CA/Browser Forum&apos;s Baseline Requirements (v2.2.9 §6.1.5) permit only RSA and
+              ECDSA key pairs, full stop. AUTH is at or near zero across the entire index today, by
+              construction, while KEX moves. A single composite score would average those two facts
+              into a misleading middle, exactly hiding the finding.
+            </p>
+            <p>
+              An institution with zero measurable endpoints (every endpoint blocked, unreachable,
+              or excluded) shows <strong>&ldquo;—&rdquo;</strong> in both tracks, never
+              {" "}<strong>0%</strong>. Those are different claims — one is &ldquo;we don&apos;t
+              know,&rdquo; the other is a specific, false &ldquo;we know, and the answer is
+              none.&rdquo;
+            </p>
+          </Prose>
+
+          <H3 id="pqc-hygiene-flags">Hygiene flags — not scored, always shown</H3>
+          <Prose>
+            <p>
+              Four flags are recorded and displayed on every row, independent of the two-track
+              score: whether TLS 1.2 is still accepted, a weak or deprecated certificate signature
+              algorithm, a certificate key below the recommended minimum size, and a certificate
+              that is expired or within 90 days of expiry. These are not scored — they are shown
+              because they are independently worth knowing, and folding them into a score would
+              obscure which specific thing is wrong.
+            </p>
+          </Prose>
+
+          <H3 id="pqc-pinned-client">The pinned client configuration</H3>
+          <Prose>
+            <p>
+              Negotiated parameters depend on the client as well as the server — the measurement
+              paper this index builds on notes this explicitly. Every scan run publishes its exact
+              client configuration (OpenSSL version, offered group list, candidate groups probed)
+              as a hash stamped on every record. A configuration change is a methodology-version
+              change, dated and disclosed, never a silent shift in what a score means.
+            </p>
+          </Prose>
+
+          <H3 id="pqc-institution-selection">Institution and endpoint selection</H3>
+          <Prose>
+            <p>
+              Institutions are drawn from public regulator and association listings — the
+              Financial Stability Board&apos;s G-SIB list, national bank-holding-company and
+              systemic-institution lists (US Federal Reserve, EU EBA O-SII list, UK ring-fencing
+              regime), the CA/Browser ecosystem&apos;s own trusted-root reports, and well-known card
+              networks — never scraped or crawled. Endpoints (the specific hostnames measured per
+              institution) are discovered only from what the institution has itself published:
+              linked login pages, announced developer portals, documented mobile endpoints. No
+              endpoint is guessed from a naming convention and left unverified.
+            </p>
+          </Prose>
+
+          <H3 id="pqc-rate-limits">Rate limits and identification</H3>
+          <Prose>
+            <p>
+              At most one connection per second to any single hostname; at most one concurrent
+              connection to any one institution; a full sweep once per week. Any connection refusal
+              or reset ends measurement of that host for the entire sweep immediately — not just
+              the probe that hit it. The scanning source is a single, stable, publicly-disclosed
+              address with correct reverse DNS and a monitored abuse contact, so any institution
+              that notices the traffic can identify it and request exclusion.
+            </p>
+          </Prose>
+
+          <H3 id="pqc-exclusion">Exclusion, honestly labeled</H3>
+          <Prose>
+            <p>
+              Any institution may request exclusion from measurement, unconditionally, without
+              justification. An excluded institution is not silently removed from the index and is
+              not scored as zero — its row states plainly &ldquo;excluded at the institution&apos;s
+              request,&rdquo; dated, with no score in either track. Silent removal would let the
+              index be edited by whoever complains; scoring an exclusion as zero would make opting
+              out punitive. Naming the exclusion is the only version that is neither.
+            </p>
+          </Prose>
+
+          <H3 id="pqc-right-of-reply">Right of reply</H3>
+          <Prose>
+            <p>
+              Every institution sees its own complete data — every endpoint, every negotiated
+              parameter, both track scores — before its row is ever published for the first time,
+              with 14 calendar days to respond. Material changes (a track score crossing a
+              published threshold, a new hygiene flag) trigger a shorter notice window before the
+              change goes live. Silence is not consent and is not a veto — after the window elapses
+              without response, publication proceeds with a note that reply was invited.
+            </p>
+          </Prose>
+
+          <H3 id="pqc-corrections">Corrections and disputes</H3>
+          <Prose>
+            <p>
+              A permanent, published address plus a correction link on every row accepts reports
+              from anyone, not only the rated institution. Every report is acknowledged within 5
+              business days; a disputed row is marked <strong>disputed</strong> publicly while under
+              review. A confirmed correction updates the row, carries a visible correction notice
+              for one full refresh cycle, and gets a dated entry in a permanent public corrections
+              log — a wrong number is never silently fixed.
+            </p>
+          </Prose>
+
+          <H3 id="pqc-cdn-caveat">Known limitation: CDN attribution</H3>
+          <Prose>
+            <p>
+              Some measured posture reflects a CDN or edge provider in front of an institution
+              rather than the institution&apos;s own infrastructure — &ldquo;your PQ readiness is
+              rented&rdquo; is itself part of the finding, per the spec this index is built from.
+              Automatic CDN detection and per-row attribution is specified but not yet built; until
+              it is, a strong key-exchange score should be read with that caveat in mind, not as a
+              claim about the institution&apos;s own stack.
+            </p>
+          </Prose>
+
+          <H3 id="pqc-independence">Independence</H3>
+          <Prose>
+            <p>
+              Rated institutions may buy data, reports, and analyst time. They receive no influence
+              over methodology, scoring, their own position, or publication timing. No pre-publication
+              access exists beyond right of reply, identical for customers and non-customers. We do
+              not sell migration tools or remediation services to a rated institution — selling the
+              fix for the problem we score would end the only thing that makes the score worth
+              reading.
+            </p>
+          </Prose>
+
+          <div className="mt-8">
+            <Link
+              href="/pqc-readiness-index"
+              className="inline-flex items-center gap-2 text-sm text-accent hover:gap-3 transition-all"
+            >
+              See the PQC Readiness Index
               <span aria-hidden>→</span>
             </Link>
           </div>

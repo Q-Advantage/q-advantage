@@ -1,0 +1,138 @@
+{
+  "_generated_by": "PLACEHOLDER — hand-authored synthetic fixture, not scanner/score.py output. Every institution below is obviously fake (name and hostnames), demonstrating the real data shape ahead of Phase 2 publication clearance. Do not treat any value here as a real measurement.",
+  "sweep_date": "2026-01-01",
+  "methodology_version": "0.1.0",
+  "client_config_hash": "0000000000000000",
+  "hero": {
+    "n_institutions": 8,
+    "kex_field_average": 0.42,
+    "auth_field_average": 0.0
+  },
+  "categories": {
+    "bank_gsib": { "label": "Global systemically important bank" },
+    "bank_national_retail": { "label": "Large national retail bank" },
+    "exchange_ccp": { "label": "Regulated exchange / clearing house" },
+    "card_network_processor": { "label": "Card network / payment processor" },
+    "ca": { "label": "Publicly-trusted certificate authority" }
+  },
+  "institutions": [
+    {
+      "id": "example-bank-alpha",
+      "name": "Example Bank Alpha (placeholder)",
+      "category": "bank_gsib",
+      "jurisdiction": "US",
+      "kex_score": 1.0,
+      "auth_score": 0.0,
+      "measurable_endpoints": 3,
+      "total_endpoints": 3,
+      "hygiene": { "tls_1_2_accepted": true, "weak_signature_algorithm": false, "short_key": false, "expired_or_near_expiry": false },
+      "endpoints": [
+        { "hostname": "portal.example-bank-alpha.invalid", "purpose": "primary_web", "connected": true, "highest_negotiated_version": "TLSv1.3", "kex_groups_supported": ["X25519MLKEM768"], "cert_signature_algorithm": "ecdsa-with-SHA256", "cert_issuer": "C=US, O=Placeholder CA, CN=Placeholder CA R1" },
+        { "hostname": "secure.example-bank-alpha.invalid", "purpose": "online_login", "connected": true, "highest_negotiated_version": "TLSv1.3", "kex_groups_supported": ["X25519MLKEM768", "SecP256r1MLKEM768"], "cert_signature_algorithm": "ecdsa-with-SHA256", "cert_issuer": "C=US, O=Placeholder CA, CN=Placeholder CA R1" },
+        { "hostname": "developer.example-bank-alpha.invalid", "purpose": "dev_portal", "connected": true, "highest_negotiated_version": "TLSv1.3", "kex_groups_supported": ["X25519MLKEM768"], "cert_signature_algorithm": "rsaEncryption", "cert_issuer": "C=US, O=Placeholder CA, CN=Placeholder CA R1" }
+      ]
+    },
+    {
+      "id": "sample-financial-group",
+      "name": "Sample Financial Group (placeholder)",
+      "category": "bank_gsib",
+      "jurisdiction": "GB",
+      "kex_score": 0.33,
+      "auth_score": 0.0,
+      "measurable_endpoints": 3,
+      "total_endpoints": 3,
+      "hygiene": { "tls_1_2_accepted": true, "weak_signature_algorithm": false, "short_key": false, "expired_or_near_expiry": false },
+      "endpoints": [
+        { "hostname": "www.sample-financial-group.invalid", "purpose": "primary_web", "connected": true, "highest_negotiated_version": "TLSv1.3", "kex_groups_supported": [], "cert_signature_algorithm": "rsaEncryption", "cert_issuer": "C=GB, O=Placeholder CA, CN=Placeholder CA R2" },
+        { "hostname": "login.sample-financial-group.invalid", "purpose": "online_login", "connected": true, "highest_negotiated_version": "TLSv1.3", "kex_groups_supported": ["SecP256r1MLKEM768"], "cert_signature_algorithm": "rsaEncryption", "cert_issuer": "C=GB, O=Placeholder CA, CN=Placeholder CA R2" },
+        { "hostname": "api.sample-financial-group.invalid", "purpose": "dev_portal", "connected": true, "highest_negotiated_version": "TLSv1.2", "kex_groups_supported": [], "cert_signature_algorithm": "rsaEncryption", "cert_issuer": "C=GB, O=Placeholder CA, CN=Placeholder CA R2" }
+      ]
+    },
+    {
+      "id": "demo-national-bank",
+      "name": "Demo National Bank (placeholder)",
+      "category": "bank_national_retail",
+      "jurisdiction": "DE",
+      "kex_score": 0.0,
+      "auth_score": 0.0,
+      "measurable_endpoints": 1,
+      "total_endpoints": 3,
+      "hygiene": { "tls_1_2_accepted": false, "weak_signature_algorithm": false, "short_key": false, "expired_or_near_expiry": false },
+      "endpoints": [
+        { "hostname": "www.demo-national-bank.invalid", "purpose": "primary_web", "connected": true, "highest_negotiated_version": "TLSv1.3", "kex_groups_supported": [], "cert_signature_algorithm": "rsaEncryption", "cert_issuer": "C=DE, O=Placeholder CA, CN=Placeholder CA R3" },
+        { "hostname": "banking.demo-national-bank.invalid", "purpose": "online_login", "connected": false, "highest_negotiated_version": null, "kex_groups_supported": [], "cert_signature_algorithm": null, "cert_issuer": null },
+        { "hostname": "m.demo-national-bank.invalid", "purpose": "mobile_api", "connected": false, "highest_negotiated_version": null, "kex_groups_supported": [], "cert_signature_algorithm": null, "cert_issuer": null }
+      ]
+    },
+    {
+      "id": "placeholder-stock-exchange",
+      "name": "Placeholder Stock Exchange",
+      "category": "exchange_ccp",
+      "jurisdiction": null,
+      "kex_score": null,
+      "auth_score": null,
+      "measurable_endpoints": 0,
+      "total_endpoints": 0,
+      "hygiene": { "tls_1_2_accepted": false, "weak_signature_algorithm": false, "short_key": false, "expired_or_near_expiry": false },
+      "endpoints": [],
+      "unverified": true
+    },
+    {
+      "id": "sample-card-network",
+      "name": "Sample Card Network (placeholder)",
+      "category": "card_network_processor",
+      "jurisdiction": null,
+      "kex_score": 1.0,
+      "auth_score": 0.0,
+      "measurable_endpoints": 1,
+      "total_endpoints": 1,
+      "hygiene": { "tls_1_2_accepted": false, "weak_signature_algorithm": false, "short_key": false, "expired_or_near_expiry": false },
+      "endpoints": [
+        { "hostname": "www.sample-card-network.invalid", "purpose": "primary_web", "connected": true, "highest_negotiated_version": "TLSv1.3", "kex_groups_supported": ["X25519MLKEM768"], "cert_signature_algorithm": "ecdsa-with-SHA256", "cert_issuer": "C=US, O=Placeholder CA, CN=Placeholder CA R1" }
+      ]
+    },
+    {
+      "id": "example-root-ca",
+      "name": "Example Root CA (placeholder)",
+      "category": "ca",
+      "jurisdiction": null,
+      "kex_score": 0.0,
+      "auth_score": 0.0,
+      "measurable_endpoints": 1,
+      "total_endpoints": 1,
+      "hygiene": { "tls_1_2_accepted": true, "weak_signature_algorithm": false, "short_key": false, "expired_or_near_expiry": true },
+      "endpoints": [
+        { "hostname": "www.example-root-ca.invalid", "purpose": "primary_web", "connected": true, "highest_negotiated_version": "TLSv1.2", "kex_groups_supported": [], "cert_signature_algorithm": "rsaEncryption", "cert_issuer": "C=US, O=Example Root CA, CN=Example Root CA G1" }
+      ]
+    },
+    {
+      "id": "withdrawn-example-bank",
+      "name": "Withdrawn Example Bank (placeholder)",
+      "category": "bank_national_retail",
+      "jurisdiction": "FR",
+      "kex_score": null,
+      "auth_score": null,
+      "measurable_endpoints": 0,
+      "total_endpoints": 0,
+      "hygiene": { "tls_1_2_accepted": false, "weak_signature_algorithm": false, "short_key": false, "expired_or_near_expiry": false },
+      "endpoints": [],
+      "excluded": { "date": "2026-01-01" }
+    },
+    {
+      "id": "sample-clearing-house",
+      "name": "Sample Clearing House (placeholder)",
+      "category": "exchange_ccp",
+      "jurisdiction": null,
+      "kex_score": 0.5,
+      "auth_score": 0.0,
+      "measurable_endpoints": 2,
+      "total_endpoints": 2,
+      "hygiene": { "tls_1_2_accepted": false, "weak_signature_algorithm": true, "short_key": false, "expired_or_near_expiry": false },
+      "endpoints": [
+        { "hostname": "www.sample-clearing-house.invalid", "purpose": "primary_web", "connected": true, "highest_negotiated_version": "TLSv1.3", "kex_groups_supported": ["X25519MLKEM768"], "cert_signature_algorithm": "ecdsa-with-SHA256", "cert_issuer": "C=US, O=Placeholder CA, CN=Placeholder CA R1" },
+        { "hostname": "clearing.sample-clearing-house.invalid", "purpose": "online_login", "connected": true, "highest_negotiated_version": "TLSv1.2", "kex_groups_supported": [], "cert_signature_algorithm": "sha1WithRSAEncryption", "cert_issuer": "C=US, O=Placeholder CA, CN=Placeholder CA R4" }
+      ],
+      "unverified": true
+    }
+  ]
+}
