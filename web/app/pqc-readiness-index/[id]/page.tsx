@@ -28,7 +28,13 @@ export function generateMetadata({ params }: PageProps): Metadata {
 
 const pct = (n: number | null): string => (n === null ? "—" : `${Math.round(n * 100)}%`);
 
+// Paused, 2026-08-09 — see the matching note in ../page.tsx. Typed
+// `boolean`, not the literal `true`, so TS doesn't drop narrowing below.
+const PAUSED: boolean = true;
+
 export default function InstitutionPage({ params }: PageProps) {
+  if (PAUSED) notFound();
+
   const data = getPQCReadinessIndex();
   const inst = data.institutions.find((i) => i.id === params.id);
   if (!inst) notFound();

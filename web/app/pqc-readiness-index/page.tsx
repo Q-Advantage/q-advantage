@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
@@ -14,7 +15,17 @@ export const metadata: Metadata = {
     "moved; authentication hasn't. Receipts, not press releases.",
 };
 
+// Paused, 2026-08-09: founder wasn't satisfied with the launched page and
+// wants it fully down while it's polished further. Everything below is
+// intact and unmodified — flip this to false (or remove the guard below)
+// to bring it back. See work-orders/002-pqc-readiness-index-phase1.md.
+// Typed `boolean`, not the literal `true`, so TS doesn't treat the rest of
+// the component as unreachable and drop its normal type narrowing.
+const PAUSED: boolean = true;
+
 export default function PQCReadinessIndexPage() {
+  if (PAUSED) notFound();
+
   const data = getPQCReadinessIndex();
   return (
     <div className="min-h-screen flex flex-col">

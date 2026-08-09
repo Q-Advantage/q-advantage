@@ -767,15 +767,8 @@ export default function MethodologyPage() {
             </p>
           </Prose>
 
-          <div className="mt-8">
-            <Link
-              href="/pqc-readiness-index"
-              className="inline-flex items-center gap-2 text-sm text-accent hover:gap-3 transition-all"
-            >
-              See the PQC Readiness Index
-              <span aria-hidden>→</span>
-            </Link>
-          </div>
+          {/* CTA to the index page itself removed while it's paused, 2026-08-09 —
+              see web/app/pqc-readiness-index/page.tsx. Re-add once it's back. */}
         </section>
 
         {/* ====================================================================== */}
