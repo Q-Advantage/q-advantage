@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
@@ -13,7 +14,15 @@ export const metadata: Metadata = {
     "changelog of every correction we've made.",
 };
 
+// Paused, 2026-08-09 — this page only makes sense alongside the index
+// itself, which is also paused (see web/app/pqc-readiness-index/page.tsx).
+// Bring both back together. Typed `boolean`, not the literal `true`, so
+// TS doesn't drop narrowing in the rest of the component.
+const PAUSED: boolean = true;
+
 export default function CorrectionsPage() {
+  if (PAUSED) notFound();
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

@@ -33,12 +33,6 @@ export function Footer() {
               Methodology
             </a>
             <a
-              href="/corrections"
-              className="text-sm text-fg-muted hover:text-fg transition-colors"
-            >
-              Corrections
-            </a>
-            <a
               href="/privacy"
               className="text-sm text-fg-muted hover:text-fg transition-colors"
             >

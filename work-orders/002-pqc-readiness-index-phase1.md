@@ -43,6 +43,38 @@ Two real bugs shipped past 100%-passing mocked tests and were only caught by tes
 real, non-target servers — see the private repo's `docs/ARCHITECTURE.md` §6 for the full account and
 the house rule it sets for anything future work adds here.
 
+## Update, 2026-08-09 (later) — data pipeline built; endpoint coverage expanded to 59/316
+
+**The private→public data pipeline now exists** (`scripts/export_public_data.js` in the private repo):
+transforms real scan/score output into exactly the JSON shape this repo's UI expects. It deliberately
+stops at the private repo's boundary — writes only inside that repo, never opens a PR or commits here,
+never runs on a schedule. Getting real data onto `qadvantage.io` is still a manual, founder-confirmed
+step (gates 1 & 3 first) — see the private repo's `docs/ARCHITECTURE.md` §7 for the exact promotion
+steps. Until that happens, this repo's UI correctly keeps showing the synthetic placeholder data.
+
+**Endpoint coverage: 59 of 316 institutions**, up from 29 — added the 6 card networks and the top 24
+(by asset rank) US large national retail banks, same live-verification discipline as the G-SIB
+batches. Pushed to the private repo's `main` ahead of today's scheduled weekly scan (Sundays 14:00
+UTC), so the runner picks up all 59 automatically, unattended, rate-limited as designed — no live
+in-session scanning was run against real production endpoints.
+
+**Not done, honestly:** the other 257 institutions — 16 more US BHCs, ~150 EU/UK O-SII banks, 47 CAs,
+58 still-unverified exchanges — need the same per-institution primary-source verification, which is
+real ongoing labor, not a one-time unblock. Full-scale bulk scanning of all ~300 also still needs
+identification infrastructure (stable elastic IP, correct reverse DNS, monitored WHOIS abuse contact,
+exclusion page per `measurement-ethics.md` §4) that requires founder-level AWS action this session
+cannot perform.
+
+## Update, 2026-08-09 (later still) — public UI paused
+
+**Founder wasn't satisfied with the launched page** and asked for it to come fully down while it's
+polished further. `/pqc-readiness-index`, `/pqc-readiness-index/[id]`, and `/corrections` (only makes
+sense alongside the index) now 404 via a single `PAUSED` flag per page — nothing deleted, nothing
+rewritten, everything underneath is untouched and ready to re-enable by flipping that flag. Nav links
+(header, footer) and the dead cross-link from the methodology page's PQC Readiness Index section are
+also removed for the duration. Private repo, pipeline, and endpoint-sourcing work from earlier today
+are unaffected — this is a public-rendering-only pause.
+
 **Gate 4 (CA/Browser Forum ML-DSA status) is resolved**, not just researched harder: the current TLS
 Baseline Requirements (v2.2.9 §6.1.5) explicitly permit only RSA/ECDSA — "no other algorithms or key
 sizes are permitted." ML-DSA is not permitted in publicly-trusted certificates today; the enabling
