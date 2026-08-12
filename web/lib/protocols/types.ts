@@ -103,10 +103,53 @@ export interface SigTrackFile {
   schemes: Record<string, SigScheme>;
 }
 
+export interface AesBaselineRecord {
+  algorithm: string;
+  payload_bytes: number;
+  payload_bytes_source: string;
+  key_bytes: number;
+  nonce_bytes: number;
+  tag_bytes: number;
+  encrypt: TimingBlock;
+  decrypt: TimingBlock;
+}
+
+export interface AesBaselineFile {
+  environment: SigTrackEnvironment;
+  baseline: AesBaselineRecord;
+}
+
+/** One LMS/XMSS scheme record. `status !== "ok"` means no real numbers —
+ * see `reason` (unavailable) or `error` (failed). Never render a stat block
+ * for a non-"ok" record. */
+export interface StatefulSigScheme {
+  scheme: string;
+  status: "ok" | "unavailable" | "failed";
+  reason?: string;
+  error?: string;
+  error_type?: string;
+  use_case_note?: string;
+  sigs_total?: number;
+  n_iterations_actual?: number;
+  n_iterations_requested?: number;
+  keygen?: TimingBlock | null;
+  sign?: TimingBlock;
+  verify?: TimingBlock;
+  signature_bytes?: number;
+  public_key_bytes?: number;
+}
+
+export interface LmsXmssFile {
+  environment: SigTrackEnvironment;
+  schemes: Record<string, StatefulSigScheme>;
+}
+
 export interface ArchBucket {
   tls: TLSComposedFile | null;
   sig: SigTrackFile | null;
   ssh: SSHComposedFile | null;
+  aes: AesBaselineFile | null;
+  lmsXmss: LmsXmssFile | null;
 }
 
 export interface ProtocolsData {

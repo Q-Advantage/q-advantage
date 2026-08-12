@@ -7,6 +7,7 @@ import { Footer } from "@/components/chrome/Footer";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { AuditStrip } from "@/components/data/AuditStrip";
 import { Sparkline } from "@/components/data/Sparkline";
+import { ComplianceBadges } from "@/components/data/ComplianceBadges";
 import {
   getAlgorithmHistory,
   getLatestRun,
@@ -131,6 +132,9 @@ export default function AlgorithmPage({ params }: PageProps) {
             <Field label="liboqs key" value={algo.liboqs_key} mono />
           </dl>
         </section>
+
+        {/* Regulatory approval status */}
+        <ComplianceBadges family={algo.family} />
 
         {/* One section per operation: stats + sparkline */}
         {operations.map((op) => {

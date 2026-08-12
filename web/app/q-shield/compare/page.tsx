@@ -3,9 +3,12 @@ import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { AuditStrip } from "@/components/data/AuditStrip";
-import { CompareView } from "@/components/data/CompareView";
+import { CompareViewTabs } from "@/components/data/CompareViewTabs";
 import { ComparisonIndex } from "@/components/data/ComparisonIndex";
+import { HybridVsClassical } from "@/components/data/HybridVsClassical";
 import { getLatestRun } from "@/lib/data/load";
+import { loadProtocolsData } from "@/lib/protocols/load";
+import { GITHUB_REPO } from "@/lib/format";
 import {
   getComparisonGroups,
   countTotalPairs,
@@ -37,6 +40,10 @@ export default function ComparePage() {
   const groups = getComparisonGroups(run.algorithms);
   const totalPairs = countTotalPairs(groups);
 
+  const protocolsData = loadProtocolsData();
+  const protocolArches = Object.keys(protocolsData.byArch);
+  const primaryBucket = protocolsData.byArch["x86_64"] ?? protocolsData.byArch[protocolArches[0]];
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -62,6 +69,39 @@ export default function ComparePage() {
           algorithmsById={run.algorithms_by_id}
         />
 
+        {primaryBucket && (
+          <div className="border-t border-border pt-12">
+            <HybridVsClassical
+              tlsSuites={primaryBucket.tls?.suites}
+              sshSuites={primaryBucket.ssh?.suites}
+            />
+          </div>
+        )}
+
+        {!primaryBucket?.lmsXmss && (
+          <div className="border border-dashed border-border rounded-md px-5 py-4 flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <span className="text-sm text-fg font-medium">Hash-based signatures (LMS/XMSS)</span>
+              <span className="ml-2 text-2xs text-fg-subtle border border-border rounded px-1.5 py-0.5">
+                queued — first run pending
+              </span>
+              <p className="text-xs text-fg-subtle mt-1 max-w-xl leading-relaxed">
+                Harness code exists; no real run has landed yet. Shown here rather than left silently
+                absent — see <a href="/q-shield/protocols" className="hover:text-accent underline decoration-border-strong underline-offset-2">/q-shield/protocols</a> once it does.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-end">
+          <a
+            href={`https://github.com/${GITHUB_REPO}/tree/main/benchmark/results`}
+            className="text-xs text-fg-muted hover:text-accent transition-colors"
+          >
+            Full history on GitHub ↗
+          </a>
+        </div>
+
         <div id="detail" className="border-t border-border pt-12 space-y-6 scroll-mt-24">
           <div>
             <div className="eyebrow mb-2">Detail view</div>
@@ -74,7 +114,7 @@ export default function ComparePage() {
             </p>
           </div>
 
-          <CompareView algorithms={run.algorithms} />
+          <CompareViewTabs algorithms={run.algorithms} />
         </div>
       </main>
       <Footer />

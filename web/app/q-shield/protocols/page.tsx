@@ -1,19 +1,10 @@
 import type { Metadata } from "next";
-import fs from "fs";
-import path from "path";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 import { ProtocolsView } from "@/components/protocols/ProtocolsView";
-import type {
-  Manifest,
-  TLSComposedFile,
-  SigTrackFile,
-  SSHComposedFile,
-  ProtocolsData,
-  ArchBucket,
-} from "@/lib/protocols/types";
+import { loadProtocolsData } from "@/lib/protocols/load";
 
 export const metadata: Metadata = {
   title: "Q-Shield — Protocol benchmarks",
@@ -21,49 +12,8 @@ export const metadata: Metadata = {
     "Post-quantum TLS and SSH handshake cost measured in real protocol context: bytes on the wire, phase-by-phase decomposition, cross-checked against liboqs and eBACS. Measured on x86 and ARM. Re-run daily, every number linked to its commit.",
 };
 
-function dataDir(): string {
-  return path.join(process.cwd(), "public", "data", "protocols");
-}
-
-function readJson<T>(filePath: string): T {
-  return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
-}
-
-function loadData(): ProtocolsData {
-  const dir = dataDir();
-  const manifestPath = path.join(dir, "manifest.json");
-
-  if (!fs.existsSync(manifestPath)) {
-    return { manifest: null, byArch: {} };
-  }
-
-  const manifest = readJson<Manifest>(manifestPath);
-  const byArch: Record<string, ArchBucket> = {};
-
-  for (const arch of manifest.arches) {
-    byArch[arch] = { tls: null, sig: null, ssh: null };
-  }
-
-  for (const entry of Object.values(manifest.files)) {
-    const bucket = byArch[entry.arch];
-    if (!bucket) continue;
-    const filePath = path.join(dir, entry.filename);
-    if (!fs.existsSync(filePath)) continue;
-
-    if (entry.track === "tls-composed") {
-      bucket.tls = readJson<TLSComposedFile>(filePath);
-    } else if (entry.track === "sig-track") {
-      bucket.sig = readJson<SigTrackFile>(filePath);
-    } else if (entry.track === "ssh-composed") {
-      bucket.ssh = readJson<SSHComposedFile>(filePath);
-    }
-  }
-
-  return { manifest, byArch };
-}
-
 export default function ProtocolsPage() {
-  const data = loadData();
+  const data = loadProtocolsData();
 
   return (
     <div className="min-h-screen flex flex-col">
