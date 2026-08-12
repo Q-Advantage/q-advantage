@@ -310,6 +310,62 @@ export default function MethodologyPage() {
             but should not be cited as authoritative for a specific production deployment.
           </p>
 
+          <H3 id="q-shield-algorithm-expansion">Hybrid/classical comparison, amplification factor, and algorithm expansion</H3>
+          <Prose>
+            <p>
+              The composed-protocol tracks (<code>tls_composed.py</code>, <code>ssh_composed.py</code>)
+              measure real hybrid post-quantum suites (<code>X25519MLKEM768</code>,{" "}
+              <code>SecP256r1MLKEM768</code>, SSH&apos;s <code>mlkem768x25519-sha256</code>) alongside
+              their classical baselines (<code>X25519</code>, <code>curve25519-sha256</code>) — this
+              data has been committed daily since June 2026; the gap was that it never surfaced on{" "}
+              <code>/q-shield/compare</code>, only on <code>/q-shield/protocols</code>. Both pages now
+              expose it.
+            </p>
+            <p>
+              <strong>Amplification factor</strong> — bytes the server returns per byte the client
+              sends, per suite — is computed purely from the <code>size.bytes_client_to_server</code>{" "}
+              and <code>size.bytes_server_to_client</code> fields already in every composed-suite
+              record (see <code>web/lib/protocols/derive.ts</code>). No new benchmarking; it is the
+              number a DoS-conscious architect wants and, as far as this project has found, is not
+              published elsewhere for these suites.
+            </p>
+            <p>
+              <strong>What &ldquo;bytes on the wire&rdquo; means here, precisely.</strong> The
+              composed-suite <code>bytes_total</code> figure is the cryptographic key-exchange
+              payload — public key, ciphertext, classical key share — not a full captured TLS record
+              (no ClientHello extensions, no certificate chain, no record-layer framing). Every UI
+              surface labels this &ldquo;key-exchange payload bytes,&rdquo; not &ldquo;handshake bytes
+              on the wire&rdquo; unqualified, so the number isn&apos;t read as more complete than it
+              is.
+            </p>
+            <p>
+              <strong>AES-256-GCM baseline and LMS/XMSS stateful signatures</strong> (
+              <code>benchmark/protocols/aes_baseline.py</code>,{" "}
+              <code>benchmark/protocols/lms_xmss.py</code>) exist as harness code but are not yet
+              wired into the daily workflow — see each script&apos;s own docstring for why, and for
+              LMS/XMSS specifically, for the ephemeral-keypair design that keeps a stateful signature
+              scheme safe to benchmark at all. Any table or chart showing LMS/XMSS carries a
+              persistent &ldquo;stateful — firmware/code-signing use case, not general TLS&rdquo;
+              label, not a hover tooltip, and shows &ldquo;queued&rdquo; rather than a fabricated
+              number until a real run exists.
+            </p>
+          </Prose>
+
+          <H3 id="q-shield-companion-metrics">What Layer A does not measure</H3>
+          <Prose>
+            <p>
+              Handshake packet count (and whether it exceeds <code>initcwnd</code>), connections per
+              core, and bytes of state per half-open connection are <strong>not measured</strong> by
+              anything this repo currently runs. Layer A (the composed-protocol tracks above) times
+              cryptographic operations and accounts key/ciphertext sizes in-process — it does not open
+              a socket or capture packets. Producing these numbers for real would require Layer B
+              (live handshakes, currently planned via Docker), which does not exist yet. This is
+              stated here explicitly rather than left as a silent gap, per the same sourcing
+              discipline that governs every other claim on this page: an absence is a fact worth
+              stating, not a placeholder worth guessing at.
+            </p>
+          </Prose>
+
           <div className="mt-8">
             <Link
               href="/q-shield"

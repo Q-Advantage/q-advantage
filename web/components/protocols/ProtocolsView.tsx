@@ -11,6 +11,7 @@ import type {
   CrossValidation,
   ArchBucket,
 } from "@/lib/protocols/types";
+import { amplificationFactor, formatAmplificationFactor } from "@/lib/protocols/derive";
 
 // ── formatting ────────────────────────────────────────────────────────────────
 
@@ -118,6 +119,9 @@ function SuiteArchColumn({ suite }: { suite: ComposedSuite }) {
       <div className="grid grid-cols-2 gap-3">
         <Stat label="median" value={`${fmt(suite.timing.median_us)} µs`} />
         <Stat label="p95" value={`${fmt(suite.timing.p95_us)} µs`} />
+        {suite.size && (
+          <Stat label="amplification" value={formatAmplificationFactor(amplificationFactor(suite))} />
+        )}
       </div>
 
       {suite.phases && Object.keys(suite.phases).length > 0 && (
@@ -209,6 +213,109 @@ function SigCard({ schemeName, byArch }: { schemeName: string; byArch: Record<st
   );
 }
 
+// ── stateful (LMS/XMSS) card — persistent caveat, honest about non-"ok" ─────
+
+function StatefulSigCard({
+  schemeName,
+  byArch,
+}: {
+  schemeName: string;
+  byArch: Record<string, import("@/lib/protocols/types").StatefulSigScheme>;
+}) {
+  const arches = Object.keys(byArch);
+  const anyScheme = Object.values(byArch)[0];
+  if (!anyScheme) return null;
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-3">
+        <span className="num text-fg font-medium">{schemeName}</span>
+        {anyScheme.status !== "ok" && (
+          <span className="text-2xs text-fg-subtle border border-border rounded px-1.5 py-0.5">
+            queued — first run pending
+          </span>
+        )}
+      </div>
+
+      {/* Persistent, not a tooltip — spec-mandated: readers must not mistake
+          these for TLS-interchangeable stateless signatures. */}
+      <p className="text-2xs text-amber-500/90 leading-relaxed font-light mb-3">
+        Stateful — firmware/code-signing use case, not general TLS. Reusing a signing index
+        breaks the security guarantee; see NIST SP 800-208.
+      </p>
+
+      {anyScheme.status !== "ok" ? (
+        <p className="text-xs text-fg-subtle">
+          {anyScheme.reason ?? anyScheme.error ?? "No real run yet for this scheme."}
+        </p>
+      ) : (
+        <>
+          <div className="flex gap-3 text-2xs num text-fg-subtle mb-3">
+            <span>sig {fmtBytes(anyScheme.signature_bytes)}</span>
+            <span>pk {fmtBytes(anyScheme.public_key_bytes)}</span>
+            {anyScheme.sigs_total != null && <span>budget {anyScheme.sigs_total.toLocaleString()} sigs/keypair</span>}
+          </div>
+          <div className={`grid gap-5 ${arches.length > 1 ? "md:grid-cols-2" : "grid-cols-1"}`}>
+            {arches.map((arch) => {
+              const s = byArch[arch];
+              if (s.status !== "ok") return null;
+              return (
+                <div key={arch} className={arches.length > 1 ? "md:border-l md:border-border md:pl-4 md:first:border-l-0 md:first:pl-0" : ""}>
+                  <div className="mb-3">
+                    <ArchChip arch={arch} />
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {s.keygen && <Stat label="keygen" value={`${fmt(s.keygen.median_us)} µs`} />}
+                    {s.sign && <Stat label="sign" value={`${fmt(s.sign.median_us)} µs`} />}
+                    {s.verify && <Stat label="verify" value={`${fmt(s.verify.median_us)} µs`} />}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </Card>
+  );
+}
+
+// ── AES-GCM baseline card ────────────────────────────────────────────────────
+
+function AesCard({ byArch }: { byArch: Record<string, import("@/lib/protocols/types").AesBaselineRecord> }) {
+  const arches = Object.keys(byArch);
+  const any = Object.values(byArch)[0];
+  if (!any) return null;
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-3">
+        <span className="num text-fg font-medium">{any.algorithm}</span>
+        <span className="text-2xs num text-fg-subtle">{fmtBytes(any.payload_bytes)} payload</span>
+      </div>
+      <p className="text-2xs text-fg-subtle leading-relaxed font-light mb-3">
+        The symmetric reference line — what a boring, fast, everyone-already-uses-this operation
+        costs, for scale against every asymmetric number above.
+      </p>
+      <div className={`grid gap-5 ${arches.length > 1 ? "md:grid-cols-2" : "grid-cols-1"}`}>
+        {arches.map((arch) => {
+          const a = byArch[arch];
+          return (
+            <div key={arch} className={arches.length > 1 ? "md:border-l md:border-border md:pl-4 md:first:border-l-0 md:first:pl-0" : ""}>
+              <div className="mb-3">
+                <ArchChip arch={arch} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Stat label="encrypt" value={`${fmt(a.encrypt.median_us)} µs`} />
+                <Stat label="decrypt" value={`${fmt(a.decrypt.median_us)} µs`} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
 // ── hero strip ────────────────────────────────────────────────────────────────
 
 function Hero({ data }: { data: ProtocolsData }) {
@@ -285,7 +392,7 @@ function Empty() {
 
 // ── main ──────────────────────────────────────────────────────────────────────
 
-type Tab = "tls" | "signatures" | "ssh";
+type Tab = "tls" | "signatures" | "ssh" | "aes" | "stateful";
 
 // group same suite/scheme across arches
 function groupByName<T>(byArch: Record<string, ArchBucket>, extract: (b: ArchBucket) => Record<string, T> | undefined | null): Record<string, Record<string, T>> {
@@ -300,20 +407,39 @@ function groupByName<T>(byArch: Record<string, ArchBucket>, extract: (b: ArchBuc
   return grouped;
 }
 
+// AES baseline is one record per arch (no name key to group by) — collapse
+// straight to arch -> record.
+function groupAesByArch(byArch: Record<string, ArchBucket>): Record<string, import("@/lib/protocols/types").AesBaselineRecord> {
+  const grouped: Record<string, import("@/lib/protocols/types").AesBaselineRecord> = {};
+  for (const [arch, bucket] of Object.entries(byArch)) {
+    if (bucket.aes?.baseline) grouped[arch] = bucket.aes.baseline;
+  }
+  return grouped;
+}
+
 export function ProtocolsView({ data }: { data: ProtocolsData }) {
   const [tab, setTab] = useState<Tab>("tls");
 
   const tlsGrouped = groupByName(data.byArch, (b) => b.tls?.suites);
   const sigGrouped = groupByName(data.byArch, (b) => b.sig?.schemes);
   const sshGrouped = groupByName(data.byArch, (b) => b.ssh?.suites);
+  const statefulGrouped = groupByName(data.byArch, (b) => b.lmsXmss?.schemes);
+  const aesByArch = groupAesByArch(data.byArch);
 
-  const hasData = Object.keys(tlsGrouped).length || Object.keys(sigGrouped).length || Object.keys(sshGrouped).length;
+  const hasData =
+    Object.keys(tlsGrouped).length ||
+    Object.keys(sigGrouped).length ||
+    Object.keys(sshGrouped).length ||
+    Object.keys(statefulGrouped).length ||
+    Object.keys(aesByArch).length;
   const manifest = data.manifest;
 
   const tabs = [
     { id: "tls" as Tab, label: "TLS", count: Object.keys(tlsGrouped).length },
     { id: "signatures" as Tab, label: "Signatures", count: Object.keys(sigGrouped).length },
     { id: "ssh" as Tab, label: "SSH", count: Object.keys(sshGrouped).length },
+    { id: "stateful" as Tab, label: "Hash-based sigs", count: Object.keys(statefulGrouped).length },
+    { id: "aes" as Tab, label: "AES-GCM", count: Object.keys(aesByArch).length ? 1 : 0 },
   ].filter((t) => t.count > 0);
 
   const active = tabs.find((t) => t.id === tab) ? tab : tabs[0]?.id;
@@ -397,6 +523,32 @@ export function ProtocolsView({ data }: { data: ProtocolsData }) {
             {Object.entries(sshGrouped).map(([name, byArch]) => (
               <SuiteCard key={name} suiteName={name} byArch={byArch} />
             ))}
+          </div>
+        </div>
+      )}
+
+      {active === "stateful" && (
+        <div>
+          <SectionHead
+            title="Hash-based signatures"
+            caption="LMS and XMSS (NIST SP 800-208) — stateful, firmware/code-signing use case. A scheme shows &ldquo;queued&rdquo; until its first real run has landed; nothing here is ever a placeholder number."
+          />
+          <div className="grid grid-cols-1 gap-5">
+            {Object.entries(statefulGrouped).map(([name, byArch]) => (
+              <StatefulSigCard key={name} schemeName={name} byArch={byArch} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {active === "aes" && (
+        <div>
+          <SectionHead
+            title="AES-GCM baseline"
+            caption="The symmetric reference line under every asymmetric number on this page."
+          />
+          <div className="grid grid-cols-1 gap-5">
+            <AesCard byArch={aesByArch} />
           </div>
         </div>
       )}
