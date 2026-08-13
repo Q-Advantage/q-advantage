@@ -61,6 +61,18 @@ jobs:
           python3 benchmark/protocols/sig_track.py \
             --output-dir benchmark/results/protocols
 
+      - name: Run benchmark — AES-GCM baseline (Layer A)
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/protocols/aes_baseline.py \
+            --output-dir benchmark/results/protocols
+
+      - name: Run benchmark — LMS/XMSS stateful signatures (Layer A)
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/protocols/lms_xmss.py \
+            --output-dir benchmark/results/protocols
+
       - name: Build protocol manifest for web
         run: |
           source ~/q-advantage/venv/bin/activate
