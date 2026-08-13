@@ -61,6 +61,12 @@ export function Header() {
             >
               Q-Shield
             </Link>
+            <Link
+              href="/pqc-arena"
+              className="text-sm text-fg-muted hover:text-fg transition-colors"
+            >
+              PQC Arena
+            </Link>
           </div>
 
           <div className="hidden md:flex items-center gap-3 flex-shrink-0">
@@ -116,6 +122,13 @@ export function Header() {
               className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
             >
               Q-Day Index
+            </Link>
+            <Link
+              href="/pqc-arena"
+              onClick={() => setMenuOpen(false)}
+              className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
+            >
+              PQC Arena
             </Link>
             <Link
               href="/about"

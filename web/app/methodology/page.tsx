@@ -59,6 +59,7 @@ export default function MethodologyPage() {
               <li><a href="#q-shield" className="text-fg-muted hover:text-accent transition-colors">Q-Shield methodology</a></li>
               <li><a href="#q-day-index" className="text-fg-muted hover:text-accent transition-colors">Q-Day Index methodology</a></li>
               <li><a href="#pqc-readiness-index" className="text-fg-muted hover:text-accent transition-colors">PQC Readiness Index methodology</a></li>
+              <li><a href="#pqc-arena" className="text-fg-muted hover:text-accent transition-colors">PQC Arena methodology</a></li>
               <li><a href="#glossary" className="text-fg-muted hover:text-accent transition-colors">Measurement-method glossary</a></li>
               <li><a href="#challenge" className="text-fg-muted hover:text-accent transition-colors">Challenge a result</a></li>
             </ul>
@@ -825,6 +826,245 @@ export default function MethodologyPage() {
 
           {/* CTA to the index page itself removed while it's paused, 2026-08-09 —
               see web/app/pqc-readiness-index/page.tsx. Re-add once it's back. */}
+        </section>
+
+        {/* ====================================================================== */}
+        {/* ============ PQC ARENA ============ */}
+        {/* ====================================================================== */}
+        <section id="pqc-arena" className="mb-20 scroll-mt-20">
+          <div className="eyebrow mb-3">Section 4</div>
+          <h2 className="font-serif text-[clamp(32px,4.5vw,44px)] font-normal leading-[1.1] tracking-[-0.02em] text-fg mb-6">
+            PQC Arena — rating vendor implementations
+          </h2>
+          <p className="text-base text-fg-muted leading-[1.7] font-light mb-12">
+            Every other instrument here measures technology. PQC Arena rates <em>suppliers</em> — the
+            companies selling post-quantum implementations — against published criteria, so that
+            &ldquo;why this vendor and not that one&rdquo; has an answer that survives a procurement
+            review. No vendor has been rated yet. The criteria are published first, deliberately, and
+            this section explains what they are and what has to be true before any rating appears.
+          </p>
+
+          <H3 id="arena-why-suppliers">Why a supplier rating is a different instrument</H3>
+          <Prose>
+            <p>
+              The PQC Readiness Index rates <strong>deployers</strong> — institutions running
+              cryptography. That is an observation of the world; nobody transacts against a bank&apos;s
+              readiness score. PQC Arena rates <strong>suppliers</strong> — companies selling
+              implementations. That is a comparison a buyer acts on, and it is the one thing the Index
+              structurally cannot produce.
+            </p>
+            <p>
+              The gap it fills is specific. Vendor performance claims in this market are frequently
+              qualitative — &ldquo;minimal impact&rdquo; and similar — while the governance layer those
+              vendors sell into has already said in public that post-quantum performance differences
+              are significant and under-tested. A buyer is being asked to accept an adjective where
+              their own regulator asked for evidence.
+            </p>
+          </Prose>
+
+          <H3 id="arena-ten-dimensions">The ten dimensions</H3>
+          <Prose>
+            <p>
+              Vendors are assessed on ten dimensions, each with a published definition, an itemized
+              checklist of what is actually checked, and a stated source of evidence. In order:
+              algorithm correctness and standards conformance; independently measured performance;
+              protocol integration depth; crypto-agility; transparency and disclosure; compliance and
+              certification; deployment and support model; interoperability and ecosystem; track-record
+              credibility; and roadmap and standards currency.
+            </p>
+            <p>
+              The full checklists are published at{" "}
+              <Link
+                href="/pqc-arena"
+                className="text-fg hover:text-accent transition-colors underline decoration-border-strong hover:decoration-accent underline-offset-2"
+              >
+                PQC Arena
+              </Link>
+              . They are deliberately public before any rating exists, so a vendor can see the bar in
+              advance rather than discover it in a published result.
+            </p>
+            <p>
+              Dimension 2 — independently measured performance — is the one no competitor currently
+              produces, because it requires actually running the implementation rather than reading its
+              datasheet. Where an implementation is publicly testable, it goes through Q-Shield, the
+              same harness and the same hardware documented in Section 1. Where it is not testable, the
+              dimension is recorded as <strong>not assessed</strong> — never inferred from the
+              vendor&apos;s own published numbers.
+            </p>
+          </Prose>
+
+          <H3 id="arena-relative-not-mechanical">
+            This rating is relative and editorial — not a formula
+          </H3>
+          <Prose>
+            <p>
+              The Q-Day Index score above is <strong>mechanical</strong>: it is computed from
+              per-field confidence tags by published code, and the same inputs always produce the same
+              number. <strong>PQC Arena is deliberately not that</strong>, and it would be dishonest to
+              borrow the same language for it.
+            </p>
+            <p>
+              Arena scores each dimension <em>relative to the peer set</em> — how a vendor compares to
+              others on that dimension — rather than assigning weighted points and summing them to a
+              figure out of 100. A 1&ndash;100 vendor score would invite false precision: several of
+              these dimensions are irreducibly qualitative. Whether documentation discloses its own
+              limitations is a real, checkable property, and it is not a number.
+            </p>
+            <p>
+              So Arena&apos;s defensibility rests on different foundations than Q-Day&apos;s. Not on a
+              formula, but on: criteria published before the ratings; every finding tied to a cited,
+              dated source; a right of reply before publication; limitations stated on every rating
+              including the best one; and critical-failure gates that cannot be averaged away. If a
+              rating here is wrong, the evidence trail is public enough to prove it wrong &mdash; that
+              is the standard being aimed at.
+            </p>
+          </Prose>
+
+          <H3 id="arena-neutrality">Rating vendors while claiming to be vendor-neutral</H3>
+          <Prose>
+            <p>
+              Q-Advantage describes itself as vendor-neutral, and the Q-Day Index goes further: it
+              refuses to name a winner at all, reporting a field frontier rather than a leaderboard.
+              A tiered ranking of named vendors is a visible departure from that posture, so here is
+              the reasoning rather than a quiet inconsistency.
+            </p>
+            <p>
+              <strong>Vendor-neutral means no stake in which vendor wins — not a refusal to
+              compare.</strong> The Q-Day Index refuses to crown a winner because its subjects are
+              research machines measured against a physics target, where &ldquo;best&rdquo; is a
+              category error. Arena&apos;s subjects are commercial products a buyer must choose between.
+              Declining to compare them does not make us neutral; it makes us useless to the person the
+              instrument exists for, and it leaves the comparison to the sales collateral.
+            </p>
+            <p>
+              What keeps it honest is structural: Q-Advantage sells no migration tooling and competes
+              with no rated vendor; holds no equity and takes no commission; and publishes an itemized
+              commercial-relationship line on every rating rather than a blanket denial. Those
+              commitments are in the{" "}
+              <Link
+                href="/pqc-arena/policy"
+                className="text-fg hover:text-accent transition-colors underline decoration-border-strong hover:decoration-accent underline-offset-2"
+              >
+                rated-parties policy
+              </Link>
+              , published before the first rating.
+            </p>
+          </Prose>
+
+          <H3 id="arena-critical-failure">Critical-failure gates</H3>
+          <Prose>
+            <p>
+              Most dimensions trade off against each other. One does not. An implementation that fails
+              known-answer tests against the standard it claims conformance to, or that is still
+              shipping pre-final parameter sets past a stated deadline, is rated{" "}
+              <strong>Underperform</strong> regardless of how it scores everywhere else.
+            </p>
+            <p>
+              The reason is that the other nine dimensions describe how good a product is at doing its
+              job. This one asks whether it is doing the job at all. Excellent documentation on
+              cryptography that computes the wrong answer is not a mitigating factor.
+            </p>
+            <p>
+              Conformance is checked against whichever standard the vendor itself claims — the final
+              FIPS 203/204/205 parameter sets, or another jurisdiction&apos;s published requirements
+              where that is what is being claimed. A claim against a non-NIST standard is verified
+              against that body&apos;s own document, never silently mapped onto NIST&apos;s.
+            </p>
+          </Prose>
+
+          <H3 id="arena-tiers">The tiers, and what Unavailable means</H3>
+          <Prose>
+            <p>
+              Six tiers: Platinum, Gold, Silver, Bronze, Underperform, and Unavailable. The first five
+              are positions on a scale. <strong>Unavailable is not.</strong>
+            </p>
+            <p>
+              A vendor is Unavailable when there is genuinely not enough public signal to assess it and
+              no cooperation was offered. That is an absence of evidence, not a finding against the
+              product, and it is never used as a penalty for declining to engage. It is not ranked
+              below Underperform — it is not ranked at all. Given how young and unaudited this market
+              is, this tier is expected to be populated rather than to sit empty as an edge case.
+            </p>
+          </Prose>
+
+          <H3 id="arena-evidence-tracks">Where the evidence comes from</H3>
+          <Prose>
+            <p>
+              Four tracks, ordered by how little they depend on the vendor cooperating:
+            </p>
+            <p>
+              <strong>1 · Public claims audit.</strong> Read what the vendor has published — its
+              documentation, case studies, and whitepapers — and score transparency and track-record
+              from what is and is not cited in them. Requires no cooperation.
+            </p>
+            <p>
+              <strong>2 · Independent testing.</strong> Any implementation with a public SDK, library,
+              or testable endpoint goes through Q-Shield directly, producing real correctness and
+              performance figures rather than claims.
+            </p>
+            <p>
+              <strong>3 · Certification-registry checks.</strong> Public registries only — validation
+              status is read from the issuing programme&apos;s own list, and the scope of a certificate
+              is read alongside its existence, since what was validated is frequently narrower than
+              what is marketed.
+            </p>
+            <p>
+              <strong>4 · Optional vendor cooperation.</strong> Vendors are invited to provide deeper
+              access, with advance notice of the criteria and a pre-publication correction window. This
+              is an upgrade, never a requirement: a vendor that declines is still rated on tracks 1–3.
+            </p>
+          </Prose>
+
+          <H3 id="arena-not-yet-assessed">What is not yet assessed — and what is still blocking</H3>
+          <Prose>
+            <p>
+              <strong>No vendor has been rated, and no tier has been assigned to anyone.</strong> The
+              criteria on this site are the instrument; the ratings do not exist yet. Preliminary
+              internal work has produced findings on only two of the ten dimensions, for a handful of
+              candidates. Publishing a tier from two dimensions would be exactly the kind of
+              overconfident number the rest of this page exists to avoid.
+            </p>
+            <p>
+              Where a dimension has not been assessed, it will be shown as <strong>not
+              assessed</strong> — not scored zero, and not assumed favourable. Those are three
+              different statements and this instrument will not collapse them.
+            </p>
+            <p>Four things must be true before any rating publishes:</p>
+            <ul className="list-disc pl-5 space-y-1.5">
+              <li>The publishing entity exists.</li>
+              <li>
+                The itemized rated-parties and conflict-of-interest policy is published — done, and
+                readable{" "}
+                <Link
+                  href="/pqc-arena/policy"
+                  className="text-fg hover:text-accent transition-colors underline decoration-border-strong hover:decoration-accent underline-offset-2"
+                >
+                  here
+                </Link>
+                .
+              </li>
+              <li>
+                Legal review of comparative-rating exposure has happened. This is a distinct question
+                from the Readiness Index&apos;s review, not a consequence of it: publishing a
+                comparative judgement that could cost a named company a sale is a different exposure
+                than publishing a configuration fact a server already broadcasts to every visitor.
+              </li>
+              <li>
+                The criteria have been reconciled against the relevant financial-sector standard for
+                evaluating third-party providers, once its draft is visible.
+              </li>
+            </ul>
+          </Prose>
+
+          <div className="mt-8">
+            <Link
+              href="/pqc-arena"
+              className="inline-flex items-center gap-2 text-sm text-accent hover:gap-3 transition-all"
+            >
+              Read the full PQC Arena criteria
+              <span aria-hidden>→</span>
+            </Link>
+          </div>
         </section>
 
         {/* ====================================================================== */}

@@ -34,12 +34,27 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${base}/pqc-arena`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
+      url: `${base}/pqc-arena/policy`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.4,
+    },
+    {
       url: `${base}/methodology`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.6,
     },
   ];
+  // NOTE: /q-day-index and /q-shield/protocols are live but absent from this
+  // list — a pre-existing gap, not introduced here. Left alone deliberately
+  // rather than silently widening this change's scope.
 
   const algorithmPages: MetadataRoute.Sitemap = run.algorithms.map((a) => ({
     url: `${base}/q-shield/${a.id}`,
