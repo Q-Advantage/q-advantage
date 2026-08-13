@@ -30,6 +30,52 @@ export function formatAmplificationFactor(factor: number | null): string {
   return `${factor.toFixed(2)}×`;
 }
 
+export type SuiteClassification = "hybrid" | "pure-pqc" | "classical" | "unknown";
+
+/**
+ * Classifies a composed suite by what it actually measured, from the phase
+ * keys present — not from parsing the suite name (name patterns are a
+ * house convention, not a guarantee; a future suite could break it, and
+ * this shouldn't silently misclassify when that happens).
+ *
+ *   has kem_* phases only        → "pure-pqc"   (PQC alone, no classical leg)
+ *   has classical_* phases only  → "classical"  (classical alone)
+ *   has both                     → "hybrid"     (PQC + classical combined)
+ *   has neither (no phases data) → "unknown"    — never guessed
+ */
+export function classifySuite(suite: ComposedSuite): SuiteClassification {
+  const phaseNames = Object.keys(suite.phases ?? {});
+  const hasKem = phaseNames.some((p) => p.startsWith("kem_"));
+  const hasClassical = phaseNames.some((p) => p.startsWith("classical_"));
+  if (hasKem && hasClassical) return "hybrid";
+  if (hasKem) return "pure-pqc";
+  if (hasClassical) return "classical";
+  return "unknown";
+}
+
+/**
+ * How much slower (or faster) a hybrid suite is than its same-protocol
+ * pure-PQC counterpart, using the same KEM. = hybrid.median_us /
+ * pure.median_us. Returns `null` (never a guess) if either side is
+ * missing a real median. Caller is responsible for picking a same-KEM,
+ * same-protocol pure-PQC suite to compare against — this function does
+ * the arithmetic only, no suite-matching logic (that's genuinely context-
+ * dependent and belongs at the call site, not hidden in here).
+ */
+export function hybridToPurePqcRatio(hybrid: ComposedSuite, pure: ComposedSuite): number | null {
+  const h = hybrid.timing?.median_us;
+  const p = pure.timing?.median_us;
+  if (!h || !p) return null;
+  return h / p;
+}
+
+export function formatMultiplier(ratio: number | null): string {
+  if (ratio == null) return "—";
+  if (ratio >= 100) return `${Math.round(ratio)}×`;
+  if (ratio >= 10) return `${ratio.toFixed(1)}×`;
+  return `${ratio.toFixed(2)}×`;
+}
+
 /**
  * The honest label for `size.bytes_total` on a composed suite. Layer A
  * measures the cryptographic key-exchange payload (public key / ciphertext
