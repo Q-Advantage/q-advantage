@@ -18,6 +18,15 @@ import {
   criticalFailureCriteria,
   type ArenaTierId,
 } from "../lib/data/arena-criteria";
+import {
+  tierEligibility,
+  forcedTier,
+  validateRating,
+  MIN_ASSESSED_DIMENSIONS,
+  type DimensionAssessment,
+  type VendorRating,
+} from "../lib/data/arena-types";
+import { getVendorRatings, hasPublishedRatings } from "../lib/data/arena";
 
 console.log("=== Criteria: all ten dimensions present and complete ===");
 if (ARENA_CRITERIA.length !== 10) {
@@ -140,6 +149,127 @@ if (unavailable.rank !== null) {
   );
 }
 console.log("  unranked (correct): Unavailable");
+
+console.log("\n=== Tier eligibility: partial data must yield NO tier, not a cautious one ===");
+function assessments(standings: DimensionAssessment["standing"][]): DimensionAssessment[] {
+  return standings.map((standing, i) => ({
+    criterionId: ARENA_CRITERIA[i]?.id ?? `fixture-${i}`,
+    standing,
+    finding: standing === "not-assessed" ? null : "fixture finding",
+    evidence:
+      standing === "not-assessed"
+        ? []
+        : [
+            {
+              claim: "fixture claim",
+              sourceUrl: "https://example.invalid/doc",
+              retrieved: "2026-08-13",
+              verification: "confirmed" as const,
+            },
+          ],
+  }));
+}
+const twoOfTen = assessments([
+  "leads",
+  "trails",
+  ...Array<DimensionAssessment["standing"]>(8).fill("not-assessed"),
+]);
+const twoOfTenEligibility = tierEligibility(twoOfTen);
+console.log(`  2 of 10 assessed → eligible: ${twoOfTenEligibility.eligible}`);
+if (twoOfTenEligibility.eligible) {
+  throw new Error(
+    "2-of-10 assessed dimensions was judged tier-eligible. That is precisely the case the spec " +
+      "refuses to assign a tier on — partial data must yield no tier, not a cautious one.",
+  );
+}
+
+const sevenOfTen = assessments([
+  ...Array<DimensionAssessment["standing"]>(MIN_ASSESSED_DIMENSIONS).fill("adequate"),
+  ...Array<DimensionAssessment["standing"]>(10 - MIN_ASSESSED_DIMENSIONS).fill("not-assessed"),
+]);
+console.log(
+  `  ${MIN_ASSESSED_DIMENSIONS} of 10 assessed → eligible: ${tierEligibility(sevenOfTen).eligible}`,
+);
+if (!tierEligibility(sevenOfTen).eligible) {
+  throw new Error(`${MIN_ASSESSED_DIMENSIONS} assessed dimensions should meet the threshold.`);
+}
+
+console.log("\n=== Critical failure forces Underperform and cannot be averaged away ===");
+const mostlyExcellent = assessments([
+  "critical-failure",
+  ...Array<DimensionAssessment["standing"]>(9).fill("leads"),
+]);
+const forced = forcedTier(mostlyExcellent);
+console.log(`  critical failure + 9 "leads" → forced tier: ${forced}`);
+if (forced !== "underperform") {
+  throw new Error(
+    `A critical failure alongside nine leading dimensions produced "${forced}" instead of ` +
+      `"underperform". A vendor whose cryptography is provably wrong must not average its way up.`,
+  );
+}
+if (!tierEligibility(mostlyExcellent).eligible) {
+  throw new Error(
+    "A critical failure must always be assignable — a provably-wrong implementation cannot escape " +
+      "a rating by having too few other dimensions assessed.",
+  );
+}
+
+console.log("\n=== Rating validation enforces the published policy commitments ===");
+function baseRating(overrides: Partial<VendorRating> = {}): VendorRating {
+  return {
+    id: "fixture",
+    displayName: "Fixture",
+    category: "library-sdk",
+    tier: null,
+    tierWithheldReason: "Fixture: not enough dimensions assessed.",
+    reviewedOn: "2026-08-13",
+    reviewedBy: "fixture",
+    methodologyVersion: "1.0",
+    assessments: twoOfTen,
+    limitations: ["Fixture limitation."],
+    commercialRelationship: { exists: false, statement: "Commercial relationship: none." },
+    ...overrides,
+  };
+}
+const wellFormed = validateRating(baseRating());
+console.log(`  well-formed fixture → ${wellFormed.length} problems`);
+if (wellFormed.length > 0) {
+  throw new Error(`A well-formed fixture reported problems: ${wellFormed.join("; ")}`);
+}
+
+const policyViolations: [string, VendorRating][] = [
+  ["missing disclosure line", baseRating({ commercialRelationship: { exists: false, statement: "  " } })],
+  ["no limitations", baseRating({ limitations: [] })],
+  ["tier without eligibility", baseRating({ tier: "gold", tierWithheldReason: null })],
+  ["null tier without a reason", baseRating({ tierWithheldReason: null })],
+  [
+    "critical failure not routed to Underperform",
+    baseRating({
+      assessments: mostlyExcellent,
+      tier: "platinum",
+      tierWithheldReason: null,
+    }),
+  ],
+];
+for (const [label, rating] of policyViolations) {
+  const problems = validateRating(rating);
+  console.log(`  ${label.padEnd(44)} → ${problems.length} problem(s) — ${problems.length ? "caught" : "MISSED"}`);
+  if (problems.length === 0) {
+    throw new Error(
+      `validateRating() accepted a rating with "${label}". These are published policy commitments; ` +
+        `a rating that breaks one must not be renderable.`,
+    );
+  }
+}
+
+console.log("\n=== Loader ships no ratings ===");
+console.log(`  hasPublishedRatings(): ${hasPublishedRatings()} · vendors: ${getVendorRatings().length}`);
+if (hasPublishedRatings()) {
+  throw new Error(
+    "The Arena loader returned vendor ratings. No rating may ship until every publish precondition " +
+      "in docs/adr/0004-pqc-arena-topology-and-publish-gates.md is met.",
+  );
+}
 
 console.log("\n=== Public-repo guard: no vendor data may ship here ===");
 // PQC Arena publishes criteria, not verdicts. Vendor assessments live in a
