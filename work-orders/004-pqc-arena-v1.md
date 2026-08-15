@@ -1,6 +1,21 @@
 # 004 — PQC Arena v1: publish the instrument, hold the verdicts
 
-**Status:** in build. Split across two PRs (`004a` criteria/policy, `004b` gated instrument).
+**Status:** built, **paused before publication**. Split across two PRs (`004a` criteria/policy,
+`004b` gated instrument).
+
+> **Update, 2026-08-15 — everything is paused until the entity is formed.** Founder decision. The
+> criteria and policy pages name no vendor, so they were not blocked by the rating gates — but
+> publishing them still commits Q-Advantage to a methodology and a conflicts policy, and signals the
+> product to the market. That is a decision worth taking once, from a formed entity, rather than
+> taking early and walking back.
+>
+> Paused: `/pqc-arena`, `/pqc-arena/policy`, and methodology Section 4 (which links to both and states
+> the criteria "are published"). Header nav links and sitemap entries removed alongside, so nothing on
+> the live site points at a 404 — the same discipline applied when the Readiness Index was paused.
+>
+> Nothing was deleted. Going live is three flags: `PAUSED` in both Arena pages, `ARENA_PUBLIC` in
+> `web/app/methodology/page.tsx`, plus restoring the nav links and sitemap entries (both marked with
+> dated comments at their removal sites).
 
 ## What
 

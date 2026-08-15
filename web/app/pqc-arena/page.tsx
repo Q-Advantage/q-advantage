@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
@@ -32,6 +33,21 @@ export const metadata: Metadata = {
  * NO COMPANY IS NAMED ON THIS PAGE. Scope is described by category only. See
  * docs/adr/0004-pqc-arena-topology-and-publish-gates.md.
  */
+
+/**
+ * PAUSED, 2026-08-15 — by founder decision, nothing about PQC Arena goes
+ * public until the entity is formed.
+ *
+ * This page names no vendor and so is not blocked by the *rating* gates, but
+ * it does publicly commit Q-Advantage to a methodology and a policy, and it
+ * signals the product to the market. That is a decision to take once, from a
+ * formed entity, rather than to take early and walk back.
+ *
+ * Flip to false together with the same flag in ./policy/page.tsx and
+ * ARENA_PUBLIC in app/methodology/page.tsx, and restore the header nav links
+ * and sitemap entries removed alongside this. Nothing was deleted.
+ */
+const PAUSED: boolean = true;
 
 const SCOPE_IN = [
   "Post-quantum crypto library and SDK vendors",
@@ -70,6 +86,8 @@ const PRECONDITIONS: { label: string; done: boolean; detail: string }[] = [
 ];
 
 export default function PQCArenaPage() {
+  if (PAUSED) notFound();
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

@@ -61,12 +61,9 @@ export function Header() {
             >
               Q-Shield
             </Link>
-            <Link
-              href="/pqc-arena"
-              className="text-sm text-fg-muted hover:text-fg transition-colors"
-            >
-              PQC Arena
-            </Link>
+            {/* PQC Arena link removed 2026-08-15 while the product is paused
+                pre-entity — see web/app/pqc-arena/page.tsx. Re-add here and in
+                the mobile dropdown below when it goes live. */}
           </div>
 
           <div className="hidden md:flex items-center gap-3 flex-shrink-0">
@@ -123,13 +120,7 @@ export function Header() {
             >
               Q-Day Index
             </Link>
-            <Link
-              href="/pqc-arena"
-              onClick={() => setMenuOpen(false)}
-              className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
-            >
-              PQC Arena
-            </Link>
+            {/* PQC Arena link removed 2026-08-15 — paused pre-entity. */}
             <Link
               href="/about"
               onClick={() => setMenuOpen(false)}

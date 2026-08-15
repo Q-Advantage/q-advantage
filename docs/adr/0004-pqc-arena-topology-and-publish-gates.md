@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted — 2026-08-13
+Accepted — 2026-08-13. **Amended 2026-08-15: publication paused until the entity exists** (see
+"Amendment" at the end).
 
 ## Context
 
@@ -105,3 +106,36 @@ work actually produces data, which is not in v1. Creating it is a founder/org ac
   needs both.
 - **If `Q-Advantage/pqc-arena` is ever made public**, that is a distinct decision requiring its own
   history-and-logs audit — not a default this ADR pre-approves. Same clause as ADR 0003.
+
+## Amendment, 2026-08-15 — the criteria and policy pages are paused too
+
+The decision above published the criteria and policy pages immediately, on the reasoning that they
+name no company and therefore are not blocked by the rating gates. That reasoning stands as far as it
+goes, but it answered the wrong question.
+
+**Founder decision: nothing about PQC Arena is publicly visible until the entity is formed.** Not
+because the pages carry legal exposure — they name nobody — but because publishing them is still an
+act taken *by a business*: it commits Q-Advantage to a methodology and a conflicts policy in public,
+and it signals an unbuilt product to a market that includes its future subjects. That is a decision
+worth making once, from a formed entity, rather than making early and revising.
+
+This converts precondition #1 (the entity exists) from a gate on *ratings* into a gate on the
+*product's public existence*. Precondition #2 is correspondingly reopened: the COI policy is written
+and reviewed but no longer published, so it is not yet met.
+
+**What was paused:** `/pqc-arena`, `/pqc-arena/policy`, and the methodology section — the last one
+because it links to both pages and asserts the criteria "are published", which would be false while
+they 404. Header nav links and sitemap entries were removed so nothing on the live site points at a
+404, matching the discipline applied when the Readiness Index was paused.
+
+**Nothing was deleted.** Going live is three flags plus two restorations, each marked with a dated
+comment at its site:
+
+- `PAUSED` in `web/app/pqc-arena/page.tsx`
+- `PAUSED` in `web/app/pqc-arena/policy/page.tsx`
+- `ARENA_PUBLIC` in `web/app/methodology/page.tsx`
+- the two header nav links (desktop + mobile) in `web/components/chrome/Header.tsx`
+- the two sitemap entries in `web/app/sitemap.ts`
+
+The per-vendor route stays paused independently and on its own longer list of conditions — clearing
+the entity gate does not clear it.

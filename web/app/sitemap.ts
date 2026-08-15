@@ -33,18 +33,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "daily",
       priority: 0.7,
     },
-    {
-      url: `${base}/pqc-arena`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${base}/pqc-arena/policy`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.4,
-    },
+    // /pqc-arena and /pqc-arena/policy are built but paused pre-entity
+    // (see web/app/pqc-arena/page.tsx) — deliberately not listed, so nothing
+    // points search engines at a 404. Re-add when the pages go live.
     {
       url: `${base}/methodology`,
       lastModified: new Date(),

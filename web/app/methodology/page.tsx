@@ -29,6 +29,16 @@ export const metadata: Metadata = {
  * Q-Shield environment block is pulled live from the latest run so the
  * page can't drift from reality.
  */
+/**
+ * PQC Arena's methodology section is written and complete, but hidden while
+ * the product itself is paused pre-entity (see web/app/pqc-arena/page.tsx).
+ * It links to /pqc-arena and /pqc-arena/policy, which currently 404 — and it
+ * states that the criteria "are published", which would not be true while
+ * they aren't. Hidden rather than deleted: flip this to true together with
+ * the PAUSED flags on both Arena pages.
+ */
+const ARENA_PUBLIC: boolean = false;
+
 export default function MethodologyPage() {
   const run = getLatestRun();
   const env = run.environment;
@@ -59,7 +69,9 @@ export default function MethodologyPage() {
               <li><a href="#q-shield" className="text-fg-muted hover:text-accent transition-colors">Q-Shield methodology</a></li>
               <li><a href="#q-day-index" className="text-fg-muted hover:text-accent transition-colors">Q-Day Index methodology</a></li>
               <li><a href="#pqc-readiness-index" className="text-fg-muted hover:text-accent transition-colors">PQC Readiness Index methodology</a></li>
-              <li><a href="#pqc-arena" className="text-fg-muted hover:text-accent transition-colors">PQC Arena methodology</a></li>
+              {ARENA_PUBLIC && (
+                <li><a href="#pqc-arena" className="text-fg-muted hover:text-accent transition-colors">PQC Arena methodology</a></li>
+              )}
               <li><a href="#glossary" className="text-fg-muted hover:text-accent transition-colors">Measurement-method glossary</a></li>
               <li><a href="#challenge" className="text-fg-muted hover:text-accent transition-colors">Challenge a result</a></li>
             </ul>
@@ -831,6 +843,7 @@ export default function MethodologyPage() {
         {/* ====================================================================== */}
         {/* ============ PQC ARENA ============ */}
         {/* ====================================================================== */}
+        {ARENA_PUBLIC && (
         <section id="pqc-arena" className="mb-20 scroll-mt-20">
           <div className="eyebrow mb-3">Section 4</div>
           <h2 className="font-serif text-[clamp(32px,4.5vw,44px)] font-normal leading-[1.1] tracking-[-0.02em] text-fg mb-6">
@@ -1066,6 +1079,7 @@ export default function MethodologyPage() {
             </Link>
           </div>
         </section>
+        )}
 
         {/* ====================================================================== */}
         {/* ============ GLOSSARY ============ */}

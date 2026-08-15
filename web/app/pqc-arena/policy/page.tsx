@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
@@ -26,8 +27,16 @@ const POLICY_VERSION = "1.0";
  *
  * Same disclosure-document treatment as /privacy — narrow reading column, no
  * marketing background.
+ *
+ * PAUSED, 2026-08-15 — see the identical flag in ../page.tsx for the
+ * reasoning. Publishing a conflicts policy is a commitment made on behalf of
+ * a business; it waits for the entity. Flip both flags together.
  */
+const PAUSED: boolean = true;
+
 export default function ArenaPolicyPage() {
+  if (PAUSED) notFound();
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
