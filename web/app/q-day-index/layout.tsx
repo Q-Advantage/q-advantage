@@ -14,7 +14,7 @@ const TABS: ProductTab[] = [
 export default function QDayLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <ProductHeader name="Q-Day Index" tabs={TABS} />
+      <ProductHeader name="Q-Day Index" accentSplit="-" tabs={TABS} />
       {children}
       <Footer />
     </div>

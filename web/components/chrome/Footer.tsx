@@ -23,12 +23,6 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-[1.5fr_repeat(3,1fr)]">
           <div>
             <div className="flex items-center gap-2.5">
-              <span
-                className="relative inline-block h-[19px] w-[19px] rounded-[5px] bg-fg"
-                aria-hidden
-              >
-                <span className="absolute inset-[5px] rounded-[1px] bg-accent" />
-              </span>
               <span className="text-[15.5px] font-bold tracking-tight text-fg">Q-Advantage</span>
             </div>
             <p className="mt-3 max-w-[34ch] text-[12.5px] leading-relaxed text-fg-muted">
