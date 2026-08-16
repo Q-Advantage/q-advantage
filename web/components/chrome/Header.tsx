@@ -1,136 +1,210 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { PRODUCTS, TOOLS, type Surface } from "@/lib/nav";
 
 /**
- * Site header — sticky, blur backdrop, present on every page.
+ * Site header — a full-bleed bar that owns its own row, detached from the
+ * panels below it. InferenceX and ClusterMAX both do this; the previous
+ * header read as fused to the first section.
  *
- * Desktop (md+): Brand (left) · About · Methodology · Q-Day Index · Q-Shield (centered) · Theme toggle · Contact us (right)
- * Mobile (<md):  Brand · Contact us · Hamburger (opens dropdown with all nav + theme toggle)
+ * Desktop: Brand · Home · Blog · Products▾ · Tools▾ · [theme] [Contact us]
+ * Mobile:  Brand · Contact us · hamburger, everything in the drawer.
  *
- * Contact us is the only green/filled element in the nav — the single
- * conversion CTA. All other nav links share the same plain text style.
+ * Work-order 005 cut About/Methodology/Q-Day Index out of the primary nav and
+ * moved them to the footer, replacing a six-item flat list that had stopped
+ * scaling.
  */
-export function Header() {
-  const [menuOpen, setMenuOpen] = useState(false);
+
+function StatusPill({ status }: { status: Surface["status"] }) {
+  const live = status === "live";
+  return (
+    <span
+      className={`rounded px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-eyebrow ${
+        live ? "bg-status-ok/15 text-status-ok" : "bg-bg-surface text-fg-subtle"
+      }`}
+    >
+      {live ? "Live" : "Coming"}
+    </span>
+  );
+}
+
+function SurfaceRow({ surface, onNavigate }: { surface: Surface; onNavigate?: () => void }) {
+  const body = (
+    <>
+      <span className="flex items-center justify-between gap-3">
+        <span className="text-[13.5px] font-bold text-fg">{surface.name}</span>
+        <StatusPill status={surface.status} />
+      </span>
+      <span className="mt-0.5 block text-[11.5px] leading-snug text-fg-muted">
+        {surface.blurb}
+      </span>
+    </>
+  );
+
+  // Unpublished surfaces are named but never linked — no route exists, and
+  // linking one would send a visitor to a 404.
+  if (!surface.href) {
+    return <span className="block cursor-default rounded-lg px-3 py-2.5">{body}</span>;
+  }
 
   return (
-    <nav
-      className="sticky top-0 z-50 border-b border-border"
-      style={{
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        background: "rgb(var(--color-bg) / 0.7)",
+    <Link
+      href={surface.href}
+      onClick={onNavigate}
+      className="block rounded-lg px-3 py-2.5 hover:bg-bg-surface"
+    >
+      {body}
+    </Link>
+  );
+}
+
+function NavDropdown({ label, items }: { label: string; items: Surface[] }) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+
+  // Close on outside click and on Escape, so the menu can't strand a keyboard
+  // user or linger after focus has moved on.
+  useEffect(() => {
+    if (!open) return;
+
+    function onPointerDown(e: MouseEvent) {
+      if (wrap.current && !wrap.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div
+      ref={wrap}
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false);
       }}
     >
-      <div className="mx-auto max-w-[1200px] px-6 md:px-8 py-[18px]">
-        <div className="relative flex items-center justify-between gap-4">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="true"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-fg-muted transition-colors hover:bg-bg-surface hover:text-fg"
+      >
+        {label}
+        <ChevronDown className="h-3 w-3 opacity-65" aria-hidden />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-[calc(100%+7px)] z-50 min-w-[296px] rounded-xl border border-border bg-bg-elevated p-1.5 shadow-lg">
+          {items.map((s) => (
+            <SurfaceRow key={s.name} surface={s} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function Header() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const close = () => setMenuOpen(false);
+
+  return (
+    <nav className="sticky top-0 z-50 border-b border-border bg-bg-card">
+      <div className="mx-auto max-w-[1200px] px-6 md:px-8">
+        <div className="flex h-[60px] items-center justify-between gap-6">
           <Link
             href="/"
-            className="flex items-center gap-3 group flex-shrink-0"
+            className="flex flex-shrink-0 items-center gap-2.5"
             aria-label="Q-Advantage home"
           >
-            <DiamondMark />
-            <span className="font-serif text-[22px] sm:text-[26px] md:text-[32px] text-fg tracking-tight leading-none">
-              Q-Advantage
-            </span>
+            <BrandMark />
+            <span className="text-[15.5px] font-bold tracking-tight text-fg">Q-Advantage</span>
           </Link>
 
-          {/* Desktop nav — centered in the header regardless of brand/CTA width */}
-          <div className="hidden md:flex items-center gap-5 lg:gap-7 absolute left-1/2 -translate-x-1/2">
-            <Link href="/about" className="text-sm text-fg-muted hover:text-fg transition-colors">
-              About
+          <div className="hidden items-center gap-1 md:flex">
+            <Link
+              href="/"
+              className="rounded-lg px-3 py-2 text-sm font-bold text-fg transition-colors hover:bg-bg-surface"
+            >
+              Home
             </Link>
             <Link
-              href="/methodology"
-              className="text-sm text-fg-muted hover:text-fg transition-colors"
+              href="/blog"
+              className="rounded-lg px-3 py-2 text-sm font-semibold text-fg-muted transition-colors hover:bg-bg-surface hover:text-fg"
             >
-              Methodology
+              Blog
             </Link>
-            <Link
-              href="/q-day-index"
-              className="text-sm text-fg-muted hover:text-fg transition-colors"
-            >
-              Q-Day Index
-            </Link>
-            <Link
-              href="/q-shield"
-              className="text-sm text-fg-muted hover:text-fg transition-colors"
-            >
-              Q-Shield
-            </Link>
+            <NavDropdown label="Products" items={PRODUCTS} />
+            <NavDropdown label="Tools" items={TOOLS} />
           </div>
 
-          <div className="hidden md:flex items-center gap-3 flex-shrink-0">
+          <div className="hidden flex-shrink-0 items-center gap-2 md:flex">
             <ThemeToggle />
             <Link
               href="/contact"
-              className="inline-flex items-center px-4 py-2 rounded-md bg-accent text-accent-fg text-[13px] font-medium hover:opacity-90 hover:-translate-y-px transition-all"
+              className="inline-flex h-[34px] items-center rounded-lg bg-fg px-4 text-[12.5px] font-bold text-bg transition-opacity hover:opacity-90"
             >
               Contact us
             </Link>
           </div>
 
-          {/* Mobile: Contact us + Hamburger */}
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex items-center gap-2 md:hidden">
             <Link
               href="/contact"
-              className="inline-flex items-center px-3 py-1.5 rounded-md bg-accent text-accent-fg text-[12px] font-medium"
+              className="inline-flex items-center rounded-lg bg-fg px-3 py-1.5 text-xs font-bold text-bg"
             >
               Contact us
             </Link>
             <button
-              onClick={() => setMenuOpen(!menuOpen)}
+              type="button"
+              onClick={() => setMenuOpen((v) => !v)}
               aria-label={menuOpen ? "Close menu" : "Open menu"}
               aria-expanded={menuOpen}
-              className="inline-flex items-center justify-center w-9 h-9 rounded-md border border-border text-fg-muted hover:text-fg transition-colors"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-fg-muted transition-colors hover:text-fg"
             >
-              {menuOpen ? <CloseIcon /> : <MenuIcon />}
+              {menuOpen ? <X className="h-4 w-4" aria-hidden /> : <Menu className="h-4 w-4" aria-hidden />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile dropdown */}
       {menuOpen && (
-        <div
-          className="md:hidden border-t border-border"
-          style={{ background: "rgb(var(--color-bg) / 0.95)" }}
-        >
-          <div className="mx-auto max-w-[1200px] px-6 py-3 flex flex-col gap-1">
-            <div className="px-3.5 py-2">
+        <div className="border-t border-border bg-bg-elevated md:hidden">
+          <div className="mx-auto flex max-w-[1200px] flex-col gap-1 px-6 py-4">
+            <div className="pb-2">
               <ThemeToggle />
             </div>
-            <Link
-              href="/q-shield"
-              onClick={() => setMenuOpen(false)}
-              className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
-            >
-              Q-Shield
+
+            <Link href="/" onClick={close} className="px-3 py-2.5 text-sm font-bold text-fg">
+              Home
             </Link>
-            <Link
-              href="/q-day-index"
-              onClick={() => setMenuOpen(false)}
-              className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
-            >
-              Q-Day Index
+            <Link href="/blog" onClick={close} className="px-3 py-2.5 text-sm text-fg-muted">
+              Blog
             </Link>
-            <Link
-              href="/about"
-              onClick={() => setMenuOpen(false)}
-              className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
-            >
-              About
-            </Link>
-            <Link
-              href="/methodology"
-              onClick={() => setMenuOpen(false)}
-              className="px-3.5 py-2.5 text-sm text-fg-muted hover:text-fg"
-            >
-              Methodology
-            </Link>
+
+            <div className="eyebrow mt-3 px-3">Products</div>
+            {PRODUCTS.map((s) => (
+              <SurfaceRow key={s.name} surface={s} onNavigate={close} />
+            ))}
+
+            <div className="eyebrow mt-3 px-3">Tools</div>
+            {TOOLS.map((s) => (
+              <SurfaceRow key={s.name} surface={s} onNavigate={close} />
+            ))}
           </div>
         </div>
       )}
@@ -138,60 +212,17 @@ export function Header() {
   );
 }
 
-function MenuIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <line x1="3" y1="6" x2="21" y2="6" />
-      <line x1="3" y1="12" x2="21" y2="12" />
-      <line x1="3" y1="18" x2="21" y2="18" />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  );
-}
-
-function DiamondMark() {
+/**
+ * The brand mark — a gold square inset in an ink square. Replaces the rotated
+ * diamond outline, which read as a chevron at small sizes.
+ */
+function BrandMark() {
   return (
     <span
-      className="relative inline-block w-[26px] h-[26px] border-[1.5px] border-accent rounded-[4px] flex-shrink-0"
-      style={{ transform: "rotate(45deg)" }}
+      className="relative inline-block h-[19px] w-[19px] flex-shrink-0 rounded-[5px] bg-fg"
       aria-hidden
     >
-      <span
-        className="absolute"
-        style={{
-          inset: "5px",
-          borderLeft: "1.5px solid rgb(var(--color-accent))",
-          borderBottom: "1.5px solid rgb(var(--color-accent))",
-        }}
-      />
+      <span className="absolute inset-[5px] rounded-[1px] bg-accent" />
     </span>
   );
 }

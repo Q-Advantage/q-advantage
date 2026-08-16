@@ -3,85 +3,82 @@
 @tailwind utilities;
 
 /*
- * Theme tokens — three themes selected at runtime via `data-theme` on <html>
+ * Theme tokens — two themes selected at runtime via `data-theme` on <html>
  * (see components/chrome/ThemeToggle.tsx). Values are "R G B" triplets (no
  * commas) so Tailwind's `rgb(var(--x) / <alpha-value>)` pattern in
  * tailwind.config.ts can apply opacity modifiers (e.g. `bg-accent/10`).
  *
- * :root holds the "dark" defaults (unchanged from the original single-theme
- * palette) so any page that loads before the theme-init script runs still
- * paints correctly. [data-theme="light"] and [data-theme="navy"] only
- * override the tokens that actually differ — data/status tokens are
- * intentionally not redeclared per theme (see tailwind.config.ts).
+ * LIGHT IS THE DEFAULT (work-order 005). :root holds the light palette, so a
+ * page that paints before the theme-init script runs shows the default rather
+ * than a flash of the alternate. [data-theme="dark"] redeclares every colour
+ * token — none is left to inherit, because a token defined only in one block
+ * paints one theme's text on the other theme's ground.
+ *
+ * Ground (#eaebec) and ink (#131416) are sampled from InferenceX. Gold is the
+ * brand accent, blue carries links and CTAs, and ok/warn/err stay strictly
+ * semantic so a warning never reads as brand.
+ *
+ * The "navy" theme was retired in 005 — three themes was one too many, and the
+ * third never earned its maintenance cost.
  */
 @layer base {
   :root {
-    color-scheme: dark;
-
-    --color-bg: 10 10 11;
-    --color-bg-surface: 17 17 20;
-    --color-bg-card: 14 14 17;
-    --color-bg-elevated: 23 23 26;
-    --color-bg-inset: 8 8 10;
-
-    --color-fg: 237 237 237;
-    --color-fg-muted: 161 161 166;
-    --color-fg-subtle: 107 107 114;
-    --color-fg-faint: 64 64 72;
-
-    --color-border: 255 255 255;
-
-    --color-accent: 74 222 128;
-    --color-accent-dim: 45 157 95;
-    --color-accent-fg: 10 10 11;
-
-    --color-status-ok: 74 222 128;
-    --color-status-warn: 251 191 36;
-    --color-status-err: 248 113 113;
-  }
-
-  /* Light — warm paper background, editorial (SemiAnalysis / Perplexity Comet register) */
-  [data-theme="light"] {
     color-scheme: light;
 
-    --color-bg: 250 248 244;
-    --color-bg-surface: 244 241 234;
-    --color-bg-card: 255 255 255;
+    --color-bg: 234 235 236;
+    --color-bg-surface: 241 241 242;
+    --color-bg-card: 250 250 251;
     --color-bg-elevated: 255 255 255;
-    --color-bg-inset: 238 234 225;
+    --color-bg-inset: 241 241 242;
 
-    --color-fg: 26 23 20;
-    --color-fg-muted: 92 87 78;
-    --color-fg-subtle: 140 133 121;
-    --color-fg-faint: 199 192 178;
+    --color-fg: 19 20 22;
+    --color-fg-muted: 82 85 90;
+    --color-fg-subtle: 111 116 122;
+    --color-fg-faint: 168 173 179;
 
-    --color-border: 20 17 13;
+    --color-border: 101 107 114;
 
-    --color-accent: 22 163 74;
-    --color-accent-dim: 21 128 61;
-    --color-accent-fg: 255 255 255;
+    /* Brand accent — gold. `accent` is a SURFACE colour; use `accent-ink` for
+       text, which is the contrast-safe partner on this theme's ground. */
+    --color-accent: 232 168 48;
+    --color-accent-ink: 125 82 0;
+    --color-accent-dim: 189 133 30;
+    --color-accent-fg: 42 28 0;
+
+    /* Link / secondary action */
+    --color-link: 16 96 143;
+
+    --color-status-ok: 47 143 73;
+    --color-status-warn: 154 90 26;
+    --color-status-err: 200 80 58;
   }
 
-  /* Navy — deep blue, Bloomberg/terminal-adjacent register */
-  [data-theme="navy"] {
+  [data-theme="dark"] {
     color-scheme: dark;
 
-    --color-bg: 8 13 24;
-    --color-bg-surface: 12 19 34;
-    --color-bg-card: 10 16 29;
-    --color-bg-elevated: 19 28 46;
-    --color-bg-inset: 5 9 17;
+    --color-bg: 15 16 18;
+    --color-bg-surface: 33 37 41;
+    --color-bg-card: 26 29 32;
+    --color-bg-elevated: 33 37 41;
+    --color-bg-inset: 22 24 26;
 
-    --color-fg: 226 232 240;
-    --color-fg-muted: 148 163 184;
-    --color-fg-subtle: 100 116 139;
-    --color-fg-faint: 51 65 85;
+    --color-fg: 234 235 236;
+    --color-fg-muted: 164 170 176;
+    --color-fg-subtle: 126 133 140;
+    --color-fg-faint: 90 96 102;
 
-    --color-border: 148 163 184;
+    --color-border: 160 168 176;
 
-    --color-accent: 74 222 128;
-    --color-accent-dim: 45 157 95;
-    --color-accent-fg: 8 13 24;
+    --color-accent: 240 184 70;
+    --color-accent-ink: 240 184 70;
+    --color-accent-dim: 199 148 48;
+    --color-accent-fg: 42 28 0;
+
+    --color-link: 74 168 224;
+
+    --color-status-ok: 87 200 119;
+    --color-status-warn: 224 160 82;
+    --color-status-err: 232 115 92;
   }
 
   html {
@@ -94,32 +91,30 @@
   }
 
   body {
+    /* DM Sans carries text AND numerals — tabular figures everywhere, which is
+       what InferenceX does. There is no separate mono face on this site. */
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.005em;
     line-height: 1.55;
   }
 
-  /* Code and mono spans get monospace by default */
   code,
   kbd,
   pre,
   samp {
-    font-family: theme("fontFamily.mono");
+    font-family: theme("fontFamily.code");
   }
 
-  /* Subtle focus ring — accessibility without garish blue browser default */
   :focus-visible {
-    outline: 2px solid rgb(var(--color-accent));
+    outline: 2px solid rgb(var(--color-link));
     outline-offset: 2px;
   }
 
-  /* Selection styling */
   ::selection {
-    background: rgb(var(--color-accent) / 0.08);
+    background: rgb(var(--color-accent) / 0.22);
     color: rgb(var(--color-fg));
   }
 
-  /* Scrollbar */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -128,7 +123,7 @@
     background: rgb(var(--color-bg));
   }
   ::-webkit-scrollbar-thumb {
-    background: rgb(var(--color-border) / 0.14);
+    background: rgb(var(--color-border) / 0.3);
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
@@ -137,56 +132,59 @@
 }
 
 @layer components {
-  /* Eyebrow label — uppercase mono, used above section headings.
-     Marketing site convention. */
+  /* Eyebrow label — uppercase, used above section headings. */
   .eyebrow {
-    @apply font-mono text-2xs uppercase tracking-eyebrow text-fg-subtle font-medium;
+    @apply text-2xs uppercase tracking-eyebrow text-fg-subtle font-bold;
   }
 
-  /* Mono numeric cell — every table number should use this */
+  /* Numeric cell — every table number should use this. DM Sans, tabular. */
   .num {
-    @apply font-mono tabular-nums;
+    @apply tabular-nums;
   }
 
   /*
-   * Marketing-only background: radial green glow + noise overlay.
-   * Applied via <body className="..."> on the / route via a wrapper.
-   * Scoped to .marketing-bg to avoid bleeding into dashboard pages.
+   * Treatment A — floating panels on a faintly contoured ground.
+   * The homepage's section container. Product pages use treatment C
+   * (`.frame-grid`) instead; the two are deliberately different registers,
+   * the same way ClusterMAX and InferenceX don't share a skin.
    */
-  .marketing-bg {
-    position: relative;
+  .panel {
+    @apply mx-auto mb-4 rounded-2xl border border-border bg-bg-card/55 p-6 md:p-8;
+    max-width: 1200px;
   }
 
-  .marketing-bg::before {
-    content: "";
-    position: fixed;
-    top: -20%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 1200px;
-    height: 1200px;
-    background: radial-gradient(
-      circle,
-      rgb(var(--color-accent) / 0.06) 0%,
-      transparent 60%
-    );
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .marketing-bg::after {
+  /* The contour texture behind the panels. Fixed, cheap, and very faint —
+     it reads as paper grain rather than decoration. */
+  .contour::before {
     content: "";
     position: fixed;
     inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    opacity: 0.025;
+    z-index: -1;
     pointer-events: none;
-    z-index: 1;
-    mix-blend-mode: overlay;
+    opacity: 0.5;
+    background-image:
+      repeating-linear-gradient(
+        58deg,
+        transparent 0 58px,
+        rgb(var(--color-border) / 0.16) 58px 59px
+      ),
+      repeating-linear-gradient(
+        -31deg,
+        transparent 0 96px,
+        rgb(var(--color-border) / 0.16) 96px 97px
+      );
   }
 
-  /* Reveal animation helpers — used on marketing landing for staged fade-in.
-     Each .reveal-N adds a small delay so elements cascade on first paint. */
+  /*
+   * Treatment C — one continuous framed grid, shared edges, tight radii.
+   * Reserved for product surfaces (Q-Shield et al).
+   */
+  .frame-grid {
+    @apply mx-auto overflow-hidden rounded border border-border bg-bg-card;
+    max-width: 1200px;
+  }
+
+  /* Reveal animation — staged fade-in on first paint. */
   .reveal {
     opacity: 0;
     transform: translateY(8px);
@@ -206,57 +204,45 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
 @layer components {
   /*
    * Q-Day Index dashboard tokens.
    *
-   * These are LITERAL values, not theme() lookups, because the dashboard view
-   * uses its own internal palette that doesn't need to chain through the site's
-   * Tailwind config. Fonts DO route through the site's --font-sans / --font-mono
-   * variables (declared by next/font in layout.tsx) — the dashboard is
-   * deliberately sans-only (dense Bloomberg-style register, no italics).
-   *
-   * The .qday-root wrapper on the QDayIndexView component scopes these so they
-   * never leak into other pages.
+   * Literal values, scoped by the .qday-root wrapper so they never leak. Kept
+   * in step with the site palette above — light default, dark alternate.
    */
   .qday-root {
-    --qd-bg: #0a0d0b;
-    --qd-panel: #11150f;
-    --qd-panel2: #0d110c;
-    --qd-line: #1f2a20;
-    --qd-border: #26312622;
-    --qd-fg: #eef3ec;
-    --qd-fg2: #b8c4b6;
-    --qd-dim: #6f7d6e;
-    --qd-green: #4ade80;
+    --qd-bg: #eaebec;
+    --qd-panel: #fafafb;
+    --qd-panel2: #f1f1f2;
+    --qd-line: #d3d6d8;
+    --qd-border: #656b7233;
+    --qd-fg: #131416;
+    --qd-fg2: #52555a;
+    --qd-dim: #6f747a;
+    --qd-green: #2f8f49;
     --qd-serif: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     --qd-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-    --qd-mono: var(--font-geist-mono), var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace;
+    --qd-mono: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   }
 
-  /* Light theme — same paper register as the rest of the site */
-  [data-theme="light"] .qday-root {
-    --qd-bg: #faf8f4;
-    --qd-panel: #ffffff;
-    --qd-panel2: #f4f1ea;
-    --qd-line: #ddd6c8;
-    --qd-border: #14110d22;
-    --qd-fg: #1a1714;
-    --qd-fg2: #5c574e;
-    --qd-dim: #8c8579;
-    --qd-green: #16a34a;
-  }
-
-  /* Navy theme */
-  [data-theme="navy"] .qday-root {
-    --qd-bg: #080d18;
-    --qd-panel: #0c1322;
-    --qd-panel2: #0a101d;
-    --qd-line: #1e2a3f;
-    --qd-border: #94a3b822;
-    --qd-fg: #e2e8f0;
-    --qd-fg2: #94a3b8;
-    --qd-dim: #64748b;
-    --qd-green: #4ade80;
+  [data-theme="dark"] .qday-root {
+    --qd-bg: #0f1012;
+    --qd-panel: #1a1d20;
+    --qd-panel2: #212529;
+    --qd-line: #2b3034;
+    --qd-border: #a0a8b03d;
+    --qd-fg: #eaebec;
+    --qd-fg2: #a4aab0;
+    --qd-dim: #7e858c;
+    --qd-green: #57c877;
   }
 }
