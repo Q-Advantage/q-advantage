@@ -245,37 +245,3 @@
   }
 }
 
-@layer components {
-  /*
-   * Q-Day Index dashboard tokens.
-   *
-   * Literal values, scoped by the .qday-root wrapper so they never leak. Kept
-   * in step with the site palette above — light default, dark alternate.
-   */
-  .qday-root {
-    --qd-bg: #eaebec;
-    --qd-panel: #fafafb;
-    --qd-panel2: #f1f1f2;
-    --qd-line: #d3d6d8;
-    --qd-border: #656b7233;
-    --qd-fg: #131416;
-    --qd-fg2: #52555a;
-    --qd-dim: #6f747a;
-    --qd-green: #2f8f49;
-    --qd-serif: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-    --qd-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-    --qd-mono: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-  }
-
-  [data-theme="dark"] .qday-root {
-    --qd-bg: #0f1012;
-    --qd-panel: #1a1d20;
-    --qd-panel2: #212529;
-    --qd-line: #2b3034;
-    --qd-border: #a0a8b03d;
-    --qd-fg: #eaebec;
-    --qd-fg2: #a4aab0;
-    --qd-dim: #7e858c;
-    --qd-green: #57c877;
-  }
-}

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { PageShell } from "@/components/chrome/PageShell";
 import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 import { StatBand } from "@/components/chrome/ProductNav";
@@ -8,11 +9,20 @@ import {
   Caveat,
   DataTable,
   ExportRow,
+  ProvenanceTable,
   RowName,
   Section,
+  StackedBar,
   Tag,
 } from "@/components/product/kit";
+import { SortableDataTable } from "@/components/product/table";
 import { getQDayIndex } from "@/lib/data/q-day";
+import {
+  citedFieldCount,
+  normalizeProvenance,
+  systemSortValues,
+} from "@/lib/data/q-day-provenance";
+import type { ScoredSystem } from "@/lib/data/q-day-types";
 
 export const metadata: Metadata = {
   title: "Q-Day Index — how close quantum hardware is to breaking RSA-2048",
@@ -28,6 +38,99 @@ export const metadata: Metadata = {
  * the site moved. It is now assembled from the same kit as Q-Shield, so it
  * inherits the treatment automatically from here on.
  */
+/**
+ * Everything we hold on one machine, and where each figure came from.
+ *
+ * Rendered on the server into the row's detail slot, so every source URL is
+ * in the static HTML rather than behind a click handler.
+ *
+ * Deliberately no GitHub Actions link here, unlike Q-Shield: these numbers are
+ * not measured by anything we run. They come from vendor specifications and
+ * papers, and the honest provenance is the per-field source, not a run URL.
+ */
+function SystemDetail({ system }: { system: ScoredSystem }) {
+  const rows = normalizeProvenance(system);
+  const r = system.readiness;
+  const tc = system.threat_components;
+
+  return (
+    <div className="space-y-5">
+      {r && (
+        <div>
+          <div className="mb-2 text-[11px] font-bold uppercase tracking-eyebrow text-fg-subtle">
+            What would move this score
+          </div>
+          <StackedBar
+            segments={[
+              { key: "fid", label: "Fidelity progress", value: r.fidelity_progress, display: `${(r.fidelity_progress * 100).toFixed(1)}%` },
+              { key: "ec", label: "Error-correction progress", value: r.ec_progress, display: `${(r.ec_progress * 100).toFixed(1)}%` },
+              { key: "scale", label: "Scale progress", value: r.scale_progress, display: `${(r.scale_progress * 100).toFixed(1)}%` },
+            ]}
+            total={`${r.readiness.toFixed(1)}% readiness`}
+          />
+          {r._meaning && (
+            <p className="mt-2 max-w-[80ch] text-[11.5px] leading-relaxed text-fg-subtle">{r._meaning}</p>
+          )}
+        </div>
+      )}
+
+      {tc && (
+        <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-[11.5px] text-fg-muted">
+          <span className="num">logical capacity {tc.logical_capacity.toFixed(3)}</span>
+          <span className="num">fidelity gate {tc.fidelity_gate.toFixed(3)}</span>
+          <span className="num">EC signal {tc.ec_signal.toFixed(3)}</span>
+          <span className="num">effective logical {tc.effective_logical.toFixed(3)}</span>
+        </div>
+      )}
+
+      <div>
+        <div className="mb-2 flex flex-wrap items-baseline gap-3">
+          <span className="text-[11px] font-bold uppercase tracking-eyebrow text-fg-subtle">
+            Where each figure came from
+          </span>
+          <span className="num text-[11px] text-fg-subtle">
+            {citedFieldCount(system).cited} of {citedFieldCount(system).total} fields carry a source
+          </span>
+        </div>
+        <ProvenanceTable
+          rows={rows.map((row) => ({
+            label: row.label,
+            value: row.display,
+            method: row.method ?? undefined,
+            asOf: row.asOf,
+            confidence: row.confidence,
+            source: row.source,
+            notes: row.notes,
+          }))}
+        />
+      </div>
+
+      {(system.flags.length > 0 || system.notes || system.topology) && (
+        <div className="space-y-1.5 border-t border-border-subtle pt-3">
+          {system.topology && (
+            <p className="text-[11.5px] text-fg-muted">Topology: {system.topology}</p>
+          )}
+          {system.flags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {system.flags.map((f) => (
+                <Tag key={f}>{f.replace(/_/g, " ")}</Tag>
+              ))}
+            </div>
+          )}
+          {system.notes && (
+            <p className="max-w-[80ch] text-[11.5px] leading-relaxed text-fg-muted">{system.notes}</p>
+          )}
+          {system.presentation?.region_note && (
+            <p className="max-w-[80ch] text-[11.5px] leading-relaxed text-fg-subtle">
+              {system.presentation.region_note}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function QDayIndexPage() {
   const q = getQDayIndex();
   const hero = q.hero;
@@ -112,38 +215,69 @@ export default function QDayIndexPage() {
           yet defensible enough to publish.
         </Caveat>
 
+        <Caveat label="The anchor is a moving target, and that cuts both ways">
+          This score measures distance to {anchor.label} — {anchor.physical_qubits.toLocaleString()}{" "}
+          physical qubits, {anchor.runtime}. The previous published estimate,{" "}
+          {q.anchor_prior.label}, put it at {q.anchor_prior.physical_qubits.toLocaleString()} physical
+          qubits ({q.anchor_prior.as_of}). That is roughly a {
+            Math.round(q.anchor_prior.physical_qubits / anchor.physical_qubits)
+          }× reduction in the requirement in about six years — from algorithmic improvement, not from
+          better hardware. A score against a fixed target would have looked like progress that never
+          happened. If the estimate moves again, every number on this page moves with it, and we will
+          say so rather than quietly restate the scale.{" "}
+          <a
+            href={q.anchor_prior.source}
+            className="font-semibold underline decoration-border-strong underline-offset-2 hover:text-accent"
+          >
+            Prior estimate ↗
+          </a>{" "}
+          <a
+            href={anchor.source}
+            className="font-semibold underline decoration-border-strong underline-offset-2 hover:text-accent"
+          >
+            Current anchor ↗
+          </a>
+        </Caveat>
+
         <Section
           eyebrow="Per-system scoring"
           title="Every machine, named, with its own inputs."
           hint="Fidelity is deliberately not presented as a ranking — an XEB figure and a median-ECR figure are not the same physical quantity."
         >
-          <DataTable
-            head={[
-              "System",
-              "Modality",
-              "Threat",
-              "Readiness",
-              "Fidelity gate",
-              "EC signal",
-              "Input confidence",
-            ]}
-            rows={ranked.map((s) => ({
-              key: `${s.vendor}-${s.system_name}`,
-              cells: [
-                <RowName
-                  key="n"
-                  name={`${s.vendor} ${s.system_name ?? ""}`.trim()}
-                  note={s.release_year ? `Released ${s.release_year}` : undefined}
-                />,
-                <Tag key="m">{s.modality}</Tag>,
-                (s.threat_score ?? 0).toFixed(2),
-                s.readiness ? `${s.readiness.readiness.toFixed(1)}%` : "—",
-                pct(s.threat_components?.fidelity_gate),
-                pct(s.threat_components?.ec_signal),
-                <Tag key="c">{s.input_confidence?.level ?? "—"}</Tag>,
-              ],
-            }))}
-          />
+          <Suspense fallback={null}>
+            <SortableDataTable
+              head={[
+                { id: "system", label: "System" },
+                { id: "modality", label: "Modality" },
+                { id: "threat", label: "Threat", defaultDir: "desc" },
+                { id: "readiness", label: "Readiness", defaultDir: "desc" },
+                { id: "fidelity", label: "Fidelity gate", defaultDir: "desc" },
+                { id: "ec", label: "EC signal", defaultDir: "desc" },
+                { id: "confidence", label: "Input confidence" },
+              ]}
+              sortParam="sort"
+              expandParam="system"
+              expandHint="sources"
+              rows={ranked.map((s) => ({
+                key: `${s.vendor}-${s.system_name}`,
+                sort: systemSortValues(s),
+                cells: [
+                  <RowName
+                    key="n"
+                    name={`${s.vendor} ${s.system_name ?? ""}`.trim()}
+                    note={s.release_year ? `Released ${s.release_year}` : undefined}
+                  />,
+                  <Tag key="m">{s.modality}</Tag>,
+                  s.threat_score == null ? "—" : s.threat_score.toFixed(2),
+                  s.readiness ? `${s.readiness.readiness.toFixed(1)}%` : "—",
+                  pct(s.threat_components?.fidelity_gate),
+                  pct(s.threat_components?.ec_signal),
+                  <Tag key="c">{s.input_confidence?.level ?? "—"}</Tag>,
+                ],
+                detail: <SystemDetail system={s} />,
+              }))}
+            />
+          </Suspense>
         </Section>
 
         {analog.length > 0 && (
@@ -152,19 +286,32 @@ export default function QDayIndexPage() {
             title="Systems outside the gate model."
             hint="Analog simulators have no gate-model two-qubit fidelity and no gate-model path to Shor's. Marked N/A rather than scored zero."
           >
-            <DataTable
-              head={["System", "Modality", "Why not scored"]}
-              rows={analog.map((s) => ({
-                key: `${s.vendor}-${s.system_name}`,
-                cells: [
-                  <RowName key="n" name={`${s.vendor} ${s.system_name ?? ""}`.trim()} />,
-                  <Tag key="m">{s.modality}</Tag>,
-                  <span key="r" className="text-fg-muted">
-                    {s.na_reason}
-                  </span>,
-                ],
-              }))}
-            />
+            <Suspense fallback={null}>
+              <SortableDataTable
+                head={[
+                  { id: "system", label: "System" },
+                  { id: "modality", label: "Modality" },
+                  "Why not scored",
+                ]}
+                sortParam="nasort"
+                expandParam="nasystem"
+                expandHint="sources"
+                rows={analog.map((s) => ({
+                  key: `${s.vendor}-${s.system_name}`,
+                  sort: systemSortValues(s),
+                  cells: [
+                    <RowName key="n" name={`${s.vendor} ${s.system_name ?? ""}`.trim()} />,
+                    <Tag key="m">{s.modality}</Tag>,
+                    <span key="r" className="text-fg-muted">
+                      {s.na_reason}
+                    </span>,
+                  ],
+                  // Not scored is not the same as not evidenced — these carry
+                  // sourced specifications too.
+                  detail: <SystemDetail system={s} />,
+                }))}
+              />
+            </Suspense>
           </Section>
         )}
 
