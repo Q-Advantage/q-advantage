@@ -51,6 +51,22 @@
     --color-status-ok: 47 143 73;
     --color-status-warn: 154 90 26;
     --color-status-err: 200 80 58;
+
+    /* Chart series + furniture.
+       Previously the chart internals carried hardcoded hex that assumed a
+       dark ground — white gridlines, the old brand green — which rendered
+       invisible or off-brand once light became the default. These tokens are
+       the fix; see lib/chart-theme.ts for the single place components read
+       them from. Ordered by distinguishability, not by hue family. */
+    --color-series-1: 26 132 198;
+    --color-series-2: 168 111 18;
+    --color-series-3: 23 130 125;
+    --color-series-4: 109 79 184;
+    --color-series-5: 192 74 54;
+    --color-series-6: 74 96 118;
+
+    --color-chart-grid: 101 107 114;
+    --color-chart-tick: 111 116 122;
   }
 
   [data-theme="dark"] {
@@ -79,6 +95,19 @@
     --color-status-ok: 87 200 119;
     --color-status-warn: 224 160 82;
     --color-status-err: 232 115 92;
+
+    /* Same series order, lifted for a dark ground. Series identity is stable
+       across themes — series 1 is always the same series, so a chart doesn't
+       change meaning when the visitor flips the toggle. */
+    --color-series-1: 74 168 224;
+    --color-series-2: 240 184 70;
+    --color-series-3: 70 201 194;
+    --color-series-4: 169 140 224;
+    --color-series-5: 232 115 92;
+    --color-series-6: 143 168 191;
+
+    --color-chart-grid: 160 168 176;
+    --color-chart-tick: 126 133 140;
   }
 
   html {

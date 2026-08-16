@@ -9,17 +9,30 @@ import type { ReactNode } from "react";
  * bolted-on blog theme.
  */
 
+/**
+ * The reading column.
+ *
+ * `mx-auto` is the important part: at 68ch the measure is much narrower than
+ * the panel, and left-hanging it left a large dead margin on the right that
+ * made articles look unfinished. The column is centred; the text inside it
+ * stays left-aligned, because centred body copy gives every line a different
+ * starting edge and is materially harder to read.
+ */
 export function Prose({ children }: { children: ReactNode }) {
-  return <div className="max-w-[68ch] text-[16px] leading-[1.72] text-fg-muted">{children}</div>;
+  return (
+    <div className="mx-auto max-w-[68ch] text-[16.5px] leading-[1.75] text-fg-muted">
+      {children}
+    </div>
+  );
 }
 
 export function P({ children }: { children: ReactNode }) {
-  return <p className="mb-5">{children}</p>;
+  return <p className="mb-6">{children}</p>;
 }
 
 export function H2({ children }: { children: ReactNode }) {
   return (
-    <h2 className="mb-3 mt-10 text-balance text-[22px] font-bold leading-tight tracking-[-0.02em] text-fg">
+    <h2 className="mb-4 mt-12 text-balance text-[23px] font-bold leading-tight tracking-[-0.022em] text-fg">
       {children}
     </h2>
   );
@@ -57,12 +70,12 @@ export function A({ href, children }: { href: string; children: ReactNode }) {
  */
 export function Note({ children }: { children: ReactNode }) {
   return (
-    <aside className="my-7 rounded-lg border border-border border-l-[3px] border-l-accent bg-bg-card px-5 py-4 text-[14.5px] leading-relaxed">
+    <aside className="my-8 rounded-lg border border-border border-l-[3px] border-l-accent bg-bg-card px-5 py-4 text-[15px] leading-relaxed">
       {children}
     </aside>
   );
 }
 
 export function UL({ children }: { children: ReactNode }) {
-  return <ul className="mb-5 list-disc space-y-2 pl-5 marker:text-fg-faint">{children}</ul>;
+  return <ul className="mb-6 list-disc space-y-2.5 pl-5 marker:text-fg-faint">{children}</ul>;
 }
