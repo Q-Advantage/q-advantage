@@ -1,0 +1,5 @@
+# Known-answer test vectors are upstream artefacts whose SHA-256 is recorded in
+# benchmark/protocols/vectors/manifest.json and checked against liboqs's own
+# kats.json. Line-ending translation would change those bytes and make the
+# integrity claim false on checkout, so keep them exactly as fetched.
+benchmark/protocols/vectors/*.rsp -text
