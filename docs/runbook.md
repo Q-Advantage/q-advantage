@@ -23,7 +23,7 @@ One click, no revert commit needed. Do this first if something's visibly broken;
 
 ### Enabling LMS / XMSS stateful signatures
 
-**Status: not enabled, and this is a decision to take deliberately rather than a chore to complete.**
+**Status: harness ready (verify-only, Option A below). One rebuild on the runner is outstanding.**
 
 `benchmark/protocols/lms_xmss.py` has run daily since 2026-08-14 and every scheme reports
 `status: "unavailable"` — the runner's liboqs 0.15.0 build does not have stateful signatures
@@ -56,15 +56,23 @@ publishes only timings. It does mean two things:
    configuration upstream discourages, and the methodology page must say so. Publishing them
    without that disclosure would be the same class of omission this repo exists to avoid.
 
-**Option A — verification only (no hazardous flag).** Rebuild with `OQS_ENABLE_SIG_STFL_LMS=ON`
-and `OQS_ENABLE_SIG_STFL_XMSS=ON`. Yields real verify timings, which is arguably the number that
-matters most for the firmware and code-signing use case these schemes are actually for. Requires
-feeding the harness known-answer test vectors (RFC 8554 for LMS, RFC 8391 for XMSS) rather than
-generating keys, so `lms_xmss.py` needs a verify-only path — it does not have one today.
+**Option A — verification only (no hazardous flag). This is the route taken; the harness now
+supports it.** Rebuild with `OQS_ENABLE_SIG_STFL_LMS=ON` and `OQS_ENABLE_SIG_STFL_XMSS=ON` only.
+`lms_xmss.py` tries the full keygen/sign/verify path first, and when the build cannot generate keys
+it falls back to timing verification against a known-answer test vector, recording *why* the full
+path was unavailable alongside the result.
 
-**Option B — full keygen/sign/verify.** All three options `ON`. No harness change needed; the
-existing code starts returning `status: "ok"` on the next run. Carries the disclosure obligation
-above.
+The vectors are committed at `benchmark/protocols/vectors/`, fetched from liboqs's own KAT corpus
+at tag 0.15.0 and checksum-verified against the SHA-256 upstream publishes in its own `kats.json`.
+Nothing was transcribed or generated locally. `fetch_kat_vectors.py` re-fetches and re-verifies
+them; you do not need to run it for a normal rebuild.
+
+Verification is also the operation that matters most here: a firmware signature is produced once
+and checked on every boot.
+
+**Option B — full keygen/sign/verify.** All three options `ON`. Carries the disclosure obligation
+above, and note liboqs's own test suite comments that stateful keygen "can take hours to complete"
+for large trees — `benchmark.yml` has a 180-minute timeout, so this may not fit.
 
 Either way the rebuild happens on the EC2 box, against the venv the workflow already sources
 (`~/q-advantage/venv`), and **`benchmark.yml` is not edited** — it is off-limits per CLAUDE.md
@@ -93,8 +101,14 @@ python3 -c "import oqs; print(oqs.get_enabled_stateful_sig_mechanisms())"
 ```
 
 An empty list means the rebuild did not take. Then trigger the workflow manually and check the
-newest `benchmark/results/protocols/lms-xmss-*.json`: every scheme should read `status: "ok"` with
-real timings. Any scheme still `"unavailable"` is telling you the truth — do not work around it.
+newest `benchmark/results/protocols/lms-xmss-*.json`. Under Option A each scheme should read
+`status: "ok"` with `"mode": "verify_only"`, a `verify` timing block, and no keygen or sign block —
+those are absent because this build cannot produce them, not zero. Any scheme still
+`"unavailable"` is telling you the truth — do not work around it.
+
+If a scheme reports `"status": "failed"` with `error_type: "kat_verification_failed"`, the vector
+did not verify against the build and **no timing was recorded**. Investigate before trusting
+anything else in that file.
 
 Do not hand-edit a result file to make this look done. See guardrail 1.
 
