@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import BenchmarkDidntLie, { meta as benchmarkDidntLie } from "@/content/blog/benchmark-didnt-lie";
-import LatticeWeakness, { meta as latticeWeakness } from "@/content/blog/lattice-weakness-in-60-hours";
+import HowWeMeasure, { meta as howWeMeasure } from "@/content/blog/how-we-measure";
 import CbomVsPcbom, { meta as cbomVsPcbom } from "@/content/blog/cbom-vs-p-cbom";
 
 /**
@@ -38,7 +38,7 @@ export interface Post extends PostMeta {
 
 const REGISTRY: Post[] = [
   { ...benchmarkDidntLie, Body: BenchmarkDidntLie },
-  { ...latticeWeakness, Body: LatticeWeakness },
+  { ...howWeMeasure, Body: HowWeMeasure },
   { ...cbomVsPcbom, Body: CbomVsPcbom },
 ];
 

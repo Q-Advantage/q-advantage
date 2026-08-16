@@ -58,8 +58,13 @@ export default function HomePage() {
                 >
                   See today&rsquo;s numbers <span aria-hidden>→</span>
                 </Link>
+                {/* Points at the article rather than /methodology: the spec
+                    page is the canonical reference and stays linked in the
+                    footer, but a first-time visitor is better served by the
+                    written version that explains why the protocol looks the
+                    way it does. */}
                 <Link
-                  href="/methodology"
+                  href="/blog/how-we-measure"
                   className="inline-flex h-[42px] items-center rounded-lg border border-border bg-bg-card px-[18px] text-[13.5px] font-semibold text-fg transition-transform hover:-translate-y-px"
                 >
                   How we measure

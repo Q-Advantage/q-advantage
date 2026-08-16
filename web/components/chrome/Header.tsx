@@ -123,16 +123,27 @@ export function Header() {
   const close = () => setMenuOpen(false);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-bg-card">
+    // Translucent + blurred, so the bar sits in the same material language as
+    // the panels below it rather than reading as a solid slab bolted on top.
+    <nav
+      className="sticky top-0 z-50 border-b border-border"
+      style={{
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        background: "rgb(var(--color-bg-card) / 0.72)",
+      }}
+    >
       <div className="mx-auto max-w-[1200px] px-6 md:px-8">
-        <div className="flex h-[60px] items-center justify-between gap-6">
+        <div className="flex h-[64px] items-center justify-between gap-6">
           <Link
             href="/"
             className="flex flex-shrink-0 items-center gap-2.5"
             aria-label="Q-Advantage home"
           >
             <BrandMark />
-            <span className="text-[15.5px] font-bold tracking-tight text-fg">Q-Advantage</span>
+            <span className="text-[20px] font-bold tracking-[-0.02em] text-fg sm:text-[22px]">
+              Q-Advantage
+            </span>
           </Link>
 
           <div className="hidden items-center gap-1 md:flex">
@@ -218,11 +229,13 @@ export function Header() {
  */
 function BrandMark() {
   return (
+    // Scaled with the wordmark — a 19px mark next to 22px type reads as an
+    // afterthought rather than a lockup.
     <span
-      className="relative inline-block h-[19px] w-[19px] flex-shrink-0 rounded-[5px] bg-fg"
+      className="relative inline-block h-[23px] w-[23px] flex-shrink-0 rounded-[6px] bg-fg"
       aria-hidden
     >
-      <span className="absolute inset-[5px] rounded-[1px] bg-accent" />
+      <span className="absolute inset-[6px] rounded-[1px] bg-accent" />
     </span>
   );
 }
