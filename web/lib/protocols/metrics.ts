@@ -9,7 +9,7 @@
 // interpolates, estimates, or fills a gap — a metric that cannot be computed
 // returns null and the UI renders an em-dash.
 
-import type { AesBaselineRecord, ProtocolsData, TimingBlock } from "./types";
+import type { AesBaselineRecord, ComposedSuite, ProtocolsData, TimingBlock } from "./types";
 
 /**
  * max_us / median_us — how far the worst observed run strays from the typical
@@ -32,6 +32,55 @@ export function tailRatio(t: TimingBlock | null | undefined): number | null {
 export function formatTailRatio(ratio: number | null): string {
   return ratio == null ? "—" : `${ratio.toFixed(2)}×`;
 }
+
+/**
+ * Percentage a suite's median handshake runs over its classical baseline,
+ * recomputed from the two suites **in the same file**.
+ *
+ * Do not use `suite.baseline.pct_over_classical`. That field is emitted by a
+ * harness that measured the baseline in one pass and every suite in a second
+ * pass, then compared across the two — so on a host with run-to-run variance
+ * it compares different samples. Across the six runs to 2026-08-16 the stored
+ * value ranged from +46.2% to −17.2% while the same files' own medians gave a
+ * stable +36.5% to +46.2%, and on the two most recent runs the sign flipped:
+ * the site published "−16.9%" in the good/green style, telling readers hybrid
+ * post-quantum TLS is *faster* than classical. It is roughly 40% slower.
+ *
+ * Recomputing here is a pure projection of committed measurements — no result
+ * file is touched — and it corrects every historical run at once, including
+ * the ones already committed with the bad field. The harness itself is fixed
+ * separately; that only helps runs from here on.
+ *
+ * Returns null when the suite is itself the baseline, when it names no
+ * baseline, or when the named baseline is absent from the same file.
+ */
+export function vsBaselinePct(
+  suite: ComposedSuite,
+  suitesInSameFile: Record<string, ComposedSuite> | undefined,
+): number | null {
+  const baselineName = suite.baseline?.baseline_suite;
+  if (!baselineName || !suitesInSameFile) return null;
+
+  const baseline = suitesInSameFile[baselineName];
+  const baselineMedian = baseline?.timing?.median_us;
+  const median = suite.timing?.median_us;
+
+  if (baselineMedian == null || median == null) return null;
+  if (!Number.isFinite(baselineMedian) || !Number.isFinite(median)) return null;
+  if (baselineMedian <= 0) return null;
+
+  return ((median - baselineMedian) / baselineMedian) * 100;
+}
+
+/**
+ * Why the published figure is not the one in the result file. Rendered next to
+ * the column so a reader comparing the page against the raw JSON is not left
+ * to wonder which is wrong.
+ */
+export const BASELINE_DELTA_NOTE =
+  "Recomputed from the baseline suite measured in the same run. The " +
+  "pct_over_classical field in the raw files compares across two measurement " +
+  "passes and is unreliable on this host — see the methodology page.";
 
 /**
  * AES-GCM baselines keyed by architecture, or `{}` when no aes-baseline file

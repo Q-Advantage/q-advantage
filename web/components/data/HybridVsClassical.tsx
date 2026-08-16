@@ -12,6 +12,7 @@
 import { useMemo } from "react";
 import type { ComposedSuite } from "@/lib/protocols/types";
 import { amplificationFactor, formatAmplificationFactor, BYTES_ON_WIRE_LABEL } from "@/lib/protocols/derive";
+import { vsBaselinePct } from "@/lib/protocols/metrics";
 import { formatDuration, formatBytes, githubCommitUrl } from "@/lib/format";
 import { toCsv, downloadCsv } from "@/lib/csv";
 import { ShareButton } from "./ShareButton";
@@ -36,7 +37,18 @@ function DeltaBadge({ pct }: { pct: number | undefined }) {
   );
 }
 
-function SuiteRow({ name, suite, protocol }: { name: string; suite: ComposedSuite; protocol: "TLS" | "SSH" }) {
+function SuiteRow({
+  name,
+  suite,
+  protocol,
+  siblings,
+}: {
+  name: string;
+  suite: ComposedSuite;
+  protocol: "TLS" | "SSH";
+  /** The other suites from the same file — the delta is computed against these. */
+  siblings: Record<string, ComposedSuite>;
+}) {
   const factor = amplificationFactor(suite);
   const isHybrid = suite.baseline?.baseline_suite != null;
 
@@ -50,7 +62,7 @@ function SuiteRow({ name, suite, protocol }: { name: string; suite: ComposedSuit
             <span className="text-2xs text-fg-subtle border border-border rounded px-1.5 py-0.5">classical</span>
           )}
         </div>
-        <DeltaBadge pct={suite.baseline?.pct_over_classical} />
+        <DeltaBadge pct={vsBaselinePct(suite, siblings) ?? undefined} />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -89,9 +101,16 @@ export function HybridVsClassical({
   sshSuites?: Record<string, ComposedSuite>;
 }) {
   const rows = useMemo(() => {
-    const out: { name: string; suite: ComposedSuite; protocol: "TLS" | "SSH" }[] = [];
-    for (const [name, suite] of Object.entries(tlsSuites ?? {})) out.push({ name, suite, protocol: "TLS" });
-    for (const [name, suite] of Object.entries(sshSuites ?? {})) out.push({ name, suite, protocol: "SSH" });
+    const out: {
+      name: string;
+      suite: ComposedSuite;
+      protocol: "TLS" | "SSH";
+      siblings: Record<string, ComposedSuite>;
+    }[] = [];
+    for (const [name, suite] of Object.entries(tlsSuites ?? {}))
+      out.push({ name, suite, protocol: "TLS", siblings: tlsSuites ?? {} });
+    for (const [name, suite] of Object.entries(sshSuites ?? {}))
+      out.push({ name, suite, protocol: "SSH", siblings: sshSuites ?? {} });
     return out;
   }, [tlsSuites, sshSuites]);
 
@@ -100,18 +119,18 @@ export function HybridVsClassical({
       "protocol",
       "suite",
       "median_latency_us",
-      "pct_over_classical",
+      "pct_over_classical_recomputed_same_run",
       "bytes_client_to_server",
       "bytes_server_to_client",
       "bytes_total",
       "amplification_factor",
       "git_commit",
     ];
-    const csvRows = rows.map(({ name, suite, protocol }) => [
+    const csvRows = rows.map(({ name, suite, protocol, siblings }) => [
       protocol,
       name,
       suite.timing.median_us,
-      suite.baseline?.pct_over_classical ?? "",
+      vsBaselinePct(suite, siblings) ?? "",
       suite.size?.bytes_client_to_server ?? "",
       suite.size?.bytes_server_to_client ?? "",
       suite.size?.bytes_total ?? "",
@@ -148,8 +167,14 @@ export function HybridVsClassical({
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {rows.map(({ name, suite, protocol }) => (
-          <SuiteRow key={`${protocol}-${name}`} name={name} suite={suite} protocol={protocol} />
+        {rows.map(({ name, suite, protocol, siblings }) => (
+          <SuiteRow
+            key={`${protocol}-${name}`}
+            name={name}
+            suite={suite}
+            protocol={protocol}
+            siblings={siblings}
+          />
         ))}
       </div>
     </div>

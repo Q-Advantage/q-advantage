@@ -15,7 +15,7 @@ import {
   statefulSigsUnavailableReason,
 } from "../lib/protocols/derive";
 import { decomposePhases, PHASE_ORDER } from "../lib/protocols/phases";
-import { aesBaselinesByArch, formatTailRatio, tailRatio } from "../lib/protocols/metrics";
+import { aesBaselinesByArch, formatTailRatio, tailRatio, vsBaselinePct } from "../lib/protocols/metrics";
 import type { ComposedSuite, LmsXmssFile, TimingBlock } from "../lib/protocols/types";
 
 /** Sentinel timing block — the values could never pass as a measurement. */
@@ -286,6 +286,57 @@ if (Object.keys(aes).length === 0) {
       throw new Error(
         `AES baseline for ${arch} has no payload_bytes_source — the payload size is a cited ` +
           `choice (RFC 8446 §5.2), and the page renders that citation. It must be present.`,
+      );
+    }
+  }
+}
+
+
+console.log("\n=== baseline delta is recomputed same-run, never read from the file ===");
+// The regression this guards, found 2026-08-16: tls_composed.py measured the
+// baseline in one pass and every suite in a second pass, then compared across
+// them. On this host the two passes land in different modes, so the stored
+// pct_over_classical swung from +46.2% to -17.2% across six runs and flipped
+// sign on the two most recent — the site published "-16.9%" in the good/green
+// style, telling readers hybrid PQC is FASTER than classical. It is ~40% slower.
+for (const arch of arches) {
+  const suites = data.byArch[arch].tls?.suites;
+  if (!suites) continue;
+  for (const [name, suite] of Object.entries(suites)) {
+    const recomputed = vsBaselinePct(suite, suites);
+    if (recomputed == null) continue;
+    const stored = suite.baseline?.pct_over_classical;
+    const baselineName = suite.baseline!.baseline_suite;
+    const baselineMedian = suites[baselineName].timing.median_us;
+    const expected = ((suite.timing.median_us - baselineMedian) / baselineMedian) * 100;
+
+    console.log(
+      `  [${arch}] ${name.padEnd(20)} recomputed ${recomputed.toFixed(1).padStart(6)}%  ` +
+        `stored ${String(stored ?? "—").padStart(6)}%` +
+        (stored != null && Math.sign(stored) !== Math.sign(recomputed) ? "  <- stored sign is wrong" : ""),
+    );
+
+    if (Math.abs(recomputed - expected) > 1e-9) {
+      throw new Error(`vsBaselinePct(${name}) disagrees with a direct same-run computation.`);
+    }
+    // A *hybrid* suite does a KEM exchange AND a classical one, so it cannot be
+    // faster than the classical baseline alone. Detected from the phase block
+    // rather than the name: hybrid carries both kem_* and classical_* phases.
+    // Pure-PQC suites legitimately can be faster — ML-KEM-768 beats X25519 by
+    // roughly 50%, which is one of the product's own published findings — so
+    // this must not fire on them.
+    const phases = suite.phases ?? {};
+    const isHybrid =
+      Object.keys(phases).some((k) => k.startsWith("kem_")) &&
+      Object.keys(phases).some((k) => k.startsWith("classical_"));
+
+    if (isHybrid && suite.timing.median_us <= baselineMedian) {
+      throw new Error(
+        `${arch}/${name} is hybrid (KEM + classical) yet its median ${suite.timing.median_us} µs ` +
+          `is not above the classical baseline ${baselineName} at ${baselineMedian} µs. A hybrid ` +
+          `handshake cannot be faster than doing only its classical half — this is the shape of ` +
+          `the 2026-08-16 cross-pass bug. Do not publish a negative delta for a hybrid suite ` +
+          `without establishing why.`,
       );
     }
   }

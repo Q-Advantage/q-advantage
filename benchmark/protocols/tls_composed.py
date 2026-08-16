@@ -34,23 +34,34 @@ def run(iterations: int, warmup: int) -> dict:
     host = common.capture_host()
     sampler = common.StealTimeSampler()
 
-    records: dict[str, dict] = {}
+    # Measure every suite exactly ONCE, then compute the baseline delta from
+    # these same measurements.
+    #
+    # This previously ran two passes: the first measured everything and kept
+    # only the baseline median, the second re-measured everything and compared
+    # against the first pass's baseline. On a host with run-to-run variance the
+    # two passes land on different samples, so the delta compared apples to
+    # oranges. On 2026-08-16 that published "-16.9%" for X25519MLKEM768 — the
+    # site told readers hybrid post-quantum TLS is FASTER than classical, when
+    # the same run's own medians make it ~40% slower. Across six runs the stored
+    # value ranged +46.2% to -17.2% while a same-run computation gave a stable
+    # +36.5% to +46.2%.
+    #
+    # Keep this a single pass. The delta must always be between two numbers
+    # measured in the same pass, and dropping the redundant pass also halves
+    # this script's runtime.
+    measured: dict[str, dict] = {}
+    for suite, (kem_alg, classical) in TLS_SUITES.items():
+        measured[suite] = common.time_hybrid_kex(
+            kem_alg=kem_alg, classical=classical, iterations=iterations, warmup=warmup
+        )
+
     baseline_median: float | None = None
+    if BASELINE_SUITE in measured:
+        baseline_median = measured[BASELINE_SUITE]["composed"]["median_us"]
 
-    for suite, (kem_alg, classical) in TLS_SUITES.items():
-        kex = common.time_hybrid_kex(
-            kem_alg=kem_alg, classical=classical, iterations=iterations, warmup=warmup
-        )
-        composed = kex["composed"]
-        if suite == BASELINE_SUITE:
-            baseline_median = composed["median_us"]
-
-    # second pass so every record can carry the baseline delta
-    sampler2 = common.StealTimeSampler()
-    for suite, (kem_alg, classical) in TLS_SUITES.items():
-        kex = common.time_hybrid_kex(
-            kem_alg=kem_alg, classical=classical, iterations=iterations, warmup=warmup
-        )
+    records: dict[str, dict] = {}
+    for suite, kex in measured.items():
         composed = kex["composed"]
         pct = None
         if baseline_median and suite != BASELINE_SUITE:
@@ -74,8 +85,6 @@ def run(iterations: int, warmup: int) -> dict:
         records[suite] = rec
 
     steal = sampler.result_pct()
-    if steal is None:
-        steal = sampler2.result_pct()
     for rec in records.values():
         rec["host"]["steal_time_pct"] = steal
 

@@ -31,17 +31,22 @@ def run(iterations: int, warmup: int) -> dict:
     host = common.capture_host()
     sampler = common.StealTimeSampler()
 
-    baseline_median: float | None = None
+    # Single pass — the baseline delta must come from measurements taken in the
+    # same pass as the suite it describes. See the note in tls_composed.py: the
+    # previous two-pass shape compared across passes and published a sign-
+    # flipped delta on 2026-08-16.
+    measured: dict[str, dict] = {}
     for suite, (kem_alg, classical) in SSH_SUITES.items():
-        if suite == BASELINE_SUITE:
-            kex = common.time_hybrid_kex(kem_alg=kem_alg, classical=classical,
-                                         iterations=iterations, warmup=warmup)
-            baseline_median = kex["composed"]["median_us"]
+        measured[suite] = common.time_hybrid_kex(
+            kem_alg=kem_alg, classical=classical, iterations=iterations, warmup=warmup
+        )
+
+    baseline_median: float | None = None
+    if BASELINE_SUITE in measured:
+        baseline_median = measured[BASELINE_SUITE]["composed"]["median_us"]
 
     records: dict[str, dict] = {}
-    for suite, (kem_alg, classical) in SSH_SUITES.items():
-        kex = common.time_hybrid_kex(kem_alg=kem_alg, classical=classical,
-                                     iterations=iterations, warmup=warmup)
+    for suite, kex in measured.items():
         composed = kex["composed"]
         pct = None
         if baseline_median and suite != BASELINE_SUITE:
