@@ -8,8 +8,13 @@
  * instead of an honest null), fail loudly on a broken assertion.
  */
 import { loadProtocolsData } from "../lib/protocols/load";
-import { amplificationFactor, formatAmplificationFactor } from "../lib/protocols/derive";
-import type { ComposedSuite } from "../lib/protocols/types";
+import {
+  amplificationFactor,
+  formatAmplificationFactor,
+  hasLiveStatefulSigs,
+  statefulSigsUnavailableReason,
+} from "../lib/protocols/derive";
+import type { ComposedSuite, LmsXmssFile } from "../lib/protocols/types";
 
 function fixtureSuite(overrides: Partial<ComposedSuite["size"]>): ComposedSuite {
   return {
@@ -73,6 +78,69 @@ if (arches.length === 0) {
       console.log(`  [ssh/${arch}] ${name.padEnd(20)} ${formatAmplificationFactor(f)}`);
     }
   }
+}
+
+console.log("\n=== hasLiveStatefulSigs: a committed file is not evidence of data ===");
+// The regression this guards: /q-shield/compare gated its "no measurements
+// yet" notice on file presence, so the notice vanished when the first
+// all-unavailable lms-xmss file landed (2026-08-14) — the site went quiet
+// about missing data instead of louder.
+const env = { iso_timestamp: "", liboqs_version: "", git_commit: "", cpu_model: "", arch: "" };
+const unavailableFile = {
+  environment: env,
+  schemes: {
+    LMS_SHA256_M32_H10: {
+      scheme: "LMS_SHA256_M32_H10",
+      status: "unavailable",
+      reason: "not in get_enabled_stateful_sig_mechanisms() — build lacks the STFL flag.",
+    },
+    "XMSS-SHA2_10_256": { scheme: "XMSS-SHA2_10_256", status: "unavailable" },
+  },
+} as unknown as LmsXmssFile;
+const liveFile = {
+  environment: env,
+  schemes: {
+    LMS_SHA256_M32_H10: { scheme: "LMS_SHA256_M32_H10", status: "unavailable" },
+    "XMSS-SHA2_10_256": { scheme: "XMSS-SHA2_10_256", status: "ok", signature_bytes: 2500 },
+  },
+} as unknown as LmsXmssFile;
+
+for (const [label, file, expected] of [
+  ["no file at all", null, false],
+  ["file present, every scheme unavailable", unavailableFile, false],
+  ["file present, one scheme ok", liveFile, true],
+] as const) {
+  const got = hasLiveStatefulSigs(file);
+  console.log(`  ${label}: ${got}`);
+  if (got !== expected) {
+    throw new Error(
+      `hasLiveStatefulSigs(${label}) = ${got}, expected ${expected} — a file full of ` +
+        `"unavailable" must never read as live data, or /q-shield/compare drops its ` +
+        `"no measurements yet" notice while there are still no measurements.`,
+    );
+  }
+}
+
+const reason = statefulSigsUnavailableReason(unavailableFile);
+console.log(`  reason surfaced: ${reason}`);
+if (!reason || !reason.includes("STFL")) {
+  throw new Error(
+    `statefulSigsUnavailableReason() = ${reason} — must surface the harness's own recorded ` +
+      `reason, not a substitute the UI invented.`,
+  );
+}
+if (statefulSigsUnavailableReason(null) !== null) {
+  throw new Error("statefulSigsUnavailableReason(null) must be null — no file means no reason to quote.");
+}
+console.log("  Correct.");
+
+console.log("\n=== Real committed data: stateful-sig status ===");
+for (const arch of arches) {
+  const file = data.byArch[arch].lmsXmss;
+  console.log(
+    `  [${arch}] file ${file ? "present" : "absent"}, live measurements: ${hasLiveStatefulSigs(file)}` +
+      (file && !hasLiveStatefulSigs(file) ? ` — ${statefulSigsUnavailableReason(file) ?? "no reason recorded"}` : ""),
+  );
 }
 
 console.log("\nOK — protocols smoke test passed.");

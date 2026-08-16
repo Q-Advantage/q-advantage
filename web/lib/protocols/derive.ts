@@ -5,7 +5,7 @@
 // fabrication. Keep this logic in ONE place (mirrors the discipline in
 // web/lib/data/normalize.ts) — components must never recompute these inline.
 
-import type { ComposedSuite } from "./types";
+import type { ComposedSuite, LmsXmssFile } from "./types";
 
 /**
  * Server bytes returned per byte the client sends, for one handshake suite.
@@ -40,3 +40,34 @@ export function formatAmplificationFactor(factor: number | null): string {
  * measured.
  */
 export const BYTES_ON_WIRE_LABEL = "key-exchange payload bytes";
+
+/**
+ * True only when at least one stateful-signature scheme carries a real
+ * measurement (`status: "ok"`).
+ *
+ * The presence of an `lms-xmss-*.json` file is NOT evidence of data. The
+ * harness commits a file every daily run and records `status: "unavailable"`
+ * per scheme when the runner's liboqs build lacks
+ * `-DOQS_HAZARDOUS_EXPERIMENTAL_ENABLE_SIG_STFL_KEY_SIG_GEN` — which is the
+ * live state as of the first runs (2026-08-14 onward). Any UI that gates a
+ * "no data yet" notice on file presence silently drops the notice the moment
+ * the first empty file lands, which is exactly backwards. Gate on this.
+ */
+export function hasLiveStatefulSigs(file: LmsXmssFile | null | undefined): boolean {
+  if (!file) return false;
+  return Object.values(file.schemes ?? {}).some((s) => s.status === "ok");
+}
+
+/**
+ * The reason to show a reader when there is no live stateful-sig data:
+ * the harness's own recorded reason if a run has landed and reported one,
+ * otherwise null (meaning "no run at all yet" — the caller supplies that
+ * wording). Never invents an explanation.
+ */
+export function statefulSigsUnavailableReason(file: LmsXmssFile | null | undefined): string | null {
+  if (!file) return null;
+  for (const s of Object.values(file.schemes ?? {})) {
+    if (s.status !== "ok" && (s.reason || s.error)) return s.reason ?? s.error ?? null;
+  }
+  return null;
+}

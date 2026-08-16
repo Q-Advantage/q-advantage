@@ -8,6 +8,7 @@ import { ComparisonIndex } from "@/components/data/ComparisonIndex";
 import { HybridVsClassical } from "@/components/data/HybridVsClassical";
 import { getLatestRun } from "@/lib/data/load";
 import { loadProtocolsData } from "@/lib/protocols/load";
+import { hasLiveStatefulSigs, statefulSigsUnavailableReason } from "@/lib/protocols/derive";
 import { GITHUB_REPO } from "@/lib/format";
 import {
   getComparisonGroups,
@@ -100,16 +101,23 @@ export default function ComparePage() {
           </Section>
         )}
 
-        {!primaryBucket?.lmsXmss && (
+        {/* Gate on measurements, not on file presence: the harness commits an
+            lms-xmss file every run even when every scheme comes back
+            unavailable, so `!primaryBucket?.lmsXmss` silently hid this notice
+            the day the first empty file landed. */}
+        {!hasLiveStatefulSigs(primaryBucket?.lmsXmss) && (
           <div className="border border-dashed border-border rounded-md px-5 py-4 flex items-center justify-between gap-3 flex-wrap">
             <div>
               <span className="text-sm text-fg font-medium">Hash-based signatures (LMS/XMSS)</span>
               <span className="ml-2 text-2xs text-fg-subtle border border-border rounded px-1.5 py-0.5">
-                queued — first run pending
+                queued — no measurements yet
               </span>
               <p className="text-xs text-fg-subtle mt-1 max-w-xl leading-relaxed">
-                Harness code exists; no real run has landed yet. Shown here rather than left silently
-                absent — see <a href="/q-shield/protocols" className="hover:text-accent underline decoration-border-strong underline-offset-2">/q-shield/protocols</a> once it does.
+                {statefulSigsUnavailableReason(primaryBucket?.lmsXmss) ??
+                  "Harness code exists; no real run has landed yet."}{" "}
+                Shown here rather than left silently absent — see{" "}
+                <a href="/q-shield/protocols" className="hover:text-accent underline decoration-border-strong underline-offset-2">/q-shield/protocols</a>{" "}
+                once measurements land.
               </p>
             </div>
           </div>
