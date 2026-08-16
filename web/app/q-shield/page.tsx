@@ -15,7 +15,7 @@ import {
   Tag,
   type LogBar,
 } from "@/components/product/kit";
-import { SortableDataTable } from "@/components/product/table";
+import { SortableTable } from "@/components/product/interactive";
 import { getLatestRun } from "@/lib/data/load";
 import { getHomeMetrics } from "@/lib/data/home-metrics";
 import {
@@ -161,8 +161,7 @@ export default function QShieldPage() {
           title="Key encapsulation — ML-KEM."
           hint="Replaces RSA and ECC key exchange. Sizes are what goes on the wire."
         >
-          <Suspense fallback={null}>
-            <SortableDataTable
+                      <SortableTable
               head={[
                 { id: "name", label: "Algorithm" },
                 { id: "keygen", label: "Keygen" },
@@ -200,7 +199,6 @@ export default function QShieldPage() {
                 ],
               }))}
             />
-          </Suspense>
         </Section>
 
         <Section
@@ -208,8 +206,7 @@ export default function QShieldPage() {
           title="Digital signatures — ML-DSA and SLH-DSA."
           hint="Note the inversion: the hash-based schemes carry the smallest public keys and the slowest signing on the board."
         >
-          <Suspense fallback={null}>
-            <SortableDataTable
+                      <SortableTable
               head={[
                 { id: "name", label: "Algorithm" },
                 { id: "keygen", label: "Keygen" },
@@ -247,7 +244,6 @@ export default function QShieldPage() {
                 ],
               }))}
             />
-          </Suspense>
         </Section>
 
         {m.ranked.length > 0 && (

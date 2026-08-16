@@ -8,6 +8,9 @@ import { CompareViewTabs } from "@/components/data/CompareViewTabs";
 import { ComparisonIndex } from "@/components/data/ComparisonIndex";
 import { HybridVsClassical } from "@/components/data/HybridVsClassical";
 import { AlgorithmBoard } from "@/components/data/AlgorithmBoard";
+import { DataTable, RowName, Tag } from "@/components/product/kit";
+import { availableOperations, buildBoard } from "@/lib/data/board-metrics";
+import type { NormalizedAlgorithm } from "@/lib/data/types";
 import { getLatestRun } from "@/lib/data/load";
 import { loadProtocolsData } from "@/lib/protocols/load";
 import { hasLiveStatefulSigs, statefulSigsUnavailableReason } from "@/lib/protocols/derive";
@@ -38,6 +41,32 @@ export const dynamic = "force-static";
  * Clicking a card in the index updates the URL and scrolls to #detail.
  * Direct deep links (?a=X&b=Y&op=Z) still work — backwards compatible.
  */
+/**
+ * The board's default view, rendered statically.
+ *
+ * Served as the Suspense fallback so the measurements are in the HTML for a
+ * crawler and for a reader without JavaScript. The interactive board replaces
+ * it on hydration.
+ */
+function BoardFallback({ algorithms }: { algorithms: NormalizedAlgorithm[] }) {
+  const op = availableOperations(algorithms)[0] ?? "keygen";
+  const { metric, points } = buildBoard(algorithms, "mean", op, new Set(["lattice", "hash"]));
+  return (
+    <DataTable
+      head={["Algorithm", metric.label, "Family", "NIST level"]}
+      rows={points.map((p) => ({
+        key: p.id,
+        cells: [
+          <RowName key="n" name={p.label} note={op} href={`/q-shield/${p.id}`} />,
+          p.display,
+          <Tag key="f">{p.group === "hash" ? "Hash" : "Lattice"}</Tag>,
+          String(p.nistLevel),
+        ],
+      }))}
+    />
+  );
+}
+
 export default function ComparePage() {
   const run = getLatestRun();
   const groups = getComparisonGroups(run.algorithms);
@@ -90,7 +119,10 @@ export default function ComparePage() {
           title="Every algorithm, one metric at a time."
           hint="Pick the metric and operation you actually care about. The axis is yours to set — a log axis is offered by default only where a linear one would hide the small bars."
         >
-          <Suspense fallback={null}>
+          {/* The fallback carries the data, never null — this page is
+              force-static, so the board's useSearchParams() makes Next render
+              this fallback into the served HTML. See components/product/interactive.tsx. */}
+          <Suspense fallback={<BoardFallback algorithms={run.algorithms} />}>
             <AlgorithmBoard algorithms={run.algorithms} runSha={run.full_sha} />
           </Suspense>
         </Section>
