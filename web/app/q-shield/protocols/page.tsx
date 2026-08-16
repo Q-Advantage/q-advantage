@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
-import { Header } from "@/components/chrome/Header";
-import { Footer } from "@/components/chrome/Footer";
-import { ProductNav } from "@/components/chrome/ProductNav";
 import { PageShell } from "@/components/chrome/PageShell";
-import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 import { ProtocolsView } from "@/components/protocols/ProtocolsView";
 import { loadProtocolsData } from "@/lib/protocols/load";
@@ -18,15 +14,12 @@ export default function ProtocolsPage() {
   const data = loadProtocolsData();
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <PageShell variant="frame" className="space-y-10">
-        <ProductNav current="Protocols" />
-        <Breadcrumb back={{ label: "Q-Shield", href: "/q-shield" }} current="Protocols" />
+    <>
+      <PageShell variant="frame" className="space-y-8">
 
         <div className="flex flex-col gap-3">
           <div className="eyebrow">Q-Shield · Protocol benchmarks</div>
-          <h1 className="text-[clamp(36px,5vw,56px)] font-bold leading-[1.05] tracking-[-0.028em] text-fg">
+          <h1 className="text-[clamp(28px,3.6vw,40px)] font-bold leading-[1.05] tracking-[-0.028em] text-fg">
             The handshake, in context.
           </h1>
           <p className="text-base text-fg-muted max-w-2xl leading-relaxed font-medium">
@@ -52,8 +45,7 @@ export default function ProtocolsPage() {
 
         <ProtocolsView data={data} />
       </PageShell>
-      <Footer />
       <GitHubStarPopup />
-    </div>
+    </>
   );
 }

@@ -2,9 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ExternalLink } from "lucide-react";
-import { Header } from "@/components/chrome/Header";
-import { Footer } from "@/components/chrome/Footer";
-import { ProductNav } from "@/components/chrome/ProductNav";
 import { PageShell } from "@/components/chrome/PageShell";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { AuditStrip } from "@/components/data/AuditStrip";
@@ -65,10 +62,8 @@ export default function AlgorithmPage({ params }: PageProps) {
       : ["keygen", "sign", "verify"];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <>
       <PageShell variant="frame" className="space-y-10">
-        <ProductNav current="Overview" />
         <Breadcrumb back={{ label: "Q-Shield", href: "/q-shield" }} current={algo.display_name} />
 
         {/* Header */}
@@ -161,8 +156,7 @@ export default function AlgorithmPage({ params }: PageProps) {
           );
         })}
       </PageShell>
-      <Footer />
-    </div>
+    </>
   );
 }
 
