@@ -48,26 +48,39 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <article className="panel">
           <Breadcrumb back={{ label: "Blog", href: "/blog" }} current={post.category} />
 
-          <header className="mb-8 mt-6">
-            <h1 className="max-w-[24ch] text-balance text-[clamp(28px,3.6vw,42px)] font-bold leading-[1.08] tracking-[-0.03em] text-fg">
+          {/*
+            The masthead is centred and the body column below it is centred to
+            the same axis, so the article reads as one aligned block rather
+            than as a headline with copy hanging off its left edge.
+          */}
+          <header className="mx-auto mb-10 mt-8 max-w-[68ch] text-center">
+            <div className="eyebrow">{post.category}</div>
+            <h1 className="mx-auto mt-3 max-w-[26ch] text-balance text-[clamp(28px,3.6vw,42px)] font-bold leading-[1.1] tracking-[-0.03em] text-fg">
               {post.title}
             </h1>
-            <div className="mt-4 flex flex-wrap items-center gap-3 text-[12.5px] text-fg-muted">
+            <p className="mx-auto mt-4 max-w-[58ch] text-pretty text-[16px] leading-relaxed text-fg-muted">
+              {post.summary}
+            </p>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5 text-[12.5px] text-fg-subtle">
               <span className="num font-semibold">{post.date}</span>
               <span className="text-fg-faint">·</span>
-              <span>{post.category}</span>
+              <span>Q-Advantage</span>
             </div>
-
-            {/*
-              Provenance sits above the article, not in a footnote. A reader
-              should know which run produced the numbers before they read them
-              — that ordering is the whole posture.
-            */}
-            <p className="mt-5 max-w-[68ch] border-l-[3px] border-l-accent bg-bg-card py-3 pl-4 pr-3 text-[13px] leading-relaxed text-fg-muted">
-              <span className="eyebrow mb-1 block">Sources</span>
-              {post.sourceNote}
-            </p>
           </header>
+
+          <div className="mx-auto max-w-[68ch]">
+            <hr className="border-t border-border-subtle" />
+          </div>
+
+          {/*
+            Provenance sits above the article, not in a footnote. A reader
+            should know which run produced the numbers before they read them —
+            that ordering is the whole posture.
+          */}
+          <p className="mx-auto my-8 max-w-[68ch] rounded-r border-l-[3px] border-l-accent bg-bg-card py-3 pl-4 pr-3 text-[13.5px] leading-relaxed text-fg-muted">
+            <span className="eyebrow mb-1 block">Sources</span>
+            {post.sourceNote}
+          </p>
 
           <Body />
         </article>
