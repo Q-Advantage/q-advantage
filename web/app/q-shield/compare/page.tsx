@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { PageShell } from "@/components/chrome/PageShell";
 import { AuditBand, Section } from "@/components/product/kit";
 import { shortCpuModel, formatStealPercent } from "@/lib/format";
@@ -6,6 +7,7 @@ import { computeStealPercent } from "@/lib/format";
 import { CompareViewTabs } from "@/components/data/CompareViewTabs";
 import { ComparisonIndex } from "@/components/data/ComparisonIndex";
 import { HybridVsClassical } from "@/components/data/HybridVsClassical";
+import { AlgorithmBoard } from "@/components/data/AlgorithmBoard";
 import { getLatestRun } from "@/lib/data/load";
 import { loadProtocolsData } from "@/lib/protocols/load";
 import { hasLiveStatefulSigs, statefulSigsUnavailableReason } from "@/lib/protocols/derive";
@@ -82,6 +84,16 @@ export default function ComparePage() {
             },
           ]}
         />
+
+        <Section
+          eyebrow="The board"
+          title="Every algorithm, one metric at a time."
+          hint="Pick the metric and operation you actually care about. The axis is yours to set — a log axis is offered by default only where a linear one would hide the small bars."
+        >
+          <Suspense fallback={null}>
+            <AlgorithmBoard algorithms={run.algorithms} runSha={run.full_sha} />
+          </Suspense>
+        </Section>
 
         <ComparisonIndex
           groups={groups}
