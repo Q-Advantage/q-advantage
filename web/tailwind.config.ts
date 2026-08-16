@@ -58,20 +58,28 @@ const config: Config = {
           subtle: "rgb(var(--color-fg-subtle) / <alpha-value>)",
           faint: "rgb(var(--color-fg-faint) / <alpha-value>)",
         },
-        // Border ramp — single per-theme base color, fixed alphas per weight
+        // Border ramp — single per-theme base color, fixed alphas per weight.
+        // Weights are tuned for the light ground, where a 0.08 hairline is
+        // invisible; the dark palette uses a lighter base to compensate.
         border: {
-          DEFAULT: "rgb(var(--color-border) / 0.08)",
-          strong: "rgb(var(--color-border) / 0.14)",
-          subtle: "rgb(var(--color-border) / 0.04)",
+          DEFAULT: "rgb(var(--color-border) / 0.28)",
+          strong: "rgb(var(--color-border) / 0.45)",
+          subtle: "rgb(var(--color-border) / 0.16)",
         },
-        // Brand accent — Q-Advantage green (lightness tuned per theme for contrast)
+        // Brand accent — gold. `accent` is a SURFACE colour (badges, rails,
+        // fills). For accent-coloured TEXT use `accent-ink`, which is the
+        // contrast-safe partner on each theme's ground.
         accent: {
           DEFAULT: "rgb(var(--color-accent) / <alpha-value>)",
+          ink: "rgb(var(--color-accent-ink) / <alpha-value>)",
           dim: "rgb(var(--color-accent-dim) / <alpha-value>)",
           glow: "rgb(var(--color-accent) / 0.4)",
-          soft: "rgb(var(--color-accent) / 0.08)",
+          soft: "rgb(var(--color-accent) / 0.16)",
           fg: "rgb(var(--color-accent-fg) / <alpha-value>)",
         },
+        // Link / secondary action — blue. Separate from the brand accent so
+        // "clickable" and "branded" never collapse into one signal.
+        link: "rgb(var(--color-link) / <alpha-value>)",
         // Data viz palette — sequential teal/blue ramp for chart series.
         // Constant across themes by design; see note above.
         data: {
@@ -89,9 +97,21 @@ const config: Config = {
         },
       },
       fontFamily: {
+        // One face for the whole site: DM Sans carries text AND numerals,
+        // verified as what InferenceX itself does (tabular figures come from
+        // `font-variant-numeric` on body, not from a second family).
+        //
+        // `serif` and `mono` are deliberately aliased to the same face rather
+        // than removed. Both classes are used across ~21 files that predate
+        // this system; aliasing repaints them correctly in one move instead of
+        // churning every call site. Retire the aliases when those files are
+        // next touched.
         sans: ["var(--font-sans)", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
-        serif: ["var(--font-serif)", "ui-serif", "Georgia", "serif"],
-        mono: ["var(--font-geist-mono)", "ui-monospace", "SFMono-Regular", "monospace"],
+        serif: ["var(--font-sans)", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        mono: ["var(--font-sans)", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        // Literal code only (blog post snippets). The one place a real
+        // monospace face still earns its keep.
+        code: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
       },
       fontSize: {
         "2xs": ["0.6875rem", { lineHeight: "1rem", letterSpacing: "0.02em" }],

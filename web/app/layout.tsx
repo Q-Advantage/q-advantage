@@ -1,28 +1,25 @@
 import type { Metadata } from "next";
-import { Inter_Tight, Instrument_Serif } from "next/font/google";
-import { GeistMono } from "geist/font/mono";
+import { DM_Sans } from "next/font/google";
 import "./globals.css";
 
 /**
- * Typography — two distinct faces, not one face doing double duty.
+ * Typography — one face, doing every job.
  *
- * Inter Tight for body/UI text; Instrument Serif (italic for editorial
- * signature phrases — "measured.", "a commit hash.") for display headings.
- * Geist Mono for numbers, mono cells, eyebrow labels.
+ * DM Sans carries display, body, data and numerals alike. That is not a
+ * shortcut: it is what InferenceX does, checked directly against their live
+ * stylesheet, and it is the right call for a measurement brand where the
+ * digits ARE the product and a second family would make them read as a
+ * different voice. Tabular figures come from `font-variant-numeric` in
+ * globals.css, not from a monospace fallback.
+ *
+ * Loaded as a variable font so every weight from 100–1000 is available
+ * without shipping a face per weight.
  */
-const interTight = Inter_Tight({
+const dmSans = DM_Sans({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-sans",
-  weight: ["300", "400", "500", "600"],
-});
-
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-serif",
-  weight: "400",
-  style: ["normal", "italic"],
+  axes: ["opsz"],
 });
 
 export const metadata: Metadata = {
@@ -47,15 +44,17 @@ export const metadata: Metadata = {
   },
 };
 
-// Runs before first paint so the stored theme choice (dark/light/navy)
-// applies immediately — otherwise the page would flash the default dark
-// theme and then jump to the visitor's saved choice.
+// Runs before first paint so a stored "dark" choice applies immediately —
+// otherwise the page flashes the light default and then jumps. Light needs no
+// attribute: it is the bare :root palette.
+//
+// "navy" was retired in work-order 005; anyone still holding it in
+// localStorage falls through to the light default rather than a broken theme.
 const THEME_INIT_SCRIPT = `
 (function () {
   try {
-    var t = localStorage.getItem("qadv-theme");
-    if (t === "light" || t === "navy") {
-      document.documentElement.setAttribute("data-theme", t);
+    if (localStorage.getItem("qadv-theme") === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
     }
   } catch (e) {}
 })();
@@ -67,10 +66,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`${interTight.variable} ${instrumentSerif.variable} ${GeistMono.variable} dark`}
-    >
+    <html lang="en" className={dmSans.variable}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
