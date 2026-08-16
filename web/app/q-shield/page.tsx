@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { PageShell } from "@/components/chrome/PageShell";
 import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 import { StatBand } from "@/components/chrome/ProductNav";
@@ -14,6 +15,7 @@ import {
   Tag,
   type LogBar,
 } from "@/components/product/kit";
+import { SortableDataTable } from "@/components/product/table";
 import { getLatestRun } from "@/lib/data/load";
 import { getHomeMetrics } from "@/lib/data/home-metrics";
 import {
@@ -24,6 +26,15 @@ import {
   shortCpuModel,
   githubCommitUrl,
 } from "@/lib/format";
+
+/**
+ * Format a measured duration, or an em-dash when the operation was not
+ * measured. Never `?? 0` — a missing measurement rendered as "0.00 µs" reads
+ * as the fastest row on the board, which is a fabricated number by omission.
+ */
+function dur(us: number | undefined): string {
+  return us == null ? "—" : formatDuration(us);
+}
 
 export const metadata: Metadata = {
   title: "Q-Shield — PQC benchmarks",
@@ -150,21 +161,46 @@ export default function QShieldPage() {
           title="Key encapsulation — ML-KEM."
           hint="Replaces RSA and ECC key exchange. Sizes are what goes on the wire."
         >
-          <DataTable
-            head={["Algorithm", "Keygen", "Encap", "Decap", "Encap ops/sec", "Public key", "Ciphertext"]}
-            rows={kems.map((a) => ({
-              key: a.id,
-              cells: [
-                <RowName key="n" name={a.display_name} note={`NIST level ${a.nist_level}`} />,
-                formatDuration(a.operations.keygen?.mean_us ?? 0),
-                formatDuration(a.operations.encap?.mean_us ?? 0),
-                formatDuration(a.operations.decap?.mean_us ?? 0),
-                formatOpsPerSec(a.operations.encap?.ops_per_sec ?? 0),
-                formatBytes(a.pubkey_bytes),
-                a.ciphertext_bytes ? formatBytes(a.ciphertext_bytes) : "—",
-              ],
-            }))}
-          />
+          <Suspense fallback={null}>
+            <SortableDataTable
+              head={[
+                { id: "name", label: "Algorithm" },
+                { id: "keygen", label: "Keygen" },
+                { id: "encap", label: "Encap" },
+                { id: "decap", label: "Decap" },
+                { id: "encap_ops", label: "Encap ops/sec", defaultDir: "desc" },
+                { id: "pubkey", label: "Public key" },
+                { id: "ciphertext", label: "Ciphertext" },
+              ]}
+              sortParam="kem"
+              rows={kems.map((a) => ({
+                key: a.id,
+                sort: {
+                  name: a.display_name,
+                  keygen: a.operations.keygen?.mean_us ?? null,
+                  encap: a.operations.encap?.mean_us ?? null,
+                  decap: a.operations.decap?.mean_us ?? null,
+                  encap_ops: a.operations.encap?.ops_per_sec ?? null,
+                  pubkey: a.pubkey_bytes ?? null,
+                  ciphertext: a.ciphertext_bytes ?? null,
+                },
+                cells: [
+                  <RowName
+                    key="n"
+                    name={a.display_name}
+                    note={`NIST level ${a.nist_level}`}
+                    href={`/q-shield/${a.id}`}
+                  />,
+                  dur(a.operations.keygen?.mean_us),
+                  dur(a.operations.encap?.mean_us),
+                  dur(a.operations.decap?.mean_us),
+                  a.operations.encap ? formatOpsPerSec(a.operations.encap.ops_per_sec) : "—",
+                  formatBytes(a.pubkey_bytes),
+                  a.ciphertext_bytes ? formatBytes(a.ciphertext_bytes) : "—",
+                ],
+              }))}
+            />
+          </Suspense>
         </Section>
 
         <Section
@@ -172,21 +208,46 @@ export default function QShieldPage() {
           title="Digital signatures — ML-DSA and SLH-DSA."
           hint="Note the inversion: the hash-based schemes carry the smallest public keys and the slowest signing on the board."
         >
-          <DataTable
-            head={["Algorithm", "Keygen", "Sign", "Verify", "Public key", "Signature", "Family"]}
-            rows={sigs.map((a) => ({
-              key: a.id,
-              cells: [
-                <RowName key="n" name={a.display_name} note={`NIST level ${a.nist_level}`} />,
-                formatDuration(a.operations.keygen?.mean_us ?? 0),
-                formatDuration(a.operations.sign?.mean_us ?? 0),
-                formatDuration(a.operations.verify?.mean_us ?? 0),
-                formatBytes(a.pubkey_bytes),
-                a.signature_bytes ? formatBytes(a.signature_bytes) : "—",
-                <Tag key="f">{a.family === "SLH-DSA" ? "Hash" : "Lattice"}</Tag>,
-              ],
-            }))}
-          />
+          <Suspense fallback={null}>
+            <SortableDataTable
+              head={[
+                { id: "name", label: "Algorithm" },
+                { id: "keygen", label: "Keygen" },
+                { id: "sign", label: "Sign" },
+                { id: "verify", label: "Verify" },
+                { id: "pubkey", label: "Public key" },
+                { id: "signature", label: "Signature" },
+                { id: "family", label: "Family" },
+              ]}
+              sortParam="sig"
+              rows={sigs.map((a) => ({
+                key: a.id,
+                sort: {
+                  name: a.display_name,
+                  keygen: a.operations.keygen?.mean_us ?? null,
+                  sign: a.operations.sign?.mean_us ?? null,
+                  verify: a.operations.verify?.mean_us ?? null,
+                  pubkey: a.pubkey_bytes ?? null,
+                  signature: a.signature_bytes ?? null,
+                  family: a.family,
+                },
+                cells: [
+                  <RowName
+                    key="n"
+                    name={a.display_name}
+                    note={`NIST level ${a.nist_level}`}
+                    href={`/q-shield/${a.id}`}
+                  />,
+                  dur(a.operations.keygen?.mean_us),
+                  dur(a.operations.sign?.mean_us),
+                  dur(a.operations.verify?.mean_us),
+                  formatBytes(a.pubkey_bytes),
+                  a.signature_bytes ? formatBytes(a.signature_bytes) : "—",
+                  <Tag key="f">{a.family === "SLH-DSA" ? "Hash" : "Lattice"}</Tag>,
+                ],
+              }))}
+            />
+          </Suspense>
         </Section>
 
         {m.ranked.length > 0 && (
