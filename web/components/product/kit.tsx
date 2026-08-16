@@ -157,27 +157,56 @@ export function LogBars({
 
 /* ------------------------------------------------------------------ tables */
 
-export function DataTable({
-  head,
-  rows,
-}: {
-  head: string[];
+/**
+ * The table treatment, as bare class strings.
+ *
+ * `DataTable` (server) and `SortableDataTable` (client, in ./table.tsx) both
+ * render through these, so the interactive table cannot visually drift from
+ * the static one — the two are the same table with different behaviour, and
+ * the #007 render is the contract for both.
+ */
+export const tableClass = {
+  wrap: "overflow-hidden rounded border border-border",
+  scroll: "overflow-x-auto",
+  table: "w-full min-w-[700px] border-collapse",
+  th: (i: number) =>
+    `whitespace-nowrap bg-bg-inset px-3.5 py-2.5 text-2xs font-bold uppercase tracking-eyebrow text-fg-subtle ${
+      i === 0 ? "text-left" : "text-right"
+    }`,
+  td: (i: number) =>
+    `num whitespace-nowrap border-t border-border-subtle px-3.5 py-2.5 text-[13px] font-semibold ${
+      i === 0 ? "text-left" : "text-right"
+    }`,
+  row: "hover:bg-bg-surface",
+} as const;
+
+/**
+ * A table row. `cells` render as-is; `sort` and `detail` are ignored by the
+ * static `DataTable` and consumed by `SortableDataTable`.
+ */
+export interface KitRow {
+  key: string;
   /** Cell 0 renders left-aligned; the rest right-aligned, tabular. */
-  rows: { key: string; cells: ReactNode[] }[];
-}) {
+  cells: ReactNode[];
+  /**
+   * Serializable sort keys by column id. null sorts last in both directions —
+   * see web/lib/table/sort.ts. Values only; no accessor functions, because
+   * these cross the server/client boundary.
+   */
+  sort?: Record<string, number | string | null>;
+  /** Server-rendered expansion panel. Its presence makes the row expandable. */
+  detail?: ReactNode;
+}
+
+export function DataTable({ head, rows }: { head: string[]; rows: KitRow[] }) {
   return (
-    <div className="overflow-hidden rounded border border-border">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[700px] border-collapse">
+    <div className={tableClass.wrap}>
+      <div className={tableClass.scroll}>
+        <table className={tableClass.table}>
           <thead>
             <tr>
               {head.map((h, i) => (
-                <th
-                  key={h}
-                  className={`whitespace-nowrap bg-bg-inset px-3.5 py-2.5 text-2xs font-bold uppercase tracking-eyebrow text-fg-subtle ${
-                    i === 0 ? "text-left" : "text-right"
-                  }`}
-                >
+                <th key={h} className={tableClass.th(i)}>
                   {h}
                 </th>
               ))}
@@ -185,14 +214,9 @@ export function DataTable({
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.key} className="hover:bg-bg-surface">
+              <tr key={r.key} className={tableClass.row}>
                 {r.cells.map((c, i) => (
-                  <td
-                    key={i}
-                    className={`num whitespace-nowrap border-t border-border-subtle px-3.5 py-2.5 text-[13px] font-semibold ${
-                      i === 0 ? "text-left" : "text-right"
-                    }`}
-                  >
+                  <td key={i} className={tableClass.td(i)}>
                     {c}
                   </td>
                 ))}
@@ -205,13 +229,169 @@ export function DataTable({
   );
 }
 
-/** First-column cell: name over a quiet qualifier. */
-export function RowName({ name, note }: { name: string; note?: string }) {
-  return (
-    <span className="block">
+/**
+ * First-column cell: name over a quiet qualifier.
+ *
+ * With `href`, the name becomes the row's link target — recovered from the
+ * since-deleted AlgorithmTable, which was the only component that let you
+ * click a row through to its algorithm page.
+ */
+export function RowName({ name, note, href }: { name: string; note?: string; href?: string }) {
+  const body = (
+    <>
       <span className="block text-[13.5px] font-bold tracking-[-0.01em] text-fg">{name}</span>
       {note && <span className="mt-px block text-[10.5px] font-semibold text-fg-subtle">{note}</span>}
-    </span>
+    </>
+  );
+
+  if (!href) return <span className="block">{body}</span>;
+
+  return (
+    <a href={href} className="block transition-colors hover:text-accent [&>span:first-child]:hover:text-accent">
+      {body}
+    </a>
+  );
+}
+
+/* ------------------------------------------------------------ stacked bar */
+
+export interface StackedSegment {
+  key: string;
+  label: string;
+  /** Contribution in the axis's own unit. Widths are share-of-total. */
+  value: number;
+  /** Pre-formatted figure, e.g. "23.59 µs". Never derived here. */
+  display: string;
+  /** Quiet qualifier under the label, e.g. "×2 — client and server". */
+  note?: string;
+  series?: number;
+}
+
+/**
+ * Horizontal stacked bar over segments that genuinely sum to the whole.
+ *
+ * Only use this where the parts are known to account for the total. If a
+ * decomposition leaves a remainder, do not pass it as a segment and do not
+ * silently drop it — say so in a Caveat next to the bar. A stacked bar
+ * asserts "this is all of it", which is a claim about the measurement.
+ */
+export function StackedBar({
+  segments,
+  total,
+  compact,
+}: {
+  segments: StackedSegment[];
+  /** Pre-formatted total, shown at the right of the axis. */
+  total?: string;
+  compact?: boolean;
+}) {
+  const sum = segments.reduce((acc, s) => acc + s.value, 0);
+  if (sum <= 0) return null;
+
+  return (
+    <div className={compact ? "" : "rounded border border-border bg-bg-surface px-4 py-4"}>
+      <div className="flex h-5 overflow-hidden rounded-sm bg-bg-inset">
+        {segments.map((s, i) => (
+          <div
+            key={s.key}
+            title={`${s.label} — ${s.display}`}
+            style={{
+              width: `${(s.value / sum) * 100}%`,
+              background: `rgb(var(--color-series-${(s.series ?? i) % 6 + 1}))`,
+            }}
+          />
+        ))}
+      </div>
+
+      {!compact && (
+        <div className="mt-3 grid gap-x-5 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-3">
+          {segments.map((s, i) => (
+            <div key={s.key} className="flex items-baseline gap-2">
+              <span
+                aria-hidden
+                className="mt-1 h-2 w-2 shrink-0 rounded-[1px]"
+                style={{ background: `rgb(var(--color-series-${(s.series ?? i) % 6 + 1}))` }}
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[12px] font-semibold text-fg">{s.label}</span>
+                {s.note && (
+                  <span className="block truncate text-[10.5px] font-semibold text-fg-subtle">
+                    {s.note}
+                  </span>
+                )}
+              </span>
+              <span className="num shrink-0 text-[12px] font-bold text-fg">{s.display}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {total && (
+        <div className="mt-3 flex items-baseline justify-between border-t border-border-subtle pt-2">
+          <span className="text-[11px] font-semibold uppercase tracking-eyebrow text-fg-subtle">
+            Total
+          </span>
+          <span className="num text-[12.5px] font-bold text-fg">{total}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------- provenance */
+
+export interface ProvenanceRow {
+  label: string;
+  /** "—" when the field was looked for and no qualifying value exists. */
+  value: ReactNode;
+  method?: ReactNode;
+  asOf?: string | null;
+  confidence?: string | null;
+  source?: string | null;
+  notes?: string | null;
+}
+
+/**
+ * Per-field provenance: what the value is, where it came from, how it was
+ * obtained, and as of when.
+ *
+ * This is the component the sourcing standard in CLAUDE.md actually cashes
+ * out to — an uncited identity block is the same failure mode as a fabricated
+ * benchmark. A row with no `source` renders as having no source. It never
+ * substitutes a plausible-looking one.
+ */
+export function ProvenanceTable({ rows }: { rows: ProvenanceRow[] }) {
+  if (rows.length === 0) return null;
+
+  return (
+    <div className="space-y-2.5">
+      {rows.map((r) => (
+        <div key={r.label} className="border-t border-border-subtle pt-2.5 first:border-t-0 first:pt-0">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-[12px] font-bold text-fg">{r.label}</span>
+            <span className="num text-[12.5px] font-bold text-fg">{r.value}</span>
+            {r.method && <span className="text-[11px] text-fg-muted">{r.method}</span>}
+            {r.asOf && <span className="num text-[11px] text-fg-subtle">as of {r.asOf}</span>}
+            {r.confidence && <Tag>{r.confidence.replace(/_/g, " ")}</Tag>}
+            {r.source ? (
+              <a
+                href={r.source}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-semibold text-fg-muted underline decoration-border-strong underline-offset-2 transition-colors hover:text-accent"
+              >
+                source ↗
+              </a>
+            ) : (
+              <span className="text-[11px] font-semibold text-fg-subtle">no qualifying source</span>
+            )}
+          </div>
+          {r.notes && (
+            <p className="mt-1 max-w-[80ch] text-[11.5px] leading-relaxed text-fg-muted">{r.notes}</p>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }
 
