@@ -39,6 +39,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.6,
     },
+    {
+      // The API *routes* stay out of the sitemap (no SEO value), but the
+      // reference page is a page people should be able to find.
+      url: `${base}/api`,
+      lastModified: dataLastMod,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
   ];
 
   const algorithmPages: MetadataRoute.Sitemap = run.algorithms.map((a) => ({
