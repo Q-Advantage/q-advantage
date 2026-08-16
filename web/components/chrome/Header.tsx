@@ -147,7 +147,6 @@ export function Header() {
             className="flex flex-shrink-0 items-center gap-2.5"
             aria-label="Q-Advantage home"
           >
-            <BrandMark />
             <span className="text-[20px] font-bold tracking-[-0.028em] text-fg sm:text-[22px]">
               Q-Advantage
             </span>
@@ -230,19 +229,3 @@ export function Header() {
   );
 }
 
-/**
- * The brand mark — a gold square inset in an ink square. Replaces the rotated
- * diamond outline, which read as a chevron at small sizes.
- */
-function BrandMark() {
-  return (
-    // Scaled with the wordmark — a 19px mark next to 22px type reads as an
-    // afterthought rather than a lockup.
-    <span
-      className="relative inline-block h-[23px] w-[23px] flex-shrink-0 rounded-[6px] bg-fg"
-      aria-hidden
-    >
-      <span className="absolute inset-[6px] rounded-[1px] bg-accent" />
-    </span>
-  );
-}

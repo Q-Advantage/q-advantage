@@ -352,12 +352,12 @@ export default function MethodologyPage() {
             </p>
           </Prose>
 
-          <H3 id="q-shield-companion-metrics">What Layer A does not measure</H3>
+          <H3 id="q-shield-companion-metrics">What these benchmarks do not measure</H3>
           <Prose>
             <p>
               Handshake packet count (and whether it exceeds <code>initcwnd</code>), connections per
               core, and bytes of state per half-open connection are <strong>not measured</strong> by
-              anything this repo currently runs. Layer A (the composed-protocol tracks above) times
+              anything this repo currently runs. The composed-protocol tracks above time
               cryptographic operations and accounts key/ciphertext sizes in-process — it does not open
               a socket or capture packets. Producing these numbers for real would require Layer B
               (live handshakes, currently planned via Docker), which does not exist yet. This is
