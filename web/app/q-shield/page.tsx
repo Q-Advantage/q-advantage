@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { Header } from "@/components/chrome/Header";
-import { Footer } from "@/components/chrome/Footer";
 import { PageShell } from "@/components/chrome/PageShell";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
@@ -9,7 +7,7 @@ import { AlgorithmTable } from "@/components/data/AlgorithmTable";
 import { PresetComparisons } from "@/components/data/PresetComparisons";
 import { getLatestRun } from "@/lib/data/load";
 import { getHomeMetrics } from "@/lib/data/home-metrics";
-import { ProductNav, StatBand } from "@/components/chrome/ProductNav";
+import { StatBand } from "@/components/chrome/ProductNav";
 import { formatDuration, formatStealPercent } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -25,10 +23,8 @@ export default function QShieldPage() {
   const sigs = run.algorithms.filter((a) => a.kind === "sig");
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <>
       <PageShell variant="frame" className="space-y-10">
-        <ProductNav current="Overview" />
 
         {/* Page title block */}
         <div className="flex flex-col gap-3">
@@ -118,8 +114,7 @@ export default function QShieldPage() {
           </p>
         </aside>
       </PageShell>
-      <Footer />
        <GitHubStarPopup />
-    </div>
+    </>
   );
 }

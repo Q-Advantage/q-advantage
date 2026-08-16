@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
-import { Header } from "@/components/chrome/Header";
-import { Footer } from "@/components/chrome/Footer";
-import { ProductNav } from "@/components/chrome/ProductNav";
 import { PageShell } from "@/components/chrome/PageShell";
-import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { AuditStrip } from "@/components/data/AuditStrip";
 import { CompareViewTabs } from "@/components/data/CompareViewTabs";
 import { ComparisonIndex } from "@/components/data/ComparisonIndex";
@@ -47,18 +43,15 @@ export default function ComparePage() {
   const primaryBucket = protocolsData.byArch["x86_64"] ?? protocolsData.byArch[protocolArches[0]];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <PageShell variant="frame" className="space-y-12">
-        <ProductNav current="Compare" />
-        <Breadcrumb back={{ label: "Q-Shield", href: "/q-shield" }} current="Compare" />
+    <>
+      <PageShell variant="frame" className="space-y-8">
 
         <div className="flex flex-col gap-3">
-          <div className="eyebrow">Q-Shield · Compare</div>
-          <h1 className="text-[clamp(36px,5vw,64px)] font-bold leading-[1.05] tracking-[-0.028em] text-fg">
+          <div className="eyebrow">Head-to-head · measured daily</div>
+          <h1 className="text-[clamp(28px,3.6vw,40px)] font-bold leading-[1.05] tracking-[-0.028em] text-fg">
             Every PQC pair, measured.
           </h1>
-          <p className="text-[17px] text-fg-muted max-w-2xl leading-[1.55] font-medium">
+          <p className="max-w-[66ch] text-[15px] font-medium leading-relaxed text-fg-muted">
             {totalPairs} head-to-head comparisons across ML-KEM, ML-DSA, and
             SLH-DSA. Each opens a side-by-side detail view with latency,
             percentiles, and key sizes — measured daily on the same hardware.
@@ -120,7 +113,6 @@ export default function ComparePage() {
           <CompareViewTabs algorithms={run.algorithms} />
         </div>
       </PageShell>
-      <Footer />
-    </div>
+    </>
   );
 }
