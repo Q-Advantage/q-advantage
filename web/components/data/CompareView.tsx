@@ -326,7 +326,7 @@ function HeadlineMetric({
   return (
     <section className="border border-border rounded-md bg-bg-surface p-4 md:p-6">
       <div className="eyebrow mb-2">Headline · {op} mean</div>
-      <p className="font-serif text-2xl md:text-3xl text-fg leading-snug tracking-tight">
+      <p className="text-2xl md:text-3xl text-fg leading-snug tracking-tight">
         <span className="text-accent">{faster}</span> is{" "}
         <span className="font-mono text-accent tabular-nums">{formatRatio(ratio)}</span> faster
         than <span className="text-fg-muted">{slower}</span> on {op}.

@@ -44,7 +44,7 @@ export default function BlogIndexPage() {
                   <span className="text-[11.5px] text-fg-muted">{p.category}</span>
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-balance text-[19px] font-bold leading-snug tracking-[-0.02em] text-fg">
+                  <h2 className="text-balance text-[19px] font-bold leading-snug tracking-[-0.028em] text-fg">
                     {p.title}
                   </h2>
                   <p className="mt-1.5 max-w-[70ch] text-[14px] leading-relaxed text-fg-muted">

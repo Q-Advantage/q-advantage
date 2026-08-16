@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
+import { PageShell } from "@/components/chrome/PageShell";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 
@@ -19,39 +20,45 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 mx-auto max-w-[1100px] px-6 md:px-8 py-10 md:py-12 w-full">
+      <PageShell variant="panel">
         <Breadcrumb back={{ label: "Home", href: "/" }} current="About" />
 
         {/* ============ HERO ============ */}
-        <section className="mt-10 md:mt-14 max-w-[820px]">
+        <section className="mt-8 md:mt-10 max-w-[820px]">
           <div className="eyebrow mb-4">About Q-Advantage</div>
-          <h1 className="font-serif text-[clamp(36px,5.5vw,64px)] font-normal leading-[1.05] tracking-[-0.02em] text-fg">
-            Independent benchmarks for the{" "}
-            <em className="italic">quantum era.</em>
+          <h1 className="text-[clamp(32px,4.6vw,54px)] font-bold leading-[1.06] tracking-[-0.03em] text-fg text-balance">
+            The independent measurement layer over the post-quantum migration.
           </h1>
-          <p className="mt-7 text-lg leading-[1.6] text-fg-muted font-light">
-            The quantum industry runs on press releases, roadmaps, and selectively reported milestones.
-            Q-Advantage runs on GitHub Actions logs. We build independent measurement infrastructure for
-            three questions: how close current hardware is to breaking today&apos;s cryptography, how the
-            post-quantum replacements perform on real silicon, and which machines can execute which
-            algorithms with what fidelity.
+          <p className="mt-7 text-lg leading-[1.6] text-fg-muted font-medium">
+            NIST finished choosing the algorithms. What is left is harder and more expensive: every
+            organisation now has to decide when to turn post-quantum encryption on, and what it costs
+            them — in latency, in connections per core, in bytes on the wire, in hardware bought
+            sooner than planned. Nobody neutral has priced that.
           </p>
-          <p className="mt-5 text-lg leading-[1.6] text-fg-muted font-light">
-            Every spec is sourced. Every benchmark re-runs on a schedule. Every result links back to the
-            public Actions workflow that produced it.
+          <p className="mt-5 text-lg leading-[1.6] text-fg-muted font-medium">
+            We exist to make it measurable. Our mission is to make the true cost of post-quantum
+            cryptography independently verifiable, so a migration decision can be checked instead of
+            trusted. Every benchmark re-runs on a schedule. Every figure links to the run or the
+            cited source that produced it.
+          </p>
+          <p className="mt-5 text-lg leading-[1.6] text-fg font-semibold">
+            We do not sell migration tools, and we never will. Selling them would destroy the only
+            thing the market actually needs from us.
           </p>
         </section>
 
         {/* ============ THREE PRODUCTS — expanded ============ */}
         <section className="mt-20 md:mt-24">
           <div className="eyebrow mb-5">What we measure</div>
-          <h2 className="font-serif text-[clamp(28px,3.8vw,42px)] font-normal leading-[1.1] tracking-[-0.015em] text-fg mb-3">
-            Three benchmarks. One discipline.
+          <h2 className="text-[clamp(28px,3.8vw,42px)] font-bold leading-[1.1] tracking-[-0.022em] text-fg mb-3">
+            We measure, track, rate, and price.
           </h2>
-          <p className="text-base text-fg-muted leading-[1.6] font-light max-w-[760px] mb-12">
-            Each product targets a different layer of the quantum-cryptography problem. The discipline
-            is the same across all three: vendor-published or peer-reviewed sources only, every figure
-            dated and methodology-tagged, every result reproducible from a public commit.
+          <p className="text-base text-fg-muted leading-[1.6] font-medium max-w-[760px] mb-12">
+            Four instruments, each answering a different part of the same question. Two are live
+            today; the rating and the cost calculator are named here honestly as not yet published,
+            rather than pre-announced as shipped. The discipline is identical across all of them:
+            vendor-published or peer-reviewed sources only, every figure dated and methodology-tagged,
+            every result reproducible from a public commit.
           </p>
 
           <div className="space-y-10">
@@ -79,10 +86,10 @@ export default function AboutPage() {
         {/* ============ REPRODUCIBILITY ============ */}
         <section className="mt-20 md:mt-24">
           <div className="eyebrow mb-5">How it works</div>
-          <h2 className="font-serif text-[clamp(28px,3.8vw,42px)] font-normal leading-[1.1] tracking-[-0.015em] text-fg mb-7">
+          <h2 className="text-[clamp(28px,3.8vw,42px)] font-bold leading-[1.1] tracking-[-0.022em] text-fg mb-7">
             Reproducibility is the product.
           </h2>
-          <p className="text-base text-fg-muted leading-[1.6] font-light max-w-[760px] mb-12">
+          <p className="text-base text-fg-muted leading-[1.6] font-medium max-w-[760px] mb-12">
             Every chart, score, and comparison on this site is the output of code in a public repo.
             The recipe, the run, the artifacts, and the result are linked end-to-end so anyone can
             audit, re-run, or fork what we publish.
@@ -142,26 +149,86 @@ export default function AboutPage() {
           </div>
         </section>
 
+        {/* ============ INDEPENDENCE + WHO ============ */}
+        <section className="mt-20 md:mt-24">
+          <div className="eyebrow mb-5">Independence</div>
+          <h2 className="text-[clamp(28px,3.8vw,42px)] font-bold leading-[1.1] tracking-[-0.022em] text-fg mb-7">
+            The constraint is the product.
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 max-w-[980px]">
+            <div>
+              <p className="text-base text-fg-muted leading-[1.65] font-medium">
+                Every performance claim a buyer currently sees comes from someone selling something.
+                That is the gap we occupy, and it only stays occupied if we are structurally unable
+                to become one of those sellers. So the constraints are written down rather than
+                promised:
+              </p>
+              <ul className="mt-5 space-y-3 text-base text-fg-muted leading-[1.6] font-medium list-disc pl-5 marker:text-fg-faint">
+                <li>
+                  <span className="text-fg font-semibold">No migration tooling, ever.</span> Not a
+                  stage we are at — a permanent constraint.
+                </li>
+                <li>
+                  <span className="text-fg font-semibold">No positions in anything we measure.</span>
+                </li>
+                <li>
+                  <span className="text-fg font-semibold">No rated party sees a result early</span>, or
+                  influences methodology, scope, or timing.
+                </li>
+                <li>
+                  <span className="text-fg font-semibold">Public methodology, published corrections.</span>{" "}
+                  Surviving scrutiny is the credential.
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-base text-fg-muted leading-[1.65] font-medium">
+                Q-Advantage is built and run by <span className="text-fg font-semibold">Joshua Opaka</span>,
+                a solo founder — six years in production software engineering, with security as the
+                through-line, and work spanning crypto infrastructure, banking, AI, and quantum. That
+                span is the shape of the post-quantum value chain itself.
+              </p>
+              <p className="mt-4 text-base text-fg-muted leading-[1.65] font-medium">
+                Two things worth stating before anyone asks. There is no vendor employment history
+                and no product to sell, which is what makes the independence structurally credible
+                rather than merely asserted. And this is not a credentialed cryptography lab — which
+                is exactly why the methodology is fully public and every run is cross-validated
+                against eBACS and liboqs&rsquo;s own speed tools rather than published on trust.
+              </p>
+              <p className="mt-4 text-base text-fg-muted leading-[1.65] font-medium">
+                The pipeline runs daily without a team because it was built to. If a number here is
+                wrong, the fastest way to fix it is to tell us in public.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* ============ FAQ ============ */}
         <section className="mt-20 md:mt-24">
           <div className="eyebrow mb-5">Frequently asked</div>
-          <h2 className="font-serif text-[clamp(28px,3.8vw,42px)] font-normal leading-[1.1] tracking-[-0.015em] text-fg mb-10">
+          <h2 className="text-[clamp(28px,3.8vw,42px)] font-bold leading-[1.1] tracking-[-0.022em] text-fg mb-10">
             Questions worth asking.
           </h2>
 
           <div className="divide-y divide-border">
             <Faq q="What is Q-Advantage?">
-              Independent, vendor-neutral benchmarks and analysis for the post-quantum transition.
-              Q-Shield measures how the standardized PQC algorithms actually perform, on production
-              hardware, every day. The Q-Day Index tracks distance to a cryptographically relevant
-              quantum computer. Independent data and analysis for the teams building, buying, and
-              regulating post-quantum cryptography.
+              The independent measurement-and-intelligence layer over the post-quantum migration.
+              Not a migration vendor, not a security product. Q-Shield measures how the standardized
+              PQC algorithms actually perform on production hardware, daily; the Q-Day Index tracks
+              distance to a cryptographically relevant quantum computer. A vendor-implementation
+              rating and a migration cost calculator are specced and not yet published. The through
+              line is the same: what does turning post-quantum encryption on actually cost, and can
+              you check the answer yourself.
             </Faq>
             <Faq q="Who runs Q-Advantage?">
-              Q-Advantage is currently built without external funding. The codebase, data, methodology,
-              and Actions logs are open for inspection. There is no paid tier. If that ever changes —
-              sponsorship, subscriptions, customer engagements — it will be announced publicly with the
-              terms in writing.
+              Joshua Opaka, solo, currently without external funding. The codebase, data, methodology,
+              and Actions logs are all open for inspection. There is no paid tier today. When that
+              changes — data subscriptions, reports, analyst access — it will be announced publicly
+              with the terms in writing, and the line between what stays free and what is paid will
+              be published as a principle rather than introduced quietly later. What will never be
+              sold is migration tooling.
             </Faq>
             <Faq q="What does “vendor-neutral” mean in practice?">
               No quantum hardware or PQC software vendor pays for placement, ranking, or early access.
@@ -242,12 +309,12 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-8 md:gap-16 items-start">
             <div>
               <div className="eyebrow mb-4">Contribute</div>
-              <h2 className="font-serif text-[clamp(24px,3vw,34px)] font-normal leading-[1.15] tracking-[-0.015em] text-fg">
+              <h2 className="text-[clamp(24px,3vw,34px)] font-bold leading-[1.15] tracking-[-0.022em] text-fg">
                 Public critique is how this stays honest.
               </h2>
             </div>
             <div className="space-y-5">
-              <p className="text-base text-fg-muted leading-[1.6] font-light">
+              <p className="text-base text-fg-muted leading-[1.6] font-medium">
                 If you spot a wrong number, a weak source, a missing system, or a method tag we have
                 misapplied — say so. If you want to discuss the scoring formula, the anchor target, or
                 whether a vendor&apos;s claim clears the bar — open an issue.
@@ -281,7 +348,7 @@ export default function AboutPage() {
             </div>
           </div>
         </section>
-      </main>
+      </PageShell>
       <Footer />
       <GitHubStarPopup />
     </div>
@@ -324,7 +391,7 @@ function ProductBlock({
     <article className="bg-bg-card border border-border rounded-xl p-6 md:p-8">
       <header className="flex items-start justify-between gap-4 mb-5 flex-wrap">
         <div>
-          <div className="font-serif text-[28px] font-normal tracking-[-0.015em] text-fg leading-tight">
+          <div className="text-[28px] font-bold tracking-[-0.022em] text-fg leading-tight">
             {name}
           </div>
           <div className="font-mono text-[11px] uppercase tracking-eyebrow text-fg-subtle mt-1.5">
@@ -340,15 +407,15 @@ function ProductBlock({
 
       <div className="grid grid-cols-1 md:grid-cols-[160px_1fr] gap-x-6 gap-y-4 text-sm leading-[1.6]">
         <div className="eyebrow pt-0.5">What it measures</div>
-        <p className="text-fg-muted font-light">
+        <p className="text-fg-muted font-medium">
           <span dangerouslySetInnerHTML={{ __html: measures }} />
         </p>
 
         <div className="eyebrow pt-0.5">How</div>
-        <p className="text-fg-muted font-light">{methodology}</p>
+        <p className="text-fg-muted font-medium">{methodology}</p>
 
         <div className="eyebrow pt-0.5">Status</div>
-        <p className="text-fg-muted font-light">{status_note}</p>
+        <p className="text-fg-muted font-medium">{status_note}</p>
       </div>
 
       {href && (
@@ -370,7 +437,7 @@ function Pillar({ num, title, desc }: { num: string; title: string; desc: string
   return (
     <div className="border-l border-border-strong pl-5">
       <div className="font-mono text-[11px] text-accent mb-2 tracking-[0.05em]">{num}</div>
-      <div className="font-serif text-[22px] font-normal mb-2 tracking-[-0.01em] text-fg leading-tight">
+      <div className="text-[22px] font-bold mb-2 tracking-[-0.01em] text-fg leading-tight">
         {title}
       </div>
       <div className="text-sm text-fg-muted leading-[1.65]">{desc}</div>
@@ -384,7 +451,7 @@ function Faq({ q, children }: { q: string; children: React.ReactNode }) {
   return (
     <details className="group py-5 marker:hidden [&::-webkit-details-marker]:hidden">
       <summary className="flex items-start justify-between gap-6 cursor-pointer list-none">
-        <span className="text-base md:text-[17px] text-fg font-normal leading-snug">{q}</span>
+        <span className="text-base md:text-[17px] text-fg font-bold leading-snug">{q}</span>
         <span
           aria-hidden
           className="font-mono text-fg-muted text-xs mt-1.5 transition-transform group-open:rotate-45 flex-shrink-0"
@@ -392,7 +459,7 @@ function Faq({ q, children }: { q: string; children: React.ReactNode }) {
           +
         </span>
       </summary>
-      <div className="mt-4 text-[15px] text-fg-muted leading-[1.65] font-light pr-10">
+      <div className="mt-4 text-[15px] text-fg-muted leading-[1.65] font-medium pr-10">
         {children}
       </div>
     </details>

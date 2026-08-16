@@ -37,10 +37,10 @@ export function ComparisonIndex({
       {groups.map((group) => (
         <div key={group.id} className="space-y-6">
           <div>
-            <h2 className="font-serif text-[clamp(28px,3.5vw,40px)] font-normal leading-[1.1] tracking-[-0.02em] text-fg mb-2">
+            <h2 className="text-[clamp(28px,3.5vw,40px)] font-bold leading-[1.1] tracking-[-0.028em] text-fg mb-2">
               {group.title}
             </h2>
-            <p className="text-[15px] text-fg-muted leading-relaxed font-light max-w-2xl">
+            <p className="text-[15px] text-fg-muted leading-relaxed font-medium max-w-2xl">
               {group.description}
             </p>
           </div>
@@ -97,7 +97,7 @@ function PairCard({
         <div className="flex-1 min-w-0">
           <div className="text-[15px] text-fg font-medium tracking-tight leading-snug mb-1.5 truncate">
             {algA.display_name}{" "}
-            <span className="text-fg-subtle font-normal">vs</span>{" "}
+            <span className="text-fg-subtle font-bold">vs</span>{" "}
             {algB.display_name}
           </div>
           <div className="font-mono text-[11px] text-fg-subtle uppercase tracking-eyebrow truncate">

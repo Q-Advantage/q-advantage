@@ -58,10 +58,10 @@ export function QDayFeedbackForm() {
     <section className="mt-16 border-t border-border pt-12">
       <div className="max-w-2xl">
         <div className="eyebrow mb-3">Invite scrutiny</div>
-        <h2 className="font-serif text-[clamp(28px,3.5vw,40px)] font-normal leading-[1.1] tracking-[-0.02em] text-fg">
+        <h2 className="text-[clamp(28px,3.5vw,40px)] font-bold leading-[1.1] tracking-[-0.028em] text-fg">
           See a number you disagree with?
         </h2>
-        <p className="mt-3 text-base text-fg-muted leading-relaxed font-light">
+        <p className="mt-3 text-base text-fg-muted leading-relaxed font-medium">
           This index is only as good as the scrutiny it survives. If a spec is wrong, a source is weak, a
           method tag is misapplied, or a system is missing — tell us. Concrete corrections improve every
           subsequent run. For long-form critique or anything you want a public record of,{" "}

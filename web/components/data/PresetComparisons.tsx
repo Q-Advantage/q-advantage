@@ -113,8 +113,8 @@ export function PresetComparisons({
               <div
                 className={
                   large
-                    ? "font-serif text-3xl md:text-4xl font-normal text-fg leading-tight tracking-tight mb-4"
-                    : "font-serif text-2xl font-normal text-fg leading-tight tracking-tight mb-3"
+                    ? "text-3xl md:text-4xl font-normal text-fg leading-tight tracking-tight mb-4"
+                    : "text-2xl font-normal text-fg leading-tight tracking-tight mb-3"
                 }
               >
                 {p.headline}

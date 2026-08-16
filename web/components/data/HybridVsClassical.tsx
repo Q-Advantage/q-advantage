@@ -31,7 +31,7 @@ function DeltaBadge({ pct }: { pct: number | undefined }) {
   const abs = Math.abs(pct).toFixed(1);
   return (
     <span className={`text-xs font-medium ${faster ? "text-emerald-500" : "text-fg"}`}>
-      {abs}% {faster ? "faster" : "slower"} <span className="text-fg-subtle font-normal">vs classical</span>
+      {abs}% {faster ? "faster" : "slower"} <span className="text-fg-subtle font-bold">vs classical</span>
     </span>
   );
 }
@@ -127,10 +127,10 @@ export function HybridVsClassical({
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h3 className="font-serif text-[clamp(22px,3vw,28px)] font-normal leading-tight tracking-[-0.01em] text-fg">
-            Hybrid vs <em className="italic">classical.</em>
+          <h3 className="text-[clamp(22px,3vw,28px)] font-bold leading-tight tracking-[-0.01em] text-fg">
+            Hybrid vs classical.
           </h3>
-          <p className="text-sm text-fg-muted mt-1 max-w-2xl leading-relaxed font-light">
+          <p className="text-sm text-fg-muted mt-1 max-w-2xl leading-relaxed font-medium">
             Real TLS and SSH handshake suites — hybrid post-quantum key exchange next to the classical
             baseline everyone already runs. Amplification factor (server bytes returned per byte the
             client sends) is a first-to-publish number here: not measured elsewhere for these suites.

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
+import { PageShell } from "@/components/chrome/PageShell";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 
@@ -26,16 +27,16 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 mx-auto max-w-[760px] px-6 md:px-8 py-12 md:py-16 w-full">
+      <PageShell variant="panel" width="narrow">
         <Breadcrumb back={{ label: "Home", href: "/" }} current="Privacy Policy" />
 
         {/* ============ HERO ============ */}
         <div className="mt-8 mb-14">
           <div className="eyebrow mb-4">Legal</div>
-          <h1 className="font-serif text-[clamp(36px,5.5vw,56px)] font-normal leading-[1.05] tracking-[-0.02em] text-fg mb-5">
+          <h1 className="text-[clamp(36px,5.5vw,56px)] font-bold leading-[1.05] tracking-[-0.028em] text-fg mb-5">
             Privacy Policy
           </h1>
-          <p className="text-lg text-fg-muted leading-[1.6] font-light">
+          <p className="text-lg text-fg-muted leading-[1.6] font-medium">
             Q-Advantage collects as little personal information as the site needs to function,
             uses it only for the purpose you gave it to us, and never sells it. This page explains
             what we collect, why, how long we keep it, who we share it with, and how to exercise
@@ -262,7 +263,7 @@ export default function PrivacyPage() {
             </p>
           </Prose>
         </Section>
-      </main>
+      </PageShell>
       <Footer />
       <GitHubStarPopup />
     </div>
@@ -274,7 +275,7 @@ export default function PrivacyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mb-12 scroll-mt-20">
-      <h2 className="font-serif text-[22px] md:text-2xl font-normal text-fg mb-4 tracking-[-0.01em]">
+      <h2 className="text-[22px] md:text-2xl font-bold text-fg mb-4 tracking-[-0.01em]">
         {title}
       </h2>
       {children}

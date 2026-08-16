@@ -96,7 +96,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                   className="flex flex-col gap-1.5 rounded-lg border border-border bg-bg-card px-4 py-4 transition-colors hover:border-border-strong"
                 >
                   <span className="num text-[11.5px] font-semibold text-fg-subtle">{p.date}</span>
-                  <span className="text-[14px] font-bold leading-snug tracking-[-0.015em] text-fg">
+                  <span className="text-[14px] font-bold leading-snug tracking-[-0.022em] text-fg">
                     {p.title}
                   </span>
                   <span className="text-[11.5px] text-fg-muted">{p.category}</span>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
+import { PageShell } from "@/components/chrome/PageShell";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { AuditStrip } from "@/components/data/AuditStrip";
 import { CompareViewTabs } from "@/components/data/CompareViewTabs";
@@ -47,15 +48,15 @@ export default function ComparePage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 mx-auto max-w-[1200px] px-6 md:px-8 py-10 md:py-12 w-full space-y-12">
+      <PageShell variant="frame" className="space-y-12">
         <Breadcrumb back={{ label: "Q-Shield", href: "/q-shield" }} current="Compare" />
 
         <div className="flex flex-col gap-3">
           <div className="eyebrow">Q-Shield · Compare</div>
-          <h1 className="font-serif text-[clamp(36px,5vw,64px)] font-normal leading-[1.05] tracking-[-0.02em] text-fg">
-            Every PQC pair, <em className="italic">measured.</em>
+          <h1 className="text-[clamp(36px,5vw,64px)] font-bold leading-[1.05] tracking-[-0.028em] text-fg">
+            Every PQC pair, measured.
           </h1>
-          <p className="text-[17px] text-fg-muted max-w-2xl leading-[1.55] font-light">
+          <p className="text-[17px] text-fg-muted max-w-2xl leading-[1.55] font-medium">
             {totalPairs} head-to-head comparisons across ML-KEM, ML-DSA, and
             SLH-DSA. Each opens a side-by-side detail view with latency,
             percentiles, and key sizes — measured daily on the same hardware.
@@ -105,10 +106,10 @@ export default function ComparePage() {
         <div id="detail" className="border-t border-border pt-12 space-y-6 scroll-mt-24">
           <div>
             <div className="eyebrow mb-2">Detail view</div>
-            <h2 className="font-serif text-[clamp(28px,3.5vw,40px)] font-normal leading-[1.1] tracking-[-0.02em] text-fg">
-              Side by <em className="italic">side.</em>
+            <h2 className="text-[clamp(28px,3.5vw,40px)] font-bold leading-[1.1] tracking-[-0.028em] text-fg">
+              Side by side.
             </h2>
-            <p className="text-[15px] text-fg-muted mt-2 max-w-2xl leading-relaxed font-light">
+            <p className="text-[15px] text-fg-muted mt-2 max-w-2xl leading-relaxed font-medium">
               Pick any two PQC algorithms and an operation. Numbers come from
               the latest daily run, same hardware, same iteration count.
             </p>
@@ -116,7 +117,7 @@ export default function ComparePage() {
 
           <CompareViewTabs algorithms={run.algorithms} />
         </div>
-      </main>
+      </PageShell>
       <Footer />
     </div>
   );

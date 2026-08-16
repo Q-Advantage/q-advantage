@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
+import { PageShell } from "@/components/chrome/PageShell";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { AuditStrip } from "@/components/data/AuditStrip";
 import { Sparkline } from "@/components/data/Sparkline";
@@ -65,7 +66,7 @@ export default function AlgorithmPage({ params }: PageProps) {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 mx-auto max-w-[1200px] px-6 md:px-8 py-10 md:py-12 w-full space-y-10">
+      <PageShell variant="frame" className="space-y-10">
         <Breadcrumb back={{ label: "Q-Shield", href: "/q-shield" }} current={algo.display_name} />
 
         {/* Header */}
@@ -81,10 +82,10 @@ export default function AlgorithmPage({ params }: PageProps) {
               NIST level {algo.nist_level}
             </span>
           </div>
-          <h1 className="font-serif text-[clamp(36px,5vw,56px)] font-normal leading-[1.05] tracking-[-0.02em] text-fg">
+          <h1 className="text-[clamp(36px,5vw,56px)] font-bold leading-[1.05] tracking-[-0.028em] text-fg">
             {algo.display_name}
           </h1>
-          <p className="text-base text-fg-muted max-w-2xl leading-relaxed font-light">
+          <p className="text-base text-fg-muted max-w-2xl leading-relaxed font-medium">
             {describeAlgorithm(algo)}
           </p>
           {algorithmNote(algo) && (
@@ -157,7 +158,7 @@ export default function AlgorithmPage({ params }: PageProps) {
             />
           );
         })}
-      </main>
+      </PageShell>
       <Footer />
     </div>
   );
