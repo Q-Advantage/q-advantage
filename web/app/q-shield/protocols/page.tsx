@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
+import { PageShell } from "@/components/chrome/PageShell";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 import { ProtocolsView } from "@/components/protocols/ProtocolsView";
@@ -18,22 +19,22 @@ export default function ProtocolsPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 mx-auto max-w-[1200px] px-6 md:px-8 py-10 md:py-12 w-full space-y-10">
+      <PageShell variant="frame" className="space-y-10">
         <Breadcrumb back={{ label: "Q-Shield", href: "/q-shield" }} current="Protocols" />
 
         <div className="flex flex-col gap-3">
           <div className="eyebrow">Q-Shield · Protocol benchmarks</div>
-          <h1 className="font-serif text-[clamp(36px,5vw,56px)] font-normal leading-[1.05] tracking-[-0.02em] text-fg">
-            The handshake, <em className="italic">in context.</em>
+          <h1 className="text-[clamp(36px,5vw,56px)] font-bold leading-[1.05] tracking-[-0.028em] text-fg">
+            The handshake, in context.
           </h1>
-          <p className="text-base text-fg-muted max-w-2xl leading-relaxed font-light">
+          <p className="text-base text-fg-muted max-w-2xl leading-relaxed font-medium">
             Reference benchmarks like eBACS and liboqs measure PQC primitives in
             isolation &mdash; one operation, one cycle count. This is different: it
             shows how post-quantum cryptography actually behaves inside the
             protocols people run every day, TLS and SSH, rather than as raw numbers
             on a spec sheet.
           </p>
-          <p className="text-base text-fg-muted max-w-2xl leading-relaxed font-light">
+          <p className="text-base text-fg-muted max-w-2xl leading-relaxed font-medium">
             A handshake isn&apos;t one operation &mdash; it&apos;s key exchange
             composed with authentication, and what actually ships is the whole
             thing: how many microseconds it costs and how many bytes it puts on the
@@ -48,7 +49,7 @@ export default function ProtocolsPage() {
         </div>
 
         <ProtocolsView data={data} />
-      </main>
+      </PageShell>
       <Footer />
       <GitHubStarPopup />
     </div>

@@ -77,10 +77,10 @@ export default function PQCReadinessIndexView({ data }: { data: PQCReadinessInde
       {/* ============ HERO ============ */}
       <div className="mb-10">
         <div className="eyebrow mb-3">PQC Readiness Index</div>
-        <h1 className="font-serif text-[clamp(32px,5vw,52px)] font-normal leading-[1.05] tracking-[-0.02em] text-fg mb-4">
+        <h1 className="text-[clamp(32px,5vw,52px)] font-bold leading-[1.05] tracking-[-0.028em] text-fg mb-4">
           Key exchange moved. Authentication didn&apos;t.
         </h1>
-        <p className="text-base text-fg-muted leading-[1.7] font-light max-w-[720px]">
+        <p className="text-base text-fg-muted leading-[1.7] font-medium max-w-[720px]">
           Weekly-measured TLS posture of named financial institutions, exchanges, card networks,
           and certificate authorities — split into two tracks that are never merged into one
           score, because merging them would hide the half that matters.
@@ -260,7 +260,7 @@ function Stat({ label, value, tone, mono }: { label: string; value: string; tone
   return (
     <div>
       <div className="text-2xs uppercase tracking-eyebrow text-fg-subtle mb-1.5 font-mono">{label}</div>
-      <div className={`text-2xl font-serif ${color} ${mono ? "font-mono text-lg" : ""}`}>{value}</div>
+      <div className={`text-2xl ${color} ${mono ? "font-mono text-lg" : ""}`}>{value}</div>
     </div>
   );
 }

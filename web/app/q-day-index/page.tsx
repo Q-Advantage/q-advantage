@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
+import { PageShell } from "@/components/chrome/PageShell";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 import { QDayFeedbackForm } from "@/components/chrome/QDayFeedbackForm";
@@ -20,13 +21,13 @@ export default function QDayIndexPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 mx-auto max-w-[1200px] px-6 md:px-8 py-10 md:py-12 w-full">
+      <PageShell variant="frame">
         <Breadcrumb back={{ label: "Home", href: "/" }} current="Q-Day Index" />
         <div className="mt-6">
           <QDayIndexView data={data} />
         </div>
         <QDayFeedbackForm />
-      </main>
+      </PageShell>
       <Footer />
       <GitHubStarPopup />
     </div>

@@ -183,7 +183,11 @@
   }
 
   /* The contour texture behind the panels. Fixed, cheap, and very faint —
-     it reads as paper grain rather than decoration. */
+     it reads as paper grain rather than decoration.
+     Applied to `body` rather than an opt-in class: it is the site's ground,
+     and having it on only the two routes that remembered to add the class was
+     exactly how the rest of the site ended up looking untouched. */
+  body::before,
   .contour::before {
     content: "";
     position: fixed;

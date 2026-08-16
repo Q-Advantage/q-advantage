@@ -220,7 +220,7 @@ export default function HomePage() {
                   className="grid grid-cols-1 items-baseline gap-x-5 gap-y-1 border-b border-border-subtle px-0.5 py-3.5 transition-colors hover:bg-bg-surface sm:grid-cols-[92px_1fr_auto]"
                 >
                   <span className="num text-[11.5px] font-semibold text-fg-subtle">{p.date}</span>
-                  <span className="text-[14.5px] font-bold tracking-[-0.015em] text-fg">
+                  <span className="text-[14.5px] font-bold tracking-[-0.022em] text-fg">
                     {p.title}
                   </span>
                   <span className="whitespace-nowrap text-[11.5px] text-fg-muted">
@@ -489,7 +489,7 @@ function VerbCard({
         {verb}
       </div>
       <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="text-[15px] font-bold tracking-[-0.015em] text-fg">{surface.name}</span>
+        <span className="text-[15px] font-bold tracking-[-0.022em] text-fg">{surface.name}</span>
         <span
           className={`rounded px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-eyebrow ${
             surface.status === "live"

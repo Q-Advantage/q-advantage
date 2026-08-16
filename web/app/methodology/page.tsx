@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
+import { PageShell } from "@/components/chrome/PageShell";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 import { getLatestRun } from "@/lib/data/load";
@@ -36,16 +37,16 @@ export default function MethodologyPage() {
   return (
     <div className="marketing-bg min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 mx-auto max-w-[760px] px-6 md:px-8 py-12 md:py-16 w-full">
+      <PageShell variant="panel" width="narrow">
         <Breadcrumb back={{ label: "Home", href: "/" }} current="Methodology" />
 
         {/* ============ HERO ============ */}
         <div className="mt-8 mb-12">
           <div className="eyebrow mb-4">Methodology</div>
-          <h1 className="font-serif text-[clamp(40px,6vw,64px)] font-normal leading-[1.05] tracking-[-0.02em] text-fg mb-5">
+          <h1 className="text-[clamp(40px,6vw,64px)] font-bold leading-[1.05] tracking-[-0.028em] text-fg mb-5">
             How we build, what we trust, what we won&apos;t do.
           </h1>
-          <p className="text-lg text-fg-muted leading-[1.6] font-light">
+          <p className="text-lg text-fg-muted leading-[1.6] font-medium">
             The quantum industry runs on press releases and analyst PDFs. Q-Advantage runs on
             GitHub Actions logs and peer-reviewed citations. Everything below is verifiable —
             clone the repo and run it yourself, or click any number on a dashboard and chase its
@@ -89,10 +90,10 @@ export default function MethodologyPage() {
         {/* ====================================================================== */}
         <section id="q-shield" className="mb-20 scroll-mt-20">
           <div className="eyebrow mb-3">Section 1</div>
-          <h2 className="font-serif text-[clamp(32px,4.5vw,44px)] font-normal leading-[1.1] tracking-[-0.02em] text-fg mb-6">
+          <h2 className="text-[clamp(32px,4.5vw,44px)] font-bold leading-[1.1] tracking-[-0.028em] text-fg mb-6">
             Q-Shield — post-quantum cryptography benchmarks
           </h2>
-          <p className="text-base text-fg-muted leading-[1.7] font-light mb-12">
+          <p className="text-base text-fg-muted leading-[1.7] font-medium mb-12">
             Q-Shield measures the wall-clock performance of the NIST-standardized post-quantum
             algorithms — key generation, key encapsulation/decapsulation for KEMs; key generation,
             signing, and verification for signatures. Re-run daily on dedicated infrastructure with
@@ -382,10 +383,10 @@ export default function MethodologyPage() {
         {/* ====================================================================== */}
         <section id="q-day-index" className="mb-20 scroll-mt-20">
           <div className="eyebrow mb-3">Section 2</div>
-          <h2 className="font-serif text-[clamp(32px,4.5vw,44px)] font-normal leading-[1.1] tracking-[-0.02em] text-fg mb-6">
+          <h2 className="text-[clamp(32px,4.5vw,44px)] font-bold leading-[1.1] tracking-[-0.028em] text-fg mb-6">
             Q-Day Index — distance to breaking RSA-2048
           </h2>
-          <p className="text-base text-fg-muted leading-[1.7] font-light mb-12">
+          <p className="text-base text-fg-muted leading-[1.7] font-medium mb-12">
             The Q-Day Index is a 0–100 score measuring how close today&apos;s quantum hardware is to
             breaking RSA-2048 with Shor&apos;s algorithm. It is the answer to a single question, set
             against a named published target, with every input sourced. The score for nearly every
@@ -648,10 +649,10 @@ export default function MethodologyPage() {
         {/* ====================================================================== */}
         <section id="pqc-readiness-index" className="mb-20 scroll-mt-20">
           <div className="eyebrow mb-3">Section 3</div>
-          <h2 className="font-serif text-[clamp(32px,4.5vw,44px)] font-normal leading-[1.1] tracking-[-0.02em] text-fg mb-6">
+          <h2 className="text-[clamp(32px,4.5vw,44px)] font-bold leading-[1.1] tracking-[-0.028em] text-fg mb-6">
             PQC Readiness Index — key exchange vs. authentication, named
           </h2>
-          <p className="text-base text-fg-muted leading-[1.7] font-light mb-12">
+          <p className="text-base text-fg-muted leading-[1.7] font-medium mb-12">
             A weekly, per-institution measurement of the observable post-quantum posture of named
             banks, exchanges, card networks, and certificate authorities — negotiated TLS version,
             key-exchange group, and certificate chain, nothing more. Two tracks, never merged into
@@ -832,7 +833,7 @@ export default function MethodologyPage() {
         {/* ====================================================================== */}
         <section id="glossary" className="mb-16 scroll-mt-20">
           <div className="eyebrow mb-3">Glossary</div>
-          <h2 className="font-serif text-[clamp(28px,3.5vw,38px)] font-normal leading-[1.1] tracking-[-0.02em] text-fg mb-6">
+          <h2 className="text-[clamp(28px,3.5vw,38px)] font-bold leading-[1.1] tracking-[-0.028em] text-fg mb-6">
             Measurement methods, in one place
           </h2>
           <p className="text-fg-muted leading-[1.7] mb-8">
@@ -935,7 +936,7 @@ export default function MethodologyPage() {
         {/* ============ CHALLENGE ============ */}
         {/* ====================================================================== */}
         <section id="challenge" className="border-t border-border pt-10 scroll-mt-20">
-          <h2 className="font-serif text-2xl font-normal tracking-tight text-fg mb-4">
+          <h2 className="text-2xl font-bold tracking-tight text-fg mb-4">
             How to challenge a result
           </h2>
           <p className="text-fg-muted leading-[1.7] mb-4">
@@ -960,7 +961,7 @@ export default function MethodologyPage() {
               href="https://github.com/Q-Advantage/q-advantage/issues/new"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-transparent text-fg rounded-lg text-sm font-normal border border-border-strong hover:border-fg-muted transition-colors"
+              className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-transparent text-fg rounded-lg text-sm font-bold border border-border-strong hover:border-fg-muted transition-colors"
             >
               Open an issue
             </a>
@@ -968,13 +969,13 @@ export default function MethodologyPage() {
               href="https://github.com/Q-Advantage/q-advantage/actions"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-transparent text-fg rounded-lg text-sm font-normal border border-border-strong hover:border-fg-muted transition-colors"
+              className="inline-flex items-center gap-2 px-[22px] py-[13px] bg-transparent text-fg rounded-lg text-sm font-bold border border-border-strong hover:border-fg-muted transition-colors"
             >
               GitHub Actions logs
             </a>
           </div>
         </section>
-      </main>
+      </PageShell>
       <Footer />
       <GitHubStarPopup />
     </div>
@@ -987,7 +988,7 @@ function Pillar({ num, title, body }: { num: string; title: string; body: string
   return (
     <div className="border-l-2 border-accent/40 pl-6">
       <div className="font-mono text-xs text-fg-subtle mb-2 tracking-[0.05em]">{num}</div>
-      <h3 className="font-serif text-2xl font-normal mb-2 tracking-[-0.01em] text-fg">{title}</h3>
+      <h3 className="text-2xl font-bold mb-2 tracking-[-0.01em] text-fg">{title}</h3>
       <p className="text-sm text-fg-muted leading-[1.7]">{body}</p>
     </div>
   );
@@ -1004,7 +1005,7 @@ function EnvRow({ label, value }: { label: string; value: string }) {
 
 function H3({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <h3 id={id} className="font-serif text-[22px] md:text-2xl font-normal text-fg mt-10 mb-4 tracking-[-0.01em] scroll-mt-20">
+    <h3 id={id} className="text-[22px] md:text-2xl font-bold text-fg mt-10 mb-4 tracking-[-0.01em] scroll-mt-20">
       {children}
     </h3>
   );

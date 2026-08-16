@@ -57,7 +57,7 @@ export function LiveShieldPreview() {
             ML-DSA-65 · sign mean
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="font-serif text-[72px] leading-none font-normal text-accent tracking-[-0.04em]">
+            <span className="text-[72px] leading-none font-bold text-accent tracking-[-0.04em]">
               {formatDuration(mlDsa.operations.sign.mean_us).split(" ")[0]}
             </span>
             <span className="font-mono text-base text-fg-muted">

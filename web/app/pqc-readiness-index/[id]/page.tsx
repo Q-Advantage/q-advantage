@@ -46,7 +46,7 @@ export default function InstitutionPage({ params }: PageProps) {
         <Breadcrumb back={{ label: "PQC Readiness Index", href: "/pqc-readiness-index" }} current={inst.name} />
 
         <div className="mt-6 mb-10">
-          <h1 className="font-serif text-[clamp(28px,4.5vw,44px)] font-normal leading-[1.1] tracking-[-0.02em] text-fg mb-3">
+          <h1 className="text-[clamp(28px,4.5vw,44px)] font-bold leading-[1.1] tracking-[-0.028em] text-fg mb-3">
             {inst.name}
           </h1>
           {inst.disputed && (
@@ -89,7 +89,7 @@ export default function InstitutionPage({ params }: PageProps) {
 
         {!inst.excluded && (
           <>
-            <h2 className="font-serif text-2xl font-normal text-fg mb-4">Endpoints</h2>
+            <h2 className="text-2xl font-bold text-fg mb-4">Endpoints</h2>
             <div className="space-y-3 mb-12">
               {inst.endpoints.map((ep) => (
                 <EndpointCard key={ep.hostname} ep={ep} />
@@ -161,7 +161,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="text-2xs uppercase tracking-eyebrow text-fg-subtle mb-1.5 font-mono">{label}</div>
-      <div className="text-2xl font-serif text-fg">{value}</div>
+      <div className="text-2xl text-fg">{value}</div>
     </div>
   );
 }

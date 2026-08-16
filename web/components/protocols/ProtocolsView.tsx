@@ -33,7 +33,7 @@ function DeltaPct({ pct, baseline }: { pct: number | undefined; baseline?: strin
   const cls = faster ? "text-emerald-500" : "text-fg";
   return (
     <div className="flex flex-col items-end">
-      <span className={`font-serif text-2xl leading-none ${cls}`}>
+      <span className={`text-2xl leading-none ${cls}`}>
         {abs}% <span className="text-sm font-sans">{label}</span>
       </span>
       {baseline && <span className="text-2xs text-fg-subtle mt-1">vs {baseline}</span>}
@@ -65,10 +65,10 @@ function Meta({ label, value }: { label: string; value: string }) {
 function SectionHead({ title, caption }: { title: string; caption: string }) {
   return (
     <div className="flex flex-col gap-1.5 mb-4">
-      <h2 className="font-serif text-[clamp(22px,3vw,30px)] font-normal leading-tight tracking-[-0.01em] text-fg">
+      <h2 className="text-[clamp(22px,3vw,30px)] font-bold leading-tight tracking-[-0.01em] text-fg">
         {title}
       </h2>
-      <p className="text-sm text-fg-muted max-w-2xl leading-relaxed font-light">{caption}</p>
+      <p className="text-sm text-fg-muted max-w-2xl leading-relaxed font-medium">{caption}</p>
     </div>
   );
 }
@@ -204,7 +204,7 @@ function SigCard({ schemeName, byArch }: { schemeName: string; byArch: Record<st
       </div>
 
       {schemeName.startsWith("ML-DSA") && (
-        <p className="mt-3 text-2xs text-fg-subtle leading-relaxed font-light">
+        <p className="mt-3 text-2xs text-fg-subtle leading-relaxed font-medium">
           Sign is right-skewed (Fiat-Shamir with aborts → rejection sampling); mean exceeds
           median. Median is the representative figure.
         </p>
@@ -239,7 +239,7 @@ function StatefulSigCard({
 
       {/* Persistent, not a tooltip — spec-mandated: readers must not mistake
           these for TLS-interchangeable stateless signatures. */}
-      <p className="text-2xs text-amber-500/90 leading-relaxed font-light mb-3">
+      <p className="text-2xs text-amber-500/90 leading-relaxed font-medium mb-3">
         Stateful — firmware/code-signing use case, not general TLS. Reusing a signing index
         breaks the security guarantee; see NIST SP 800-208.
       </p>
@@ -292,7 +292,7 @@ function AesCard({ byArch }: { byArch: Record<string, import("@/lib/protocols/ty
         <span className="num text-fg font-medium">{any.algorithm}</span>
         <span className="text-2xs num text-fg-subtle">{fmtBytes(any.payload_bytes)} payload</span>
       </div>
-      <p className="text-2xs text-fg-subtle leading-relaxed font-light mb-3">
+      <p className="text-2xs text-fg-subtle leading-relaxed font-medium mb-3">
         The symmetric reference line — what a boring, fast, everyone-already-uses-this operation
         costs, for scale against every asymmetric number above.
       </p>
@@ -368,7 +368,7 @@ function Hero({ data }: { data: ProtocolsData }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border rounded-md overflow-hidden">
       {heroes.map((h) => (
         <div key={h.label} className="bg-bg-inset px-5 py-5 flex flex-col gap-2">
-          <span className={`font-serif text-[clamp(24px,3.5vw,36px)] leading-none ${h.faster ? "text-emerald-500" : "text-fg"}`}>
+          <span className={`text-[clamp(24px,3.5vw,36px)] leading-none ${h.faster ? "text-emerald-500" : "text-fg"}`}>
             {h.value}
           </span>
           <span className="text-sm text-fg font-medium leading-tight">{h.label}</span>

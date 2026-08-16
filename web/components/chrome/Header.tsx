@@ -108,10 +108,17 @@ function NavDropdown({ label, items }: { label: string; items: Surface[] }) {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-[calc(100%+7px)] z-50 min-w-[296px] rounded-xl border border-border bg-bg-elevated p-1.5 shadow-lg">
-          {items.map((s) => (
-            <SurfaceRow key={s.name} surface={s} />
-          ))}
+        // Anchored flush to the trigger (top-full) with the visual offset made
+        // by internal padding instead of a `top` offset. The previous 7px gap
+        // was dead space: moving the pointer from the button toward the menu
+        // left the wrapper, fired onMouseLeave, and closed the menu before it
+        // could be clicked.
+        <div className="absolute left-0 top-full z-50 min-w-[296px] pt-2">
+          <div className="rounded-xl border border-border bg-bg-elevated p-1.5 shadow-lg">
+            {items.map((s) => (
+              <SurfaceRow key={s.name} surface={s} />
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -141,7 +148,7 @@ export function Header() {
             aria-label="Q-Advantage home"
           >
             <BrandMark />
-            <span className="text-[20px] font-bold tracking-[-0.02em] text-fg sm:text-[22px]">
+            <span className="text-[20px] font-bold tracking-[-0.028em] text-fg sm:text-[22px]">
               Q-Advantage
             </span>
           </Link>

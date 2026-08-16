@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
+import { PageShell } from "@/components/chrome/PageShell";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { CorrectionForm } from "@/components/chrome/CorrectionForm";
 
@@ -26,15 +27,15 @@ export default function CorrectionsPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 mx-auto max-w-[720px] px-6 md:px-8 py-10 md:py-16 w-full">
+      <PageShell variant="panel" width="narrow">
         <Breadcrumb back={{ label: "PQC Readiness Index", href: "/pqc-readiness-index" }} current="Corrections & Disputes" />
 
         <div className="mt-8 mb-12">
           <div className="eyebrow mb-4">Corrections &amp; Disputes</div>
-          <h1 className="font-serif text-[clamp(32px,5vw,48px)] font-normal leading-[1.1] tracking-[-0.02em] text-fg mb-5">
+          <h1 className="text-[clamp(32px,5vw,48px)] font-bold leading-[1.1] tracking-[-0.028em] text-fg mb-5">
             If we&apos;re wrong, we say so publicly.
           </h1>
-          <p className="text-fg-muted leading-[1.7] font-light">
+          <p className="text-fg-muted leading-[1.7] font-medium">
             We publish measurements about named institutions. We get things wrong sometimes — a
             hostname we scanned isn&apos;t the one that matters, a certificate rotated between our
             sweep and your read of the page, a configuration we recorded as &ldquo;not
@@ -75,13 +76,13 @@ export default function CorrectionsPage() {
           </p>
         </div>
 
-        <h2 className="font-serif text-2xl font-normal text-fg mb-2">Report an error</h2>
+        <h2 className="text-2xl font-bold text-fg mb-2">Report an error</h2>
         <Suspense fallback={<div className="mt-8 h-[420px]" />}>
           <CorrectionForm />
         </Suspense>
 
         <div className="mt-16 pt-10 border-t border-border">
-          <h2 className="font-serif text-2xl font-normal text-fg mb-6">Changelog</h2>
+          <h2 className="text-2xl font-bold text-fg mb-6">Changelog</h2>
           <div className="border border-border rounded-lg bg-bg-card p-5">
             <p className="text-fg-subtle text-sm">
               No corrections have been logged yet. Every confirmed correction will appear here,
@@ -89,7 +90,7 @@ export default function CorrectionsPage() {
             </p>
           </div>
         </div>
-      </main>
+      </PageShell>
       <Footer />
     </div>
   );

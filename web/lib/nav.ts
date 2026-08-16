@@ -63,7 +63,9 @@ export const TOOLS: Surface[] = [
 export const COMPANY_LINKS: { name: string; href: string }[] = [
   { name: "About", href: "/about" },
   { name: "Methodology", href: "/methodology" },
-  { name: "Corrections policy", href: "/corrections" },
+  // Corrections policy is deliberately absent: /corrections is paused
+  // (`notFound()`), so linking it from every page in the site would put a
+  // guaranteed 404 in the footer. Restore this entry when the route comes back.
   { name: "Benchmark source", href: "https://github.com/Q-Advantage/q-advantage" },
   { name: "Privacy", href: "/privacy" },
   { name: "Contact", href: "/contact" },
