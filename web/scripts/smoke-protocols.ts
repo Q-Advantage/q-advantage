@@ -14,7 +14,17 @@ import {
   hasLiveStatefulSigs,
   statefulSigsUnavailableReason,
 } from "../lib/protocols/derive";
-import type { ComposedSuite, LmsXmssFile } from "../lib/protocols/types";
+import { decomposePhases, PHASE_ORDER } from "../lib/protocols/phases";
+import { aesBaselinesByArch, formatTailRatio, tailRatio } from "../lib/protocols/metrics";
+import type { ComposedSuite, LmsXmssFile, TimingBlock } from "../lib/protocols/types";
+
+/** Sentinel timing block — the values could never pass as a measurement. */
+function fixtureTiming(mean: number): TimingBlock {
+  return {
+    mean_us: mean, median_us: mean, p95_us: mean, p99_us: mean, stdev_us: 0,
+    min_us: mean, max_us: mean, ops_per_sec: 1, n_iterations: 1,
+  };
+}
 
 function fixtureSuite(overrides: Partial<ComposedSuite["size"]>): ComposedSuite {
   return {
@@ -142,5 +152,144 @@ for (const arch of arches) {
       (file && !hasLiveStatefulSigs(file) ? ` — ${statefulSigsUnavailableReason(file) ?? "no reason recorded"}` : ""),
   );
 }
+
+console.log("\n=== decomposePhases: classical phases count twice, KEM phases once ===");
+// The identity this encodes, verified across all 548 committed suites:
+//   handshake = kem_keygen + kem_encaps + kem_decaps
+//             + 2 × (classical_keygen + classical_derive)
+const hybridFixture = {
+  ...fixtureSuite({ bytes_client_to_server: 1, bytes_server_to_client: 1, bytes_total: 2 }),
+  timing: fixtureTiming(9999),
+  phases: {
+    kem_keygen: fixtureTiming(1000),
+    kem_encaps: fixtureTiming(1000),
+    kem_decaps: fixtureTiming(1000),
+    classical_keygen: fixtureTiming(1000),
+    classical_derive: fixtureTiming(1000),
+  },
+} as unknown as ComposedSuite;
+
+const hybrid = decomposePhases(hybridFixture);
+if (!hybrid) throw new Error("decomposePhases returned null for a suite that has a phases block.");
+console.log(`  composed=${hybrid.composed_us} (3×1000 KEM + 2×2×1000 classical, expect 7000)`);
+if (hybrid.composed_us !== 7000) {
+  throw new Error(
+    `composed_us = ${hybrid.composed_us}, expected 7000 — the classical phases must count ` +
+      `twice (both parties keygen and derive) and the KEM phases once. Getting this wrong ` +
+      `mis-attributes a third of the handshake.`,
+  );
+}
+if (hybrid.phases.find((p) => p.key === "classical_keygen")!.occurrences !== 2) {
+  throw new Error("classical_keygen must report occurrences: 2, shown explicitly in the UI.");
+}
+if (Math.abs(hybrid.phases.reduce((a, p) => a + p.share, 0) - 1) > 1e-9) {
+  throw new Error("Phase shares must sum to exactly 1 — the stacked bar asserts completeness.");
+}
+
+console.log("\n=== decomposePhases: a broken identity must surface, not be hidden ===");
+// If a future harness change breaks the composition, `exact` goes false and
+// the UI is required to disclose it rather than draw a tidy bar.
+const skewed = decomposePhases({
+  ...hybridFixture,
+  timing: fixtureTiming(-1),
+} as unknown as ComposedSuite)!;
+console.log(`  handshake=-1 composed=7000 → residual=${skewed.residual_us}, exact=${skewed.exact}`);
+if (skewed.exact) {
+  throw new Error(
+    "A suite whose phases do not compose to its handshake mean reported exact:true — the " +
+      "discrepancy must reach the UI, never be clamped or swallowed.",
+  );
+}
+
+console.log("\n=== decomposePhases: never zero-fills an unmeasured phase ===");
+const kemOnly = decomposePhases({
+  ...hybridFixture,
+  timing: fixtureTiming(3000),
+  phases: {
+    kem_keygen: fixtureTiming(1000),
+    kem_encaps: fixtureTiming(1000),
+    kem_decaps: fixtureTiming(1000),
+  },
+} as unknown as ComposedSuite)!;
+console.log(`  KEM-only suite → ${kemOnly.phases.length} phases, exact=${kemOnly.exact}`);
+if (kemOnly.phases.length !== 3 || kemOnly.phases.some((p) => p.key.startsWith("classical_"))) {
+  throw new Error(
+    `KEM-only suite produced ${kemOnly.phases.length} phases including classical ones — an ` +
+      `unmeasured phase must be absent, never a 0 µs segment. A zero-width bar reads as ` +
+      `"this step is free", which the data does not claim.`,
+  );
+}
+if (decomposePhases(fixtureSuite({ bytes_client_to_server: 1 })) !== null) {
+  throw new Error("A suite with no phases block must decompose to null, not an empty breakdown.");
+}
+console.log("  Correct.");
+
+console.log("\n=== tailRatio: never Infinity, never a guess ===");
+for (const [label, block] of [
+  ["median 0", fixtureTiming(0)],
+  ["missing block", null],
+] as const) {
+  if (tailRatio(block) !== null) {
+    throw new Error(`tailRatio(${label}) must be null, got ${tailRatio(block)}.`);
+  }
+}
+console.log(`  median 0 → ${formatTailRatio(tailRatio(fixtureTiming(0)))}, missing → ${formatTailRatio(null)}`);
+
+console.log("\n=== Real committed data: phase identity holds on every suite ===");
+// A running honesty check. If the harness ever stops composing the handshake
+// from these phases, this digest shows it before the site does.
+let worstResidualPct = 0;
+let checked = 0;
+for (const arch of arches) {
+  const bucket = data.byArch[arch];
+  for (const [track, suites] of [
+    ["tls", bucket.tls?.suites],
+    ["ssh", bucket.ssh?.suites],
+  ] as const) {
+    for (const [name, suite] of Object.entries(suites ?? {})) {
+      const d = decomposePhases(suite);
+      if (!d) continue;
+      checked++;
+      const pct = Math.abs(d.residual_us) / d.handshake_mean_us * 100;
+      worstResidualPct = Math.max(worstResidualPct, pct);
+      console.log(
+        `  [${track}/${arch}] ${name.padEnd(21)} handshake=${d.handshake_mean_us.toFixed(1).padStart(8)}µs  ` +
+          `composed=${d.composed_us.toFixed(1).padStart(8)}µs  residual=${pct.toFixed(4)}%  ` +
+          `tail=${formatTailRatio(tailRatio(suite.timing))}  ${d.exact ? "exact" : "NOT EXACT"}`,
+      );
+      if (!d.exact) {
+        throw new Error(
+          `${track}/${arch} ${name}: phases compose to ${d.composed_us.toFixed(3)} µs against a ` +
+            `reported handshake mean of ${d.handshake_mean_us.toFixed(3)} µs (${pct.toFixed(3)}% off). ` +
+            `The phase decomposition on /q-shield/protocols presents these as a complete ` +
+            `breakdown — either the harness changed or PHASE_OCCURRENCES is wrong. Do not ship ` +
+            `a stacked bar over a decomposition that does not add up.`,
+        );
+      }
+    }
+  }
+}
+console.log(`  ${checked} suites checked, worst residual ${worstResidualPct.toFixed(4)}%`);
+console.log(`  phase order: ${PHASE_ORDER.join(" → ")}`);
+
+console.log("\n=== Real committed data: AES-GCM baseline ===");
+const aes = aesBaselinesByArch(data);
+if (Object.keys(aes).length === 0) {
+  console.log("  (no aes-baseline file present — skipping)");
+} else {
+  for (const [arch, b] of Object.entries(aes)) {
+    console.log(
+      `  [${arch}] ${b.algorithm} · ${b.payload_bytes} B payload · ` +
+        `encrypt ${b.encrypt.median_us.toFixed(2)}µs · decrypt ${b.decrypt.median_us.toFixed(2)}µs`,
+    );
+    if (!b.payload_bytes_source) {
+      throw new Error(
+        `AES baseline for ${arch} has no payload_bytes_source — the payload size is a cited ` +
+          `choice (RFC 8446 §5.2), and the page renders that citation. It must be present.`,
+      );
+    }
+  }
+}
+
 
 console.log("\nOK — protocols smoke test passed.");
