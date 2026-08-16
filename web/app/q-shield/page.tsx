@@ -8,6 +8,9 @@ import { AuditStrip } from "@/components/data/AuditStrip";
 import { AlgorithmTable } from "@/components/data/AlgorithmTable";
 import { PresetComparisons } from "@/components/data/PresetComparisons";
 import { getLatestRun } from "@/lib/data/load";
+import { getHomeMetrics } from "@/lib/data/home-metrics";
+import { ProductNav, StatBand } from "@/components/chrome/ProductNav";
+import { formatDuration, formatStealPercent } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Q-Shield — PQC benchmarks",
@@ -17,6 +20,7 @@ export const metadata: Metadata = {
 
 export default function QShieldPage() {
   const run = getLatestRun();
+  const m = getHomeMetrics();
   const kems = run.algorithms.filter((a) => a.kind === "kem");
   const sigs = run.algorithms.filter((a) => a.kind === "sig");
 
@@ -24,21 +28,53 @@ export default function QShieldPage() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <PageShell variant="frame" className="space-y-10">
-        <Breadcrumb back={{ label: "Home", href: "/" }} current="Q-Shield" />
+        <ProductNav current="Overview" />
 
         {/* Page title block */}
         <div className="flex flex-col gap-3">
-          <div className="eyebrow">Q-Shield · PQC benchmarks</div>
-          <h1 className="text-[clamp(36px,5vw,56px)] font-bold leading-[1.05] tracking-[-0.028em] text-fg">
+          <div className="eyebrow">FIPS 203 · 204 · 205 · measured daily</div>
+          <h1 className="max-w-[20ch] text-balance text-[clamp(28px,3.6vw,40px)] font-bold leading-[1.08] tracking-[-0.03em] text-fg">
             Post-quantum cryptography, measured.
           </h1>
-          <p className="text-base text-fg-muted max-w-2xl leading-relaxed font-medium">
-            Independent performance benchmarks for the NIST-standardized PQC
-            algorithms — ML-KEM, ML-DSA, and SLH-DSA. Re-run daily on
-            auditable infrastructure. Every data point links back to the
-            GitHub commit that produced it.
+          <p className="max-w-[66ch] text-[15px] font-medium leading-relaxed text-fg-muted">
+            Every NIST-standardized post-quantum algorithm, benchmarked on real x86 and ARM silicon
+            and composed into full TLS and SSH handshakes. One thousand timed iterations per
+            operation, GC disabled, process pinned to a core. Every number links to the run that
+            produced it.
           </p>
         </div>
+
+        {/* Headline figures — derived, never literals */}
+        <StatBand
+          items={[
+            {
+              k: "Algorithms tracked",
+              v: String(run.algorithms.length),
+              d: `${kems.length} KEMs, ${sigs.length} signature schemes`,
+            },
+            {
+              k: "Signing spread",
+              v: m.signatures ? Math.round(m.signatures.ratio).toLocaleString() : "—",
+              unit: m.signatures ? "×" : undefined,
+              d: m.signatures
+                ? `${m.signatures.fastestName} against ${m.signatures.slowestName}. Both FIPS-approved`
+                : "Signature track unavailable for this run",
+            },
+            {
+              k: "Hybrid TLS wire cost",
+              v: m.wire ? m.wire.ratio.toFixed(1) : "—",
+              unit: m.wire ? "×" : undefined,
+              d: m.wire
+                ? `${m.wire.hybridBytes.toLocaleString()} B against classical ${m.wire.classicalBytes} B`
+                : "Protocol track unavailable for this run",
+            },
+            {
+              k: "Run integrity",
+              v: m.run.stealPct != null ? formatStealPercent(m.run.stealPct) : "—",
+              d: `CPU steal on ${m.run.instanceType}. Disclosed, not hidden`,
+            },
+          ]}
+        />
 
         {/* Audit-trail strip — the dashboard's signature element */}
         <AuditStrip run={run} />
