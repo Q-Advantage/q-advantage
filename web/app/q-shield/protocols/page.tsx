@@ -17,7 +17,13 @@ import { SortableTable, TabbedPanels } from "@/components/product/interactive";
 import type { TabItem } from "@/components/product/tabs";
 import { loadProtocolsData } from "@/lib/protocols/load";
 import { decomposePhases } from "@/lib/protocols/phases";
-import { aesBaselinesByArch, formatTailRatio, tailRatio } from "@/lib/protocols/metrics";
+import {
+  BASELINE_DELTA_NOTE,
+  aesBaselinesByArch,
+  formatTailRatio,
+  tailRatio,
+  vsBaselinePct,
+} from "@/lib/protocols/metrics";
 import type { ComposedSuite, TimingBlock } from "@/lib/protocols/types";
 import {
   formatBytes,
@@ -146,7 +152,9 @@ function suiteRows(suites: Record<string, ComposedSuite> | undefined): KitRow[] 
   return Object.entries(suites ?? {})
     .sort(([, a], [, b]) => a.timing.mean_us - b.timing.mean_us)
     .map(([name, s]) => {
-      const pct = s.baseline?.pct_over_classical;
+      // Recomputed against the baseline measured in this same run — never the
+      // stored pct_over_classical, which compares across passes. See metrics.ts.
+      const pct = vsBaselinePct(s, suites);
       const tail = tailRatio(s.timing);
       return {
         key: name,
