@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
+import { ProductNav } from "@/components/chrome/ProductNav";
 import { PageShell } from "@/components/chrome/PageShell";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { AuditStrip } from "@/components/data/AuditStrip";
@@ -49,6 +50,7 @@ export default function ComparePage() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <PageShell variant="frame" className="space-y-12">
+        <ProductNav current="Compare" />
         <Breadcrumb back={{ label: "Q-Shield", href: "/q-shield" }} current="Compare" />
 
         <div className="flex flex-col gap-3">
