@@ -15,7 +15,7 @@ import {
   StackedBar,
   Tag,
 } from "@/components/product/kit";
-import { SortableDataTable } from "@/components/product/table";
+import { SortableTable } from "@/components/product/interactive";
 import { getQDayIndex } from "@/lib/data/q-day";
 import {
   citedFieldCount,
@@ -244,8 +244,7 @@ export default function QDayIndexPage() {
           title="Every machine, named, with its own inputs."
           hint="Fidelity is deliberately not presented as a ranking — an XEB figure and a median-ECR figure are not the same physical quantity."
         >
-          <Suspense fallback={null}>
-            <SortableDataTable
+                      <SortableTable
               head={[
                 { id: "system", label: "System" },
                 { id: "modality", label: "Modality" },
@@ -277,7 +276,6 @@ export default function QDayIndexPage() {
                 detail: <SystemDetail system={s} />,
               }))}
             />
-          </Suspense>
         </Section>
 
         {analog.length > 0 && (
@@ -286,8 +284,7 @@ export default function QDayIndexPage() {
             title="Systems outside the gate model."
             hint="Analog simulators have no gate-model two-qubit fidelity and no gate-model path to Shor's. Marked N/A rather than scored zero."
           >
-            <Suspense fallback={null}>
-              <SortableDataTable
+                          <SortableTable
                 head={[
                   { id: "system", label: "System" },
                   { id: "modality", label: "Modality" },
@@ -311,7 +308,6 @@ export default function QDayIndexPage() {
                   detail: <SystemDetail system={s} />,
                 }))}
               />
-            </Suspense>
           </Section>
         )}
 

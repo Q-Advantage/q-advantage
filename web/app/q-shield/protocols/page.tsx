@@ -13,8 +13,8 @@ import {
   Tag,
   type KitRow,
 } from "@/components/product/kit";
-import { SortableDataTable } from "@/components/product/table";
-import { Tabs, type TabItem } from "@/components/product/tabs";
+import { SortableTable, TabbedPanels } from "@/components/product/interactive";
+import type { TabItem } from "@/components/product/tabs";
 import { loadProtocolsData } from "@/lib/protocols/load";
 import { decomposePhases } from "@/lib/protocols/phases";
 import { aesBaselinesByArch, formatTailRatio, tailRatio } from "@/lib/protocols/metrics";
@@ -203,27 +203,23 @@ export default function ProtocolsPage() {
     if (withData.length === 0) return null;
 
     const table = (arch: string) => (
-      <Suspense fallback={null}>
-        <SortableDataTable
+              <SortableTable
           head={SUITE_HEAD}
           rows={suiteRows(pick(arch))}
           sortParam="sort"
           expandParam="suite"
           expandHint="phase decomposition"
         />
-      </Suspense>
     );
 
     if (withData.length === 1) return table(withData[0]);
 
     return (
-      <Suspense fallback={null}>
-        <Tabs
+              <TabbedPanels
           ariaLabel="Architecture"
           urlParam="arch"
           items={withData.map((arch) => ({ id: arch, label: arch, content: table(arch) }))}
         />
-      </Suspense>
     );
   }
 
@@ -231,8 +227,7 @@ export default function ProtocolsPage() {
   const sshPanel = trackPanel((a) => data.byArch[a]?.ssh?.suites);
 
   const sigPanel = primary?.sig?.schemes ? (
-    <Suspense fallback={null}>
-      <SortableDataTable
+          <SortableTable
         head={[
           { id: "scheme", label: "Scheme" },
           { id: "keygen", label: "Keygen" },
@@ -274,7 +269,6 @@ export default function ProtocolsPage() {
           ),
         }))}
       />
-    </Suspense>
   ) : null;
 
   const aesPanel =
@@ -351,9 +345,7 @@ export default function ProtocolsPage() {
           hint="Expand any suite for its phase decomposition. The wire column is fixed by the protocol; the timing columns move with host load — read them as a distribution, and read the tail column as how far it strays."
         >
           {tabs.length > 0 ? (
-            <Suspense fallback={null}>
-              <Tabs ariaLabel="Protocol track" urlParam="track" items={tabs} />
-            </Suspense>
+                          <TabbedPanels ariaLabel="Protocol track" urlParam="track" items={tabs} />
           ) : (
             <p className="text-[13px] text-fg-subtle">No protocol data is present in this build.</p>
           )}
