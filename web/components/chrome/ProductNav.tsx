@@ -11,6 +11,7 @@ const TABS = [
   { label: "Overview", href: "/q-shield" },
   { label: "Compare", href: "/q-shield/compare" },
   { label: "Protocols", href: "/q-shield/protocols" },
+  { label: "Trends", href: "/q-shield/trends" },
   { label: "Methodology", href: "/methodology" },
 ];
 
