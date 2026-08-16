@@ -31,7 +31,7 @@ export function formatAmplificationFactor(factor: number | null): string {
 }
 
 /**
- * The honest label for `size.bytes_total` on a composed suite. Layer A
+ * The honest label for `size.bytes_total` on a composed suite. The composed-protocol harness
  * measures the cryptographic key-exchange payload (public key / ciphertext
  * / classical key share), not a full captured TLS record — no ClientHello
  * extensions, no certificate chain, no record-layer framing. Every UI
