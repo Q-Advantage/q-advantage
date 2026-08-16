@@ -1,7 +1,7 @@
 # 008 — Make the data surfaces operable
 
-**Status:** in progress
-**Branch:** `work-order/008-kit-operations` (+ follow-on branches per phase)
+**Status:** complete, 2026-08-16. All phases merged and deployed.
+**Branches:** `work-order/008-*`, `fix/008g-*`, `docs/008f-*` (one per phase)
 **Opened:** 2026-08-16
 **Prompted by:** founder comparison against InferenceX (`inferencex.semianalysis.com`), 2026-08-16
 
@@ -73,13 +73,20 @@ end-to-end.
 
 Each phase is its own PR off `main`.
 
-| # | Phase | Status |
-|---|---|---|
-| 1 | Kit primitives: sortable/expandable table, tabs, provenance table, stacked bar | this branch |
-| 2 | Protocols: phase decomposition, AES-GCM, tail latency | queued |
-| 3 | Q-Day Index: per-field provenance, readiness decomposition, deep links | queued |
-| 4 | Data access, API-first: static JSON API + OpenAPI + `/api` page, then CSV/JSON controls | queued |
-| 5 | Historical trends across 94 runs; run-reliability surface | queued |
+| # | Phase | PR | Status |
+|---|---|---|---|
+| 1 | Kit primitives: sortable/expandable table, tabs, provenance table, stacked bar | #22 | merged |
+| 2 | Protocols: phase decomposition, AES-GCM, tail latency | #24 | merged |
+| 3 | Q-Day Index: per-field provenance, readiness decomposition, deep links | #27 | merged |
+| 4 | Charts and selectors: the algorithm board | #25 | merged |
+| 5 | Data access, API-first: static JSON API + OpenAPI + `/api` page | #26 | merged |
+| 6 | Historical trends across 94 runs | #30 | merged |
+| — | Fix: interactive tables absent from the served HTML | #29 | merged |
+| — | Verify-only LMS/XMSS via upstream KAT vectors + runbook | #28 | merged |
+
+Phase 4 was taken ahead of 3 and 5 at the founder's pick. Per-table Copy/CSV/JSON
+controls were scoped out of phase 5 — the API is the substantive half, and
+InferenceX ships no per-chart CSV button either. They remain a small follow-up.
 
 Orphaned components are deleted in the phase that supersedes them, not in a separate sweep.
 
@@ -98,6 +105,52 @@ interpolated from real benchmark data"). Under guardrail 1 an interpolated figur
 number. Our trends plot measured points only; where a reader wants a value between runs, we say
 we do not have one. State this on the methodology page — it is a positioning advantage, not a
 limitation.
+
+## What building it established
+
+Two things came out of the work that were not known when it was written, beyond
+the phase identity recorded above, and that belong in the repo rather than only
+in PR comments.
+
+**Run-to-run noise on the current instance exceeds any trend it could show.**
+
+Across the 94 committed runs, the observed range on a single algorithm's keygen
+mean is 85-103% of its own minimum. ML-KEM-768 keygen is bimodal, alternating
+between roughly 19 and 32 microseconds rather than drifting, so its +89%
+first-to-last reading says only which mode each endpoint landed in. The cause is
+the host: `t3.medium` is burstable and CPU steal ranges 0.13-10.51% across the
+record.
+
+Consequences, all now stated on `/q-shield/trends`: same-run comparisons are
+sound and that is what `/compare` is for; time-series claims are not, until
+there is a dedicated instance. **If trend detection matters commercially, the
+instance is the blocker, not the harness.**
+
+**The design system's series tokens are weaker than they look.** Validated
+against both surfaces: colourblind separation and contrast pass everywhere, but
+`--color-series-6` is effectively neutral grey in both themes (chroma 0.044-0.045)
+and will not read as a category, and `series-3` is borderline in light (0.09
+against a 0.1 floor). `StackedBar` cycles at `% 6`, so a six-segment
+decomposition reaches the grey slot. Charts added here cap their series count
+rather than cycle. Re-stepping the tokens is a design-contract decision and was
+left to the founder — full numbers in the PR #25 comment.
+
+## A process failure worth recording
+
+Four PRs in this work-order claimed the measured numbers were present in the
+static HTML with JavaScript disabled. That was false in production for the whole
+period: these pages are `force-static`, and a client component calling
+`useSearchParams()` makes Next render the enclosing Suspense fallback into the
+served HTML instead of the subtree. Every fallback was `null`, so `/q-shield`
+and `/q-day-index` served zero table elements.
+
+The verification was run against `npm run dev`, which does not reproduce the
+bailout. Fixed in #29 by making the fallback carry the data and moving the
+wrappers into `components/product/interactive.tsx` so a page cannot mount an
+interactive table without one.
+
+The rule that follows: **a claim about what the served HTML contains is verified
+against build output or the live URL, never the dev server.**
 
 ## Not in this work-order
 
