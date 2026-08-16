@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { PageShell } from "@/components/chrome/PageShell";
-import { AuditStrip } from "@/components/data/AuditStrip";
+import { AuditBand, Section } from "@/components/product/kit";
+import { shortCpuModel, formatStealPercent } from "@/lib/format";
+import { computeStealPercent } from "@/lib/format";
 import { CompareViewTabs } from "@/components/data/CompareViewTabs";
 import { ComparisonIndex } from "@/components/data/ComparisonIndex";
 import { HybridVsClassical } from "@/components/data/HybridVsClassical";
@@ -58,7 +60,27 @@ export default function ComparePage() {
           </p>
         </div>
 
-        <AuditStrip run={run} />
+        <AuditBand
+          cells={[
+            { k: "Run date", v: run.date_string },
+            { k: "Commit", v: run.short_sha ?? run.full_sha.slice(0, 7), tone: "link" },
+            { k: "Host", v: shortCpuModel(run.environment.cpu_model) },
+            { k: "Instance", v: run.environment.ec2_instance_type },
+            { k: "liboqs", v: run.environment.liboqs_version },
+            {
+              k: "CPU steal",
+              v: run.runtime_metrics
+                ? formatStealPercent(
+                    computeStealPercent(
+                      run.runtime_metrics.cpu_steal_seconds,
+                      run.runtime_metrics.wall_clock_seconds
+                    )
+                  )
+                : "—",
+              tone: "warn",
+            },
+          ]}
+        />
 
         <ComparisonIndex
           groups={groups}
@@ -66,12 +88,16 @@ export default function ComparePage() {
         />
 
         {primaryBucket && (
-          <div className="border-t border-border pt-12">
+          <Section
+            eyebrow="Hybrid vs classical"
+            title="What turning it on costs inside a real handshake."
+            hint="Amplification factor is server bytes returned per client byte sent — not published elsewhere for these suites."
+          >
             <HybridVsClassical
               tlsSuites={primaryBucket.tls?.suites}
               sshSuites={primaryBucket.ssh?.suites}
             />
-          </div>
+          </Section>
         )}
 
         {!primaryBucket?.lmsXmss && (
