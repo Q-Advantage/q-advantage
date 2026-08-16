@@ -3,13 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "node scripts/copy-data.mjs",
-    "predev": "node scripts/copy-data.mjs",
+    "prebuild": "node scripts/copy-data.mjs && node scripts/build-openapi.mjs",
+    "predev": "node scripts/copy-data.mjs && node scripts/build-openapi.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "smoke": "node scripts/copy-data.mjs && tsx scripts/smoke-loader.ts && tsx scripts/smoke-protocols.ts && tsx scripts/smoke-kit.ts && tsx scripts/smoke-board.ts",
+    "smoke": "node scripts/copy-data.mjs && node scripts/build-openapi.mjs && tsx scripts/smoke-loader.ts && tsx scripts/smoke-protocols.ts && tsx scripts/smoke-kit.ts && tsx scripts/smoke-board.ts && tsx scripts/smoke-api.ts",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

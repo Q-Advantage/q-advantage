@@ -1,0 +1,314 @@
+{
+  "openapi": "3.1.0",
+  "x-generated-by": "web/scripts/build-openapi.mjs — do not hand-edit; runs on prebuild",
+  "info": {
+    "title": "Q-Advantage public data API",
+    "version": "1.0.0",
+    "summary": "Post-quantum cryptography benchmark measurements, as published.",
+    "description": "Every response is a projection of measurements committed to the public repository and produced by a GitHub Actions run. Nothing is interpolated, smoothed, or estimated: where a value does not exist the field is null and stays null. Every measurement carries a `run_url` pointing at the Actions run that produced it.  Responses are prerendered at build time, so they are static files. No authentication, no rate limits, no keys.",
+    "license": {
+      "name": "See repository",
+      "url": "https://github.com/Q-Advantage/q-advantage"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://qadvantage.io",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/api/v1/algorithms/{id}/history": {
+      "get": {
+        "summary": "Read an algorithm's measured series",
+        "description": "Every committed measurement for one algorithm, per operation, oldest first. Measured points only — there is no value between two runs and the series must not be resampled as though it were continuous.",
+        "operationId": "api_v1_algorithms_id_history",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Algorithm id as returned by /api/v1/availability.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ml-dsa-44",
+                "ml-dsa-65",
+                "ml-dsa-87",
+                "ml-kem-1024",
+                "ml-kem-512",
+                "ml-kem-768",
+                "slh-dsa-pure-shake-128f",
+                "slh-dsa-pure-shake-128s"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/availability": {
+      "get": {
+        "summary": "List what can be asked for",
+        "description": "Discovery. Returns the algorithms, operations, protocol tracks, architectures and run-date range actually present, plus the endpoint list. Start here rather than guessing identifiers.",
+        "operationId": "api_v1_availability",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/latest": {
+      "get": {
+        "summary": "Read the newest run",
+        "description": "The most recent daily benchmark run in full: every algorithm, every operation, all nine timing fields, with the run's provenance block.",
+        "operationId": "api_v1_latest",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/protocols": {
+      "get": {
+        "summary": "Read the composed protocol tracks",
+        "description": "TLS and SSH handshake suites with their phase decomposition, wire sizes, amplification factor and classical baseline, plus the signature, AES-GCM and stateful-signature tracks, per architecture.",
+        "operationId": "api_v1_protocols",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reliability": {
+      "get": {
+        "summary": "Read measurement reliability",
+        "description": "Per-run counts of algorithm measurements attempted and succeeded, with CPU steal. Reported as counts rather than a bare percentage — the same rate over two runs and over ninety-four are different claims.",
+        "operationId": "api_v1_reliability",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs": {
+      "get": {
+        "summary": "List all runs",
+        "description": "Index of every committed run, newest first, each with its commit, Actions run URL, CPU-steal figure and a link to the full payload.",
+        "operationId": "api_v1_runs",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{date}": {
+      "get": {
+        "summary": "Read one run",
+        "description": "One run by date (YYYY-MM-DD). Only dates present in the index resolve; anything else is a 404 rather than an empty run.",
+        "operationId": "api_v1_runs_date",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "path",
+            "required": true,
+            "description": "Run date, YYYY-MM-DD. Must be a date present in /api/v1/runs.",
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "enum": [
+                "2026-05-11",
+                "2026-05-15",
+                "2026-05-16",
+                "2026-05-17",
+                "2026-05-18",
+                "2026-05-19",
+                "2026-05-21",
+                "2026-05-22",
+                "2026-05-23",
+                "2026-05-24",
+                "2026-05-25",
+                "2026-05-26",
+                "2026-05-27",
+                "2026-05-28",
+                "2026-05-29",
+                "2026-05-30",
+                "2026-05-31",
+                "2026-06-01",
+                "2026-06-02",
+                "2026-06-03",
+                "2026-06-04",
+                "2026-06-05",
+                "2026-06-06",
+                "2026-06-07",
+                "2026-06-08",
+                "2026-06-09",
+                "2026-06-10",
+                "2026-06-11",
+                "2026-06-12",
+                "2026-06-13",
+                "2026-06-14",
+                "2026-06-15",
+                "2026-06-16",
+                "2026-06-17",
+                "2026-06-18",
+                "2026-06-19",
+                "2026-06-20",
+                "2026-06-21",
+                "2026-06-22",
+                "2026-06-23",
+                "2026-06-24",
+                "2026-06-25",
+                "2026-06-26",
+                "2026-06-27",
+                "2026-06-28",
+                "2026-06-29",
+                "2026-06-30",
+                "2026-07-01",
+                "2026-07-02",
+                "2026-07-03",
+                "2026-07-04",
+                "2026-07-05",
+                "2026-07-06",
+                "2026-07-07",
+                "2026-07-08",
+                "2026-07-09",
+                "2026-07-10",
+                "2026-07-11",
+                "2026-07-12",
+                "2026-07-13",
+                "2026-07-14",
+                "2026-07-15",
+                "2026-07-16",
+                "2026-07-17",
+                "2026-07-18",
+                "2026-07-19",
+                "2026-07-20",
+                "2026-07-21",
+                "2026-07-22",
+                "2026-07-23",
+                "2026-07-24",
+                "2026-07-25",
+                "2026-07-26",
+                "2026-07-27",
+                "2026-07-28",
+                "2026-07-29",
+                "2026-07-30",
+                "2026-07-31",
+                "2026-08-01",
+                "2026-08-02",
+                "2026-08-03",
+                "2026-08-04",
+                "2026-08-05",
+                "2026-08-06",
+                "2026-08-07",
+                "2026-08-08",
+                "2026-08-09",
+                "2026-08-10",
+                "2026-08-11",
+                "2026-08-12",
+                "2026-08-13",
+                "2026-08-14",
+                "2026-08-15",
+                "2026-08-16"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

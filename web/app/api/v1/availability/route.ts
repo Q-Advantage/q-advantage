@@ -1,0 +1,12 @@
+// app/api/v1/availability/route.ts
+//
+// Prerendered to static JSON at build time — no runtime cost, no database.
+// See web/lib/api/v1.ts for the projection rules.
+import { NextResponse } from "next/server";
+import { availabilityPayload } from "@/lib/api/v1";
+
+export const dynamic = "force-static";
+
+export function GET() {
+  return NextResponse.json(availabilityPayload());
+}
