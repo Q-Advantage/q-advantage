@@ -24,8 +24,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { NormalizedAlgorithm, AlgorithmFamily } from "@/lib/data/types";
-
-const SERIES_COLORS = ["#4ade80", "#2a8aae", "#c084fc", "#f59e0b", "#f87171", "#60a5fa"];
+import { CHART, seriesColor } from "@/lib/chart-theme";
 
 function normalizeInverse(values: number[]): number[] {
   // fastest/smallest (lowest value) scores 100; others scale proportionally.
@@ -61,22 +60,36 @@ function FamilyRadar({ family, members }: { family: AlgorithmFamily; members: No
       <div className="eyebrow mb-3">{family}</div>
       <ResponsiveContainer width="100%" height={280}>
         <RadarChart data={data} outerRadius="70%">
-          <PolarGrid stroke="rgba(255,255,255,0.08)" />
-          <PolarAngleAxis dataKey="axis" tick={{ fill: "#6b6b72", fontSize: 11 }} />
-          <PolarRadiusAxis domain={[0, 100]} tick={{ fill: "#6b6b72", fontSize: 9 }} axisLine={false} />
+          <PolarGrid stroke={CHART.grid} />
+          <PolarAngleAxis
+            dataKey="axis"
+            tick={{ fill: CHART.tick, fontSize: 11, fontFamily: CHART.font }}
+          />
+          <PolarRadiusAxis
+            domain={[0, 100]}
+            tick={{ fill: CHART.tick, fontSize: 9, fontFamily: CHART.font }}
+            axisLine={false}
+          />
           {members.map((a, i) => (
             <Radar
               key={a.id}
               name={a.display_name}
               dataKey={a.id}
-              stroke={SERIES_COLORS[i % SERIES_COLORS.length]}
-              fill={SERIES_COLORS[i % SERIES_COLORS.length]}
+              stroke={seriesColor(i)}
+              fill={seriesColor(i)}
               fillOpacity={0.15}
             />
           ))}
-          <Legend wrapperStyle={{ fontSize: 11 }} />
+          <Legend wrapperStyle={{ fontSize: 11, fontFamily: CHART.font }} />
           <Tooltip
-            contentStyle={{ background: "var(--color-bg-elevated, #1a1a1e)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, fontSize: 12 }}
+            contentStyle={{
+              background: CHART.tooltipBg,
+              border: `1px solid ${CHART.tooltipBorder}`,
+              borderRadius: 6,
+              fontSize: 12,
+              fontFamily: CHART.font,
+              color: CHART.tooltipFg,
+            }}
           />
         </RadarChart>
       </ResponsiveContainer>

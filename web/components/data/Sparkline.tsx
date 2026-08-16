@@ -3,6 +3,7 @@
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 import { useRouter } from "next/navigation";
 import { formatDuration, formatRunDate, shortSha, githubChecksUrl } from "@/lib/format";
+import { CHART, seriesColor } from "@/lib/chart-theme";
 
 interface SparklinePoint {
   /** ISO timestamp string for x-axis */
@@ -64,19 +65,19 @@ export function Sparkline({ data, height = 80, full = false }: SparklineProps) {
       >
         {full && (
           <>
-            <CartesianGrid stroke="#1f1f23" strokeDasharray="2 4" vertical={false} />
+            <CartesianGrid stroke={CHART.grid} strokeDasharray="2 4" vertical={false} />
             <XAxis
               dataKey="timestamp"
-              tick={{ fill: "#6b6b73", fontSize: 10, fontFamily: "var(--font-geist-mono)" }}
+              tick={{ fill: CHART.tick, fontSize: 10, fontFamily: CHART.font }}
               tickFormatter={(v) => formatRunDate(v).split(" ")[0]}
-              stroke="#1f1f23"
+              stroke={CHART.axis}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
-              tick={{ fill: "#6b6b73", fontSize: 10, fontFamily: "var(--font-geist-mono)" }}
+              tick={{ fill: CHART.tick, fontSize: 10, fontFamily: CHART.font }}
               tickFormatter={(v) => formatDuration(v)}
-              stroke="#1f1f23"
+              stroke={CHART.axis}
               tickLine={false}
               axisLine={false}
               width={70}
@@ -101,7 +102,7 @@ export function Sparkline({ data, height = 80, full = false }: SparklineProps) {
         <Line
           type="monotone"
           dataKey="mean_us"
-          stroke="#4ade80"
+          stroke={seriesColor(0)}
           strokeWidth={1.5}
           dot={(props: DotProps) => <ClickableDot {...props} />}
           activeDot={(props: DotProps) => <ClickableDot {...props} active />}
@@ -144,7 +145,7 @@ function ClickableDot({ cx, cy, payload, active }: DotProps) {
         cx={cx}
         cy={cy}
         r={active ? 4 : 2.5}
-        fill="#4ade80"
+        fill={seriesColor(0)}
         style={{ stroke: active ? "rgb(var(--color-bg))" : "transparent" }}
         strokeWidth={active ? 2 : 0}
         pointerEvents="none"

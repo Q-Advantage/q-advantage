@@ -29,6 +29,7 @@ import {
   formatDuration,
   formatOpsPerSec,
 } from "@/lib/format";
+import { CHART, seriesColor } from "@/lib/chart-theme";
 
 interface CompareViewProps {
   algorithms: NormalizedAlgorithm[];
@@ -193,18 +194,18 @@ export function CompareView({ algorithms }: CompareViewProps) {
           </div>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData} margin={{ top: 10, right: 12, left: 8, bottom: 4 }}>
-              <CartesianGrid stroke="rgba(255,255,255,0.05)" strokeDasharray="2 4" vertical={false} />
+              <CartesianGrid stroke={CHART.grid} strokeDasharray="2 4" vertical={false} />
               <XAxis
                 dataKey="label"
-                tick={{ fill: "#6b6b72", fontSize: 11, fontFamily: "var(--font-geist-mono)" }}
-                stroke="rgba(255,255,255,0.08)"
+                tick={{ fill: CHART.tick, fontSize: 11, fontFamily: CHART.font }}
+                stroke={CHART.axis}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 tickFormatter={(v) => formatDuration(Number(v))}
-                tick={{ fill: "#6b6b72", fontSize: 10, fontFamily: "var(--font-geist-mono)" }}
-                stroke="rgba(255,255,255,0.08)"
+                tick={{ fill: CHART.tick, fontSize: 10, fontFamily: CHART.font }}
+                stroke={CHART.axis}
                 axisLine={false}
                 tickLine={false}
                 scale={useLogScale ? "log" : "auto"}
@@ -213,7 +214,7 @@ export function CompareView({ algorithms }: CompareViewProps) {
                 width={70}
               />
               <Tooltip
-                cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                cursor={{ fill: CHART.cursor }}
                 content={({ active, payload, label }) => {
                   if (!active || !payload?.length) return null;
                   return (
@@ -233,13 +234,13 @@ export function CompareView({ algorithms }: CompareViewProps) {
                   );
                 }}
               />
-              <Bar dataKey={algA.display_name} fill="#4ade80" radius={[3, 3, 0, 0]} />
-              <Bar dataKey={algB.display_name} fill="#2a8aae" radius={[3, 3, 0, 0]} />
+              <Bar dataKey={algA.display_name} fill={seriesColor(0)} radius={[3, 3, 0, 0]} />
+              <Bar dataKey={algB.display_name} fill={seriesColor(1)} radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
           <div className="flex items-center gap-5 mt-3 text-xs">
-            <LegendDot color="#4ade80" label={algA.display_name} />
-            <LegendDot color="#2a8aae" label={algB.display_name} />
+            <LegendDot color={seriesColor(0)} label={algA.display_name} />
+            <LegendDot color={seriesColor(1)} label={algB.display_name} />
           </div>
         </section>
       )}
@@ -381,10 +382,10 @@ function CompareKeyMetrics({
           <tr className="border-b border-border-subtle text-left">
             <th className="px-4 py-2.5 eyebrow font-medium w-1/3">Metric</th>
             <th className="px-4 py-2.5 eyebrow font-medium text-right">
-              <span style={{ color: "#4ade80" }}>{algA.display_name}</span>
+              <span style={{ color: seriesColor(0) }}>{algA.display_name}</span>
             </th>
             <th className="px-4 py-2.5 eyebrow font-medium text-right">
-              <span style={{ color: "#2a8aae" }}>{algB.display_name}</span>
+              <span style={{ color: seriesColor(1) }}>{algB.display_name}</span>
             </th>
           </tr>
         </thead>
@@ -445,9 +446,9 @@ function ComparisonContext({
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-4 py-3 border border-border-subtle rounded-md bg-bg-inset">
       <div className="flex items-center gap-3 md:gap-5 flex-wrap text-xs">
-        <AlgoTag algo={algA} color="#4ade80" />
+        <AlgoTag algo={algA} color={seriesColor(0)} />
         <span className="text-fg-faint">vs</span>
-        <AlgoTag algo={algB} color="#2a8aae" />
+        <AlgoTag algo={algB} color={seriesColor(1)} />
       </div>
       <p className="text-2xs text-fg-muted md:max-w-md md:text-right leading-relaxed">
         {note}
