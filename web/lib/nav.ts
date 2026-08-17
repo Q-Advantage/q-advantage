@@ -67,6 +67,7 @@ export const COMPANY_LINKS: { name: string; href: string }[] = [
   // Corrections policy is deliberately absent: /corrections is paused
   // (`notFound()`), so linking it from every page in the site would put a
   // guaranteed 404 in the footer. Restore this entry when the route comes back.
+  { name: "Data API", href: "/api" },
   { name: "Benchmark source", href: "https://github.com/Q-Advantage/q-advantage" },
   { name: "Privacy", href: "/privacy" },
   { name: "Contact", href: "/contact" },
