@@ -106,7 +106,7 @@ export default function HomePage() {
               verb="Price"
               surface={TOOLS[1]}
               body="What the handshake delta actually costs across an estate: connections per second, session reuse, bytes on the wire — converted to dollars."
-              cta="Not yet published"
+              cta="Open the calculator →"
             />
           </div>
         </section>
