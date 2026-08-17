@@ -48,9 +48,10 @@ export const TOOLS: Surface[] = [
     status: "live",
   },
   {
-    name: "Network Calculator",
-    blurb: "Handshake cost priced across your estate",
-    status: "coming",
+    name: "PQC Cost Calculator",
+    href: "/calculator",
+    blurb: "What post-quantum TLS costs at your traffic volume",
+    status: "live",
   },
   {
     name: "P-CBOM",
