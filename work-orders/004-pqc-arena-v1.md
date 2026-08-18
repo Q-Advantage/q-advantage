@@ -135,14 +135,28 @@ In the new repo, rebuilt on the current design system:
 - The ten dimensions grown from flat checklists into **59 itemized requirements** with nested
   sub-points, per-requirement citations, and scoping by vendor category — the axis that does for
   Arena what deployment scenario does for the reference product.
-- A criteria surface with search, category scoping, a dimension × category counts matrix,
-  per-dimension permalinks, and a Markdown export generated from the same source the pages render.
-  That export is the vendor-outreach artifact the methodology calls for.
+- A criteria surface: one collapsible panel per dimension, scoping by vendor category, a dimension ×
+  category counts matrix, per-dimension permalinks, and a Markdown export generated from the same
+  source the pages render — so the document a vendor is sent is the document they are held to. That
+  export is the vendor-outreach artifact the methodology calls for, and print CSS forces every panel
+  open so a printed copy is complete regardless of what the reader had expanded.
 - The candidate pool and three worked vendor reviews, each re-verified against its primary source on
   2026-08-17, each carrying **no tier** — 2 of 10 assessed dimensions sits below the threshold of 7,
   which is now founder-confirmed.
 - Rankings and reviews built and gated. Two publish preconditions remain open: legal review of the
   comparative-rating exposure, and TR-61 reconciliation.
+- The six tiers unchanged from this work-order's original description. An evidence-grade ladder
+  (Verified / Substantiated / Documented / Asserted) was built as an alternative and reverted by
+  founder decision on 2026-08-18; the reasoning is recorded in the private repo rather than here,
+  because the argument for it was partly a legal-framing one that belongs next to the code it would
+  change. One piece of that pass was kept: the gate wording is now **"conformance gate"** rather than
+  "critical failure".
+
+### Where it went
+
+`Q-Advantage/pqc-arena`, private, created and pushed 2026-08-18. Deploys to `arena.qadvantage.io`
+once the Vercel project is wired up — note its root directory is `/`, not `web/`, because that repo
+*is* the app rather than containing one.
 
 ### What stays here
 

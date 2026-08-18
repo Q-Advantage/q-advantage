@@ -96,6 +96,25 @@ parked rather than merged.
 - `docs/adr/` now has a permanent gap at 0004. Preferred over renumbering, which would have made an
   old branch's ADR reference point at a different document.
 
+## Implemented, 2026-08-18
+
+`Q-Advantage/pqc-arena` exists, is **private**, and carries the build. Deployment to
+`arena.qadvantage.io` is a Vercel project against it — root directory `/`, since that repo is the app
+rather than containing one, which is the one setting that differs from this repo's.
+
+Two details worth recording because they are the kind of thing that gets rediscovered painfully:
+
+- **Vendor data reaches the server bundle even while gated.** Any route that imports the assessments
+  pulls them into that route's server chunk, whether or not the flag lets it render. Verified absent
+  from every served HTML page and from the client bundle. Acceptable on a private repo behind
+  deployment protection; it is precisely what would not have been acceptable had the product stayed
+  here.
+- **The design-kit fork has already diverged**, as predicted above and faster than expected. Arena's
+  kit dropped the chart components it had no data for, re-tokenized the tier badge, and grew tier
+  colour tokens this repo does not have. None of that should flow back; it is Arena-specific. The
+  drift is working as intended rather than as a defect, but it means "copy the fix across" is now a
+  judgement call rather than a paste.
+
 ## Still open, and not resolved by this ADR
 
 Publication of the ratings themselves is gated in the new repo behind a flag, on two preconditions
