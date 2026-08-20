@@ -1,0 +1,41 @@
+{
+  "environment": {
+    "iso_timestamp": "2026-08-20T08:25:05Z",
+    "liboqs_version": "0.15.0",
+    "git_commit": "06475b326f5b20a5ec782a50c9933bf37cdc5f75",
+    "cpu_model": "Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz",
+    "arch": "x86_64",
+    "build_path": "OQS_DIST_BUILD dispatch \u00b7 kyber768/falcon AVX2 \u00b7 SHA3 AVX512VL",
+    "steal_time_pct": 0.0
+  },
+  "baseline": {
+    "algorithm": "AES-256-GCM",
+    "payload_bytes": 16384,
+    "payload_bytes_source": "RFC 8446 \u00a75.2 \u2014 max TLSPlaintext record length",
+    "key_bytes": 32,
+    "nonce_bytes": 12,
+    "tag_bytes": 16,
+    "encrypt": {
+      "mean_us": 6.097,
+      "median_us": 5.867,
+      "p95_us": 6.035,
+      "p99_us": 10.199,
+      "stdev_us": 1.919,
+      "min_us": 5.775,
+      "max_us": 49.051,
+      "ops_per_sec": 164010.73,
+      "n_iterations": 1000
+    },
+    "decrypt": {
+      "mean_us": 6.382,
+      "median_us": 5.867,
+      "p95_us": 8.883,
+      "p99_us": 11.965,
+      "stdev_us": 1.846,
+      "min_us": 5.795,
+      "max_us": 35.684,
+      "ops_per_sec": 156680.82,
+      "n_iterations": 1000
+    }
+  }
+}
