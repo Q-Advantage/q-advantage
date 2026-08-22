@@ -3,10 +3,15 @@
  * dropdowns and the footer columns.
  *
  * Status is load-bearing, not decoration. `website-ia-spec.md §8` makes it a
- * hard rule that "coming" never dresses up as "live", and two of these
- * surfaces are deliberately dark right now: PQC Arena and the Readiness Index
- * both `notFound()` until the entity is formed. Anything without an `href`
- * renders as plain text, never as a link to a 404.
+ * hard rule that "coming" never dresses up as "live". Anything without an
+ * `href` renders as plain text, never as a link to a 404.
+ *
+ * Two surfaces are deliberately dark, for different reasons:
+ *  - PQC Readiness Index — built here, `notFound()` behind a PAUSED flag.
+ *  - PQC Arena — no longer built here at all. It moved to its own private repo
+ *    and deploys as a separate property at arena.qadvantage.io (ADR 0006). It
+ *    keeps a row in this catalog because it is part of the product line and
+ *    belongs in the nav; it gains an `href` to the subdomain once that is live.
  */
 
 export type SurfaceStatus = "live" | "coming";
