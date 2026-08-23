@@ -65,8 +65,9 @@ export const TOOLS: Surface[] = [
   },
   {
     name: "P-CBOM",
+    href: "/p-cbom",
     blurb: "Performance extension to the CycloneDX CBOM",
-    status: "coming",
+    status: "live",
   },
 ];
 

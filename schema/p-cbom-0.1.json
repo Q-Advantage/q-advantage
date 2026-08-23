@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qadvantage.io/p-cbom/schema/p-cbom-0.1.json",
+  "title": "Performance-CBOM v0.1 (native form)",
+  "description": "A performance extension record for a CycloneDX CBOM algorithm asset. Native standalone form. See SPEC.md.",
+  "type": "object",
+  "required": ["cbom_version", "p_cbom_extension", "algorithm", "implementation", "performance"],
+  "additionalProperties": true,
+  "properties": {
+    "cbom_version": {
+      "type": "string",
+      "description": "CycloneDX/CBOM spec version this record is compatible with. 1.6 or later.",
+      "pattern": "^1\\.(6|[7-9]|[1-9][0-9])$"
+    },
+    "p_cbom_extension": {
+      "type": "string",
+      "description": "P-CBOM extension version.",
+      "const": "0.1"
+    },
+    "algorithm": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string", "description": "Canonical algorithm name, e.g. ML-DSA-65." },
+        "type": {
+          "type": "string",
+          "enum": [
+            "digital-signature",
+            "key-encapsulation",
+            "symmetric-encryption",
+            "hash",
+            "mac",
+            "key-derivation",
+            "other"
+          ]
+        },
+        "standard": {
+          "type": "string",
+          "description": "Standardizing document. Body-neutral: NIST FIPS 204, BSI TR-02102, ANSSI PG-083, CNSA 2.0, etc."
+        },
+        "parameter_set": {
+          "type": "string",
+          "description": "Parameter set or security category, e.g. Category 3."
+        }
+      }
+    },
+    "implementation": {
+      "type": "object",
+      "required": ["library", "version"],
+      "additionalProperties": true,
+      "properties": {
+        "library": { "type": "string" },
+        "version": { "type": "string" },
+        "build_flags": {
+          "type": "string",
+          "description": "Build configuration materially affecting performance, e.g. OQS_DIST_BUILD."
+        }
+      }
+    },
+    "performance": {
+      "type": "object",
+      "required": ["source", "measurement_id", "ref_url", "last_measured", "commit"],
+      "additionalProperties": true,
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Reference dataset identifier, e.g. q-advantage/q-shield."
+        },
+        "measurement_id": {
+          "type": "string",
+          "description": "Stable identifier for the specific measurement within the source."
+        },
+        "ref_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Resolvable URL to the authoritative measurement. Source of truth."
+        },
+        "last_measured": {
+          "type": "string",
+          "format": "date-time",
+          "description": "RFC 3339 UTC timestamp of the referenced measurement."
+        },
+        "commit": {
+          "type": "string",
+          "description": "VCS commit hash of the measurement run.",
+          "pattern": "^[0-9a-fA-F]{7,40}$"
+        },
+        "snapshot": {
+          "type": "object",
+          "description": "Cached values for offline consumers. Never authoritative; ref_url wins.",
+          "required": ["operation", "platform"],
+          "additionalProperties": true,
+          "properties": {
+            "operation": {
+              "type": "string",
+              "description": "Timed operation, e.g. sign, verify, keygen, encaps, decaps."
+            },
+            "platform": { "type": "string" },
+            "median_us": { "type": "number", "minimum": 0 },
+            "p95_us": { "type": "number", "minimum": 0 },
+            "throughput_ops_sec": { "type": "number", "minimum": 0 },
+            "signature_bytes": { "type": "integer", "minimum": 0 },
+            "public_key_bytes": { "type": "integer", "minimum": 0 },
+            "ciphertext_bytes": { "type": "integer", "minimum": 0 },
+            "baseline": {
+              "type": "object",
+              "description": "Delta versus the classical algorithm this asset replaces. Carries the faster-than-classical result as a machine-queryable field rather than prose.",
+              "required": ["classical_algorithm", "pct_over_classical"],
+              "additionalProperties": true,
+              "properties": {
+                "classical_algorithm": { "type": "string", "description": "e.g. X25519, ECDSA-P256, RSA-2048." },
+                "pct_over_classical": {
+                  "type": "number",
+                  "description": "Signed percentage vs the classical baseline for the same operation. Negative means the PQC asset is faster than the classical one."
+                },
+                "comparison": {
+                  "type": "string",
+                  "description": "Optional label for what the delta is measured against when not a bare primitive-vs-primitive figure."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "deployment_use": {
+          "type": "string",
+          "description": "Free-text usage. In v0.1 this is prose, NOT a modeled CycloneDX protocol asset."
+        },
+        "asset_id": { "type": "string" },
+        "qday_relevance": { "type": "string" }
+      }
+    }
+  }
+}
