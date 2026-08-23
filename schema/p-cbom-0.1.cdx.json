@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qadvantage.io/p-cbom/schema/p-cbom-0.1.cdx.json",
+  "title": "Performance-CBOM v0.1 (CycloneDX-compatible binding)",
+  "description": "Validates the P-CBOM overlay on a CycloneDX cryptographic-asset component. This is the interoperability contract. It checks ONLY the P-CBOM-specific constraints; the host document must independently validate against the stock CycloneDX 1.6+ schema. The record is carried as namespaced entries in the component's 'properties' array (CycloneDX's sanctioned name/value extension point), because 'component' and 'cryptoProperties' are additionalProperties:false and cannot hold a custom nested key. Algorithm identity comes from cryptoProperties.algorithmProperties and is not duplicated by the extension.",
+  "type": "object",
+  "required": ["type", "cryptoProperties", "properties"],
+  "additionalProperties": true,
+  "properties": {
+    "type": { "const": "cryptographic-asset" },
+    "cryptoProperties": {
+      "type": "object",
+      "required": ["assetType"],
+      "additionalProperties": true,
+      "properties": {
+        "assetType": {
+          "const": "algorithm",
+          "description": "v0.1 binds to algorithm assets. protocol reserved for v0.2."
+        }
+      }
+    },
+    "properties": {
+      "type": "array",
+      "description": "CycloneDX name-value properties. MUST include the required P-CBOM reference tuple as namespaced entries.",
+      "items": {
+        "type": "object",
+        "required": ["name", "value"],
+        "properties": {
+          "name": { "type": "string" },
+          "value": { "type": "string" }
+        }
+      },
+      "allOf": [
+        { "contains": { "properties": { "name": { "const": "q-advantage:p-cbom:extension" }, "value": { "const": "0.1" } }, "required": ["name", "value"] } },
+        { "contains": { "properties": { "name": { "const": "q-advantage:p-cbom:source" } }, "required": ["name"] } },
+        { "contains": { "properties": { "name": { "const": "q-advantage:p-cbom:measurement_id" } }, "required": ["name"] } },
+        { "contains": { "properties": { "name": { "const": "q-advantage:p-cbom:ref_url" } }, "required": ["name"] } },
+        { "contains": { "properties": { "name": { "const": "q-advantage:p-cbom:last_measured" } }, "required": ["name"] } },
+        { "contains": { "properties": { "name": { "const": "q-advantage:p-cbom:commit" } }, "required": ["name"] } }
+      ]
+    }
+  }
+}
