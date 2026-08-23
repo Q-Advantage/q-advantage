@@ -51,6 +51,24 @@ function SurfaceRow({ surface, onNavigate }: { surface: Surface; onNavigate?: ()
     return <span className="block cursor-default rounded-lg px-3 py-2.5">{body}</span>;
   }
 
+  // A surface on another property — PQC Arena at arena.qadvantage.io — is an
+  // absolute URL. It opens in a new tab: the visitor is crossing to a separate
+  // site, and losing this one from their history would be the wrong default.
+  // Matches the rule FooterLink already applies.
+  if (surface.href.startsWith("http")) {
+    return (
+      <a
+        href={surface.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={onNavigate}
+        className="block rounded-lg px-3 py-2.5 hover:bg-bg-surface"
+      >
+        {body}
+      </a>
+    );
+  }
+
   return (
     <Link
       href={surface.href}

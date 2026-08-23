@@ -33,9 +33,14 @@ export const PRODUCTS: Surface[] = [
     status: "live",
   },
   {
+    // Lives on its own property at arena.qadvantage.io, not on this site — a
+    // comparative rating of named companies is kept at arm's length from the
+    // measurement instruments. See docs/adr/0006. The absolute URL is what
+    // makes SurfaceRow render it as an external link that opens in a new tab.
     name: "PQC Arena",
-    blurb: "Ratings of named vendor implementations",
-    status: "coming",
+    href: "https://arena.qadvantage.io",
+    blurb: "Published criteria for rating named vendor implementations",
+    status: "live",
   },
   {
     name: "PQC Readiness Index",
