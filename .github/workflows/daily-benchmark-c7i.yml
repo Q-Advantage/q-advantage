@@ -1,0 +1,137 @@
+name: Daily PQC Benchmark (c7i overlap)
+
+# TEMPORARY — runs in parallel with the t3.medium benchmark for a 1-week
+# overlap window to measure and publish the hardware delta between the
+# original t3.medium (Skylake/Cascade Lake, burstable) and c7i.large
+# (Sapphire Rapids, dedicated). Results write to benchmark/results-c7i/
+# to avoid conflicting with the production t3 workflow, which remains the
+# sole writer to benchmark/results/ and web/public/data/ during overlap.
+# After the overlap period and delta publication, this workflow is deleted
+# and the production workflow is repointed to the c7i runner label.
+
+on:
+  schedule:
+    # Same cron as the t3 workflow so both runners execute the identical
+    # daily job at the same trigger time.
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Separate concurrency group from the t3 workflow so the two runs do NOT
+# serialize against each other — they're supposed to run in parallel, on
+# different runners, writing to different result paths.
+concurrency:
+  group: benchmark-c7i-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    name: Run Q-Shield benchmark on c7i.large (Sapphire Rapids)
+    runs-on: [self-hosted, c7i-x86]
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Show environment
+        run: |
+          echo "Runner: $(hostname)"
+          echo "CPU: $(grep -m1 'model name' /proc/cpuinfo | sed 's/.*: //')"
+          echo "Kernel: $(uname -r)"
+          echo "Instance type: c7i.large (Sapphire Rapids)"
+          uptime
+
+      - name: Warm up CPU (mitigate cold-boot cache/frequency effects)
+        run: |
+          # This instance was likely booted 5-10 min ago by EventBridge.
+          # Run a brief compute burst to settle CPU frequency scaling and
+          # populate L1/L2 caches before the real benchmark begins.
+          # Duration: 60s. Discarded — no results captured.
+          timeout 60 bash -c 'while true; do :; done' || true
+          echo "Warm-up complete"
+
+      - name: Run benchmark — primitives
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/benchmark.py --output-dir benchmark/results-c7i
+
+      - name: Run benchmark — TLS composed (Layer A)
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/protocols/tls_composed.py \
+            --output-dir benchmark/results-c7i/protocols
+
+      - name: Run benchmark — SSH composed (Layer A)
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/protocols/ssh_composed.py \
+            --output-dir benchmark/results-c7i/protocols
+
+      - name: Run benchmark — signature track (Job 2)
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/protocols/sig_track.py \
+            --output-dir benchmark/results-c7i/protocols
+
+      - name: Run benchmark — AES-GCM baseline (Layer A)
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/protocols/aes_baseline.py \
+            --output-dir benchmark/results-c7i/protocols
+
+      - name: Run benchmark — LMS/XMSS stateful signatures (Layer A)
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/protocols/lms_xmss.py \
+            --output-dir benchmark/results-c7i/protocols
+
+      # NOTE: build_manifest.py step from t3 workflow is INTENTIONALLY omitted.
+      # The web-facing dataset stays t3-sourced during overlap. c7i results
+      # are raw only, for delta analysis.
+
+      - name: Commit c7i results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add benchmark/results-c7i/
+
+          if git diff --staged --quiet; then
+            echo "No result changes to commit"
+            exit 0
+          fi
+
+          git commit -m "chore: c7i overlap benchmark $(date -u +%Y-%m-%d) [skip ci]"
+
+          # Same rebase-retry pattern as t3 workflow. c7i writes to a
+          # dedicated path (benchmark/results-c7i/) so file-level conflicts
+          # with the t3 workflow are impossible, but the branch head may
+          # have moved during the run.
+          for attempt in 1 2 3; do
+            if git push origin main; then
+              echo "Pushed on attempt $attempt"
+              exit 0
+            fi
+            echo "Push attempt $attempt failed; rebasing on origin/main"
+            git fetch origin main
+            if ! git rebase origin/main; then
+              echo "Rebase produced a conflict — aborting and failing the workflow"
+              git rebase --abort || true
+              exit 1
+            fi
+          done
+
+          echo "Push failed after 3 attempts; failing workflow"
+          exit 1
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## c7i overlap benchmark results" >> $GITHUB_STEP_SUMMARY
+          echo "Runner: c7i.large (Sapphire Rapids)" >> $GITHUB_STEP_SUMMARY
+          echo "Results written to: benchmark/results-c7i/" >> $GITHUB_STEP_SUMMARY
+          echo "See t3 workflow for production dataset comparison." >> $GITHUB_STEP_SUMMARY
