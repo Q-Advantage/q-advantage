@@ -278,11 +278,22 @@ function HeroTile({ m }: { m: ReturnType<typeof getHomeMetrics> }) {
       {m.wire ? (
         <>
           <div className="eyebrow mb-1 text-fg-subtle">Added to every TLS handshake</div>
-          <div className="flex items-baseline gap-1.5">
+          <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
             <span className="text-[52px] font-bold leading-none tracking-[-0.045em] text-accent-ink">
               +{m.wire.deltaBytes.toLocaleString()}
             </span>
             <span className="text-xl text-fg-muted">bytes</span>
+            {/*
+             * This figure is constant and always will be: ML-KEM-768's key and
+             * ciphertext sizes are fixed in FIPS 203, so the hybrid suite is
+             * 2,336 B and classical X25519 is 64 B on every run. It is still
+             * read from the measured data rather than hardcoded — guardrail 1
+             * — but labelling it stops a returning visitor reading an unchanged
+             * headline as a stale page. The rows below are what move.
+             */}
+            <span className="ml-1 rounded bg-bg-surface px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-eyebrow text-fg-subtle">
+              fixed by FIPS 203
+            </span>
           </div>
           <p className="mt-2 text-xs leading-snug text-fg-muted">
             Hybrid X25519MLKEM768 against classical X25519 — {m.wire.ratio.toFixed(1)}× the wire
@@ -295,8 +306,16 @@ function HeroTile({ m }: { m: ReturnType<typeof getHomeMetrics> }) {
 
       <div className="my-4 h-px bg-border-subtle" />
 
+      {/*
+       * The moving half of the tile. Handshake latency varies materially run to
+       * run — roughly a 35% spread across a recent week on the same instance
+       * type — so these are what tell a returning visitor the page is live.
+       * Marked once, on the section rather than per row, to avoid turning the
+       * card into a field of badges.
+       */}
       {m.handshake && (
         <>
+          <div className="eyebrow mb-2 text-fg-subtle">Measured this run</div>
           <TileRow k="Hybrid handshake" v={formatDuration(m.handshake.hybridMeanUs)} />
           <TileRow
             k="Handshakes / sec / core"
