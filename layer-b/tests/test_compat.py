@@ -241,6 +241,61 @@ def probe_algorithm_tools(d: Path, tmp: Path) -> list[dict]:
     return probe_parsers.probe_algorithm(d, tmp)["tools"]
 
 
+class TestAClassicalCertificateIsTheProbesOwnControl:
+    """
+    Every parser must read a classical certificate completely.
+
+    This is the parser half of the rule the header probe already has: if the
+    baseline fails, the instrument is broken and nothing it says about the
+    post-quantum arms is evidence. The first CI run reported every algorithm
+    as `parsed_partially`, classical ones included, because the probe read only
+    `not_valid_after_utc` -- which arrived in cryptography 42, and the image
+    carries 41. Without this test that reads as a compatibility finding.
+    """
+
+    def _ecdsa_leaf(self, tmp_path):
+        crypto = pytest.importorskip("cryptography")
+        from cryptography import x509
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.asymmetric import ec
+        from cryptography.hazmat.primitives.serialization import Encoding
+        from cryptography.x509.oid import NameOID
+        import datetime
+
+        key = ec.generate_private_key(ec.SECP256R1())
+        name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "leaf.example")])
+        now = datetime.datetime(2026, 1, 1)
+        cert = (
+            x509.CertificateBuilder()
+            .subject_name(name)
+            .issuer_name(name)
+            .public_key(key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(now)
+            .not_valid_after(now + datetime.timedelta(days=365))
+            .sign(key, hashes.SHA256())
+        )
+        d = tmp_path / "ecdsa-p256"
+        d.mkdir()
+        (d / "leaf.der").write_bytes(cert.public_bytes(Encoding.DER))
+        assert crypto
+        return d
+
+    def test_the_installed_parser_reads_a_classical_certificate_completely(self, tmp_path):
+        d = self._ecdsa_leaf(tmp_path)
+        rec = probe_parsers.probe_python_cryptography(d / "leaf.der")
+        assert rec["outcome"] == "parsed_fully", rec.get("errors")
+        assert rec["public_key_readable"] is True
+
+    def test_it_reads_the_expiry_whichever_spelling_this_version_has(self, tmp_path):
+        # The specific bug. Pinned by name so a future refactor cannot quietly
+        # drop the fallback and reintroduce it.
+        d = self._ecdsa_leaf(tmp_path)
+        rec = probe_parsers.probe_python_cryptography(d / "leaf.der")
+        assert rec["fields_read"].get("not_after")
+        assert "not_after" not in (rec.get("errors") or {})
+
+
 class TestTheHeadlineIsDerived:
     def test_zero_findings_is_distinguishable_from_zero_probes(self):
         # "Nothing broke" and "nothing ran" must not render identically. A page

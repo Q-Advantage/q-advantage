@@ -181,9 +181,20 @@ def probe_python_cryptography(cert_der: Path) -> dict:
             "errors": {"load": "%s: %s" % (type(exc).__name__, exc)},
         }
 
+    def not_after() -> str:
+        # `not_valid_after_utc` arrived in cryptography 42; `not_valid_after` is
+        # the older spelling and is deprecated rather than gone. Reading only
+        # the new one made every certificate -- classical ones included --
+        # report as partially parsed on an image carrying 41, which would have
+        # been published as a compatibility finding when it was a bug here.
+        try:
+            return cert.not_valid_after_utc.isoformat()
+        except AttributeError:
+            return cert.not_valid_after.isoformat()
+
     for name, get in (
         ("subject", lambda: cert.subject.rfc4514_string()),
-        ("not_after", lambda: cert.not_valid_after_utc.isoformat()),
+        ("not_after", not_after),
         ("serial", lambda: hex(cert.serial_number)),
     ):
         try:
