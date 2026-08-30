@@ -120,6 +120,10 @@ export default function QShieldPage() {
             },
             {
               k: "Signing spread",
+              // The number this page exists to make somebody look twice at: two
+              // schemes both standardised by NIST, four orders of magnitude
+              // apart on the same operation, on the same machine, same run.
+              lead: true,
               v: m.signatures ? Math.round(m.signatures.ratio).toLocaleString() : "—",
               unit: m.signatures ? "×" : undefined,
               d: m.signatures
