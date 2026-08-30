@@ -28,8 +28,18 @@ PCAP_MAGIC_BE_NS = 0x4D3CB2A1
 
 LINKTYPE_ETHERNET = 1
 LINKTYPE_LINUX_SLL = 113
+#: What `tcpdump -i any` actually writes on a modern Linux kernel. Found the
+#: hard way: the first CI run of the live testbed captured a real handshake and
+#: reported "no traffic", because this linktype was unhandled and every packet
+#: was silently skipped. A capture format we cannot read must never look like
+#: an absence of traffic.
+LINKTYPE_LINUX_SLL2 = 276
 LINKTYPE_RAW = 101
 LINKTYPE_NULL = 0
+
+SUPPORTED_LINKTYPES = frozenset(
+    {LINKTYPE_ETHERNET, LINKTYPE_LINUX_SLL, LINKTYPE_LINUX_SLL2, LINKTYPE_RAW, LINKTYPE_NULL}
+)
 
 
 @dataclass
@@ -98,6 +108,15 @@ def _link_offset(linktype: int, data: bytes) -> int | None:
         if struct.unpack("!H", data[14:16])[0] != 0x0800:
             return None
         return 16
+    if linktype == LINKTYPE_LINUX_SLL2:
+        # Linux cooked v2: protocol type first, then a 20-byte header total
+        # (reserved, ifindex, ARPHRD type, packet type, address length,
+        # address). See the libpcap LINKTYPE_LINUX_SLL2 definition.
+        if len(data) < 20:
+            return None
+        if struct.unpack("!H", data[0:2])[0] != 0x0800:
+            return None
+        return 20
     if linktype == LINKTYPE_RAW:
         return 0
     if linktype == LINKTYPE_NULL:
@@ -120,6 +139,15 @@ def iter_packets(blob: bytes):
     nanos = magic in (PCAP_MAGIC_LE_NS, PCAP_MAGIC_BE_NS)
 
     linktype = struct.unpack(endian + "I", blob[20:24])[0]
+    if linktype not in SUPPORTED_LINKTYPES:
+        # Refusing loudly matters more than it looks. An unreadable capture
+        # that yields zero packets is indistinguishable from a handshake that
+        # never happened, and "no traffic" is a real Layer B outcome -- so a
+        # format we cannot parse must raise rather than quietly become one.
+        raise PcapFormatError(
+            "unsupported pcap linktype %d. Supported: %s"
+            % (linktype, sorted(SUPPORTED_LINKTYPES))
+        )
     i = 24
 
     while i + 16 <= len(blob):

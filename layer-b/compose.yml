@@ -35,7 +35,12 @@ services:
         mkdir -p /out
         # -s 0 keeps whole packets: a truncated snaplen would silently cut off
         # the very key_share bytes this whole exercise exists to read.
-        timeout "${CAPTURE_SECONDS:-25}" tcpdump -i any -s 0 -w /out/handshake.pcap \
+        # -U writes each packet as it arrives instead of buffering. Without
+        # it the orchestrator can stop this container between the handshake
+        # and the flush, leaving a capture that parses as 'no traffic' --
+        # which is also a real Layer B outcome, so the two would be
+        # indistinguishable.
+        timeout "${CAPTURE_SECONDS:-25}" tcpdump -i any -s 0 -U -w /out/handshake.pcap \
           "tcp port 4433" || true
         echo "capture: done"
 

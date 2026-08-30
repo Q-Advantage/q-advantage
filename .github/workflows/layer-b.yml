@@ -75,10 +75,19 @@ jobs:
         working-directory: layer-b
         run: |
           mkdir -p out
-          GROUPS_CLIENT=X25519MLKEM768:x25519 \
-          GROUPS_SERVER=X25519MLKEM768:x25519 \
-          docker compose up --abort-on-container-exit --exit-code-from client || true
-          docker compose down -v || true
+          export GROUPS_CLIENT=X25519MLKEM768:x25519
+          export GROUPS_SERVER=X25519MLKEM768:x25519
+          docker compose up -d
+          # Wait for the client to finish, then let the capture stop on its own
+          # timeout. Tearing the stack down the instant the client exits races
+          # tcpdump's flush, and a truncated capture parses as "no traffic" --
+          # which is also a real outcome, so the two must not be confusable.
+          timeout 120 bash -c 'until [ -n "$(docker compose ps -a --status exited -q client)" ]; do sleep 2; done' || true
+          sleep 8
+          docker compose logs --no-color > out/compose.log 2>&1 || true
+          docker compose down -v --timeout 30 || true
+          echo '--- container logs ---'
+          cat out/compose.log || true
           ls -la out/
 
       - name: Read the negotiated group back out of the wire

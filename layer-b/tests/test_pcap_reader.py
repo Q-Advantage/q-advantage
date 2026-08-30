@@ -17,6 +17,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "capture"))
 
 from pcap_reader import (  # noqa: E402
+    LINKTYPE_LINUX_SLL2,
     PcapFormatError,
     iter_packets,
     reassemble,
@@ -81,6 +82,25 @@ def pcap(frames: list[bytes], *, linktype: int = 1, big_endian: bool = False) ->
     return out
 
 
+def sll2_frame(inner_ip_frame: bytes) -> bytes:
+    """Wrap an IPv4 packet in a Linux cooked v2 header.
+
+    `inner_ip_frame` is an Ethernet frame from tcp_packet(); its 14-byte
+    Ethernet header is stripped and replaced with the 20-byte SLL2 header.
+    """
+    ip = inner_ip_frame[14:]
+    return (
+        struct.pack("!H", 0x0800)  # protocol type
+        + bytes(2)  # reserved
+        + struct.pack("!I", 1)  # interface index
+        + struct.pack("!H", 1)  # ARPHRD type
+        + bytes([0])  # packet type
+        + bytes([6])  # link-layer address length
+        + bytes(8)  # link-layer address
+        + ip
+    )
+
+
 def to_server(payload: bytes, seq: int = 1, **kw) -> bytes:
     return tcp_packet(CLIENT_IP, SERVER_IP, CLIENT_PORT, SERVER_PORT, payload, seq, **kw)
 
@@ -115,6 +135,37 @@ class TestPacketIteration:
             ip_bytes(CLIENT_IP) + ip_bytes(SERVER_IP) + bytes(8)
         pkts = list(iter_packets(pcap([udp, to_server(b"x")])))
         assert len(pkts) == 1
+
+    def test_reads_linux_cooked_v2_captures(self):
+        # This is what `tcpdump -i any` writes on a modern kernel, and it is
+        # what the live testbed produced on its first CI run. Before this was
+        # handled, every packet was skipped and a real captured handshake
+        # reported as "no traffic captured".
+        blob = pcap(
+            [sll2_frame(to_server(b"hello")), sll2_frame(to_client(b"world"))],
+            linktype=LINKTYPE_LINUX_SLL2,
+        )
+        pkts = list(iter_packets(blob))
+        assert len(pkts) == 2
+        assert pkts[0].payload == b"hello"
+        assert pkts[0].dport == SERVER_PORT
+
+    def test_sll2_conversations_reassemble_normally(self):
+        blob = pcap(
+            [sll2_frame(to_server(b"AAA")), sll2_frame(to_client(b"BBB"))],
+            linktype=LINKTYPE_LINUX_SLL2,
+        )
+        conv = reassemble(blob, SERVER_PORT)[0]
+        assert conv.client_to_server == b"AAA"
+        assert conv.server_to_client == b"BBB"
+
+    def test_an_unsupported_linktype_raises_rather_than_reporting_no_traffic(self):
+        # The failure mode this prevents: "no traffic captured" is a REAL
+        # Layer B outcome (the client never connected). A capture we simply
+        # cannot read must never be mistaken for one.
+        blob = pcap([to_server(b"hello")], linktype=999)
+        with pytest.raises(PcapFormatError, match="unsupported pcap linktype"):
+            list(iter_packets(blob))
 
     def test_truncated_trailing_record_does_not_raise(self):
         blob = pcap([to_server(b"hello")])[:-3]
