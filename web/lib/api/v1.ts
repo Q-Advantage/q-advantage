@@ -192,6 +192,10 @@ export function historyPayload(algorithmId: string) {
         date: run.date_string,
         commit: run.full_sha,
         run_url: githubChecksUrl(run.full_sha),
+        // Which machine measured this point. Two points with different values
+        // here are not comparable as a trend -- see lib/data/hosts.ts.
+        era_id: run.host_era_id,
+        instance_type: run.environment.ec2_instance_type,
         mean_us: s.mean_us,
         median_us: s.median_us,
         p95_us: s.p95_us,

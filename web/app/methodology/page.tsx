@@ -5,7 +5,8 @@ import { Footer } from "@/components/chrome/Footer";
 import { PageShell } from "@/components/chrome/PageShell";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
-import { getLatestRun } from "@/lib/data/load";
+import { getLatestRun, loadAllRuns } from "@/lib/data/load";
+import { deriveHostEras } from "@/lib/data/hosts";
 import { shortCpuModel } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -33,6 +34,9 @@ export const metadata: Metadata = {
 export default function MethodologyPage() {
   const run = getLatestRun();
   const env = run.environment;
+  // Derived from the committed record, never a hardcoded date. See
+  // lib/data/hosts.ts for why the boundary must come from the data.
+  const eras = deriveHostEras(loadAllRuns());
 
   return (
     <div className="marketing-bg min-h-screen flex flex-col">
@@ -149,20 +153,67 @@ export default function MethodologyPage() {
           <H3 id="q-shield-hardware-rationale">Hardware choice and the burstable caveat</H3>
           <Prose>
             <p>
-              The current runner is an AWS EC2 t3.medium in us-east-1: a burstable instance class
-              with CPU performance guaranteed at a baseline and the ability to burst above when CPU
-              credits are available. Under sustained load with depleted credits, the instance
-              throttles to baseline — which would silently slow timed iterations unless the audit
-              trail catches it.
+              The x86 measurement host is an AWS EC2 t3.medium in us-east-1: a burstable instance
+              class with CPU performance guaranteed at a baseline and the ability to burst above
+              when CPU credits are available. Under sustained load with depleted credits, the
+              instance throttles to baseline — which would silently slow timed iterations unless
+              the audit trail catches it.
             </p>
             <p>
-              The earlier plan called for a fixed-performance c7i.large migration. We deferred that
-              to Month 3 once the <code>runtime_metrics</code> block showed steal-time consistently
-              near zero (around 0.24% on representative runs), meaning the burstable instance is
-              running clean. Migration will happen when budget or load justifies it; when it does,
-              this document will be updated, historical runs from the burstable period will remain
-              available, and the hardware change will be explicitly dated. Results will not be
-              silently migrated.
+              A fixed-performance c7i.large has been running the identical benchmark in parallel
+              since 2026-08-27, writing to a separate result path. It has <strong>not</strong> been
+              cut over. Every published x86 figure is measured on the t3.medium.
+            </p>
+            <p>
+              This page used to promise that a hardware change would be dated and never silently
+              migrated. That promise is now implemented rather than stated. The instance type is
+              recorded in every result file, and the site derives its hardware{" "}
+              <strong>eras</strong> from that field — not from a date anyone has to remember to
+              update. Runs measured on different machines are never drawn as one series: the trend
+              chart breaks its line at the transition and marks it. A change of machine is not a
+              performance trend.
+            </p>
+            {eras.length > 0 && (
+              <table className="my-4 w-full border-collapse text-[13px]">
+                <thead>
+                  <tr className="border-b border-border text-left">
+                    <th className="py-1.5 pr-3 font-bold">Hardware era</th>
+                    <th className="py-1.5 pr-3 font-bold">From</th>
+                    <th className="py-1.5 pr-3 font-bold">To</th>
+                    <th className="py-1.5 font-bold">Runs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {eras.map((e) => (
+                    <tr key={e.id} className="border-b border-border/60">
+                      <td className="py-1.5 pr-3 font-semibold text-fg">
+                        {e.label}
+                        {e.burstable && (
+                          <span className="ml-2 text-[11px] font-bold uppercase tracking-wide text-fg-subtle">
+                            burstable
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-1.5 pr-3 tabular-nums">{e.firstDate}</td>
+                      <td className="py-1.5 pr-3 tabular-nums">{e.lastDate}</td>
+                      <td className="py-1.5 tabular-nums">{e.runCount}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            <p>
+              <strong>A caveat this page previously got wrong.</strong> Until 2026-08-30 this
+              section attributed the x86 baseline&rsquo;s movement to burstable CPU steal, citing
+              around 0.24% on representative runs. From 2026-08-17 the X25519 baseline&rsquo;s floor
+              became bimodal — its <code>min_us</code> had sat at 160.2–160.8 µs for 68 consecutive
+              runs, then began alternating with a ~186–193 µs floor — and steal time does{" "}
+              <strong>not</strong> correlate with it: affected runs report 0.0–0.5% steal while
+              several unaffected runs report 3–4%. The cause is not yet established and is under
+              investigation against the c7i overlap data. Comparisons between algorithms measured in
+              the same run remain sound; a classical-baseline percentage from an affected run does
+              not, and any comparison that is structurally impossible is withheld rather than
+              published.
             </p>
             <p>
               Access to the runner is through AWS SSM Session Manager (no port 22 open to the

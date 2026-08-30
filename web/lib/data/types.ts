@@ -130,6 +130,13 @@ export interface NormalizedRun {
   is_legacy_filename: boolean;
   /** True when runtime_metrics was missing */
   is_legacy_schema: boolean;
+  /**
+   * Hardware era this run belongs to (see lib/data/hosts.ts). Derived from
+   * `environment.ec2_instance_type` at load time, never authored. Runs in
+   * different eras were measured on different machines and must not be drawn
+   * as one continuous series.
+   */
+  host_era_id: string;
   algorithms: NormalizedAlgorithm[];
   /** Quick lookup by algorithm id */
   algorithms_by_id: Record<string, NormalizedAlgorithm>;

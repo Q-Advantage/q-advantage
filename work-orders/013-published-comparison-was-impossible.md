@@ -87,3 +87,103 @@ publishing a figure that cannot be true.
 
 Diagnosing the 2026-08-17 host change; the c7i cutover; the host-era data layer. Those are the
 remaining WO 013 capabilities and follow separately.
+
+---
+
+# 013b — The hardware transition, implemented rather than promised
+
+**Status:** in progress, 2026-08-30. Stacked on the anomaly gate above.
+
+## What was wrong
+
+`/methodology` has promised this in prose since before the c7i migration was scheduled:
+
+> "when it does, this document will be updated, historical runs from the burstable period will remain
+> available, and the hardware change will be explicitly dated. **Results will not be silently
+> migrated.**"
+
+**No code implemented any part of it.** The loader read one flat directory and sorted by timestamp;
+`buildTrends` plotted every run as one continuous line. On the day `benchmark.yml` is repointed at the
+c7i runner, a ~2× step change would have rendered as a performance trend, under a caveat still naming
+t3.medium's burstable throttling as the cause — and the `burstable` pill in `AuditStrip`, the only
+visual cue that anything had changed, would have **silently cleared itself**, because `benchmark.py`
+derives it from a `t3.` prefix test.
+
+## What changed
+
+**`web/lib/data/hosts.ts`** — the measurement host as a first-class dimension. An era is a maximal run
+of consecutive runs sharing one `ec2_instance_type`. **Boundaries are derived from the committed files,
+never authored**: there is no cutover date literal anywhere, so the partition cannot drift from the
+data and there is nothing for guardrail 1 to catch. The only authored content is a display label and
+note per instance type, describing hardware rather than asserting any measurement.
+
+- `NormalizedRun` gains `host_era_id`, tagged in `loadAllRuns()` once the whole record is visible.
+- `getLatestRun()` now means *newest run of the current era*, not newest file. These differ during a
+  transition: the c7i overlap runs started at 05:51Z against the t3 workflow's 06:00Z, so a plain
+  newest-by-timestamp read could have made an older-era run the site's headline figure.
+- `buildTrends` tags every point with its era and returns `breaks`. `TrendsChart` gives each series one
+  Recharts data key **per era**, so two hosts never share a key and no segment can be drawn between
+  them — the same "a hole stays a hole" rule the missing-run case already followed, applied to a change
+  of machine. A dashed `ReferenceLine` marks the transition.
+- The public API's history endpoint carries `era_id` and `instance_type` per point, so the client path
+  that refetches from `/api/v1` derives the same breaks the server does.
+
+**A range bug two hosts expose.** `trends.ts` sliced the window by **run count**, not calendar days.
+Identical while one host committed once a day; during the c7i overlap two runs land per date and
+"30 days" silently becomes 15. Now sliced by date, measured back from the newest run in the record
+rather than from today, so a stalled record does not render as empty.
+
+**Copy that was false or about to be.** `/q-shield/trends` hardcoded the literal `"0.13% to 10.51%"`
+inside a live component whose neighbouring figures were computed — now derived per era.
+`/methodology` gains a **derived era table** and states the promise as implemented. `README.md:24`
+claimed the x86 host was already `c7i.large` while every result file said `t3.medium` — corrected.
+`METHODOLOGY.md` corrected in both the hardware section and known limitations. `AuditStrip`'s
+"Instance" field is relabelled **"Measured on"** so the hardware is always named, burstable or not.
+
+**Where all three documents previously agreed and were wrong:** each attributed the x86 baseline's
+movement to burstable CPU steal. Since 2026-08-17 that explanation does not fit — see the root-cause
+trace in 013 above. All three now say so and flag the cause `#unverified` rather than repeating an
+explanation the data contradicts.
+
+## The LMS/XMSS status regression
+
+`lms_xmss.py` caught `MechanismNotEnabledError` in a broad `except Exception` and reported
+`status: "failed"` / `error_type: "verify_only_exception"`. Semantically that is the `unavailable`
+case — the build simply lacks the mechanism. It landed 2026-08-17 (files from 08-14 to 08-16 are 4/4
+`unavailable`; every file since is 4/4 `failed`) and was live for 13 days.
+
+Two consequences, both real. `/q-shield/compare` rendered the raw string
+`MechanismNotEnabledError: LMS_SHA256_H10_W8` to readers as the explanation for missing hash-based
+signature data, having lost the informative reason. And `"failed"` is the louder signal, reserved for a
+KAT that will not verify — classifying an expected, documented build gap as a failure buries the real
+ones. **This is also what turned CI red on 2026-08-23**, alongside the anomaly in 013.
+
+Fixed on both sides: the harness classifies it as `unavailable` with a reason naming the flags that fix
+it, and `statefulSigsUnavailableReason` translates the raw string already committed in 13 days of
+historical files rather than waiting for the record to age out. An undiagnosed error is still passed
+through verbatim — inventing an explanation for something we have not diagnosed would be worse.
+
+**The rebuild itself is still outstanding and is the founder's**: `OQS_ENABLE_SIG_STFL_LMS=ON` and
+`OQS_ENABLE_SIG_STFL_XMSS=ON` on the measurement host, per `docs/runbook.md`. The c7i box shows the
+same error, so it did not happen there either.
+
+## Tests
+
+42 vitest cases and 4 pytest cases. The ones that matter:
+
+- a two-host fixture produces a series that **breaks** at the boundary, with points either side
+  carrying different era ids, and nothing interpolated across it
+- `deriveHostEras` handles newest-first input (the order `loadAllRuns` actually returns), a rollback to
+  earlier hardware as a third era rather than a merge, and an absent instance type as `unknown`
+- `getLatestRun` returns the newest era's run even when an older-era file has a later timestamp
+- `"30 days"` means 30 calendar days on a two-host record, measured back from the newest run
+- `transitionNote` asserts no magnitude — claiming one without the calibration measurement would be
+  authoring a number
+- pytest: `MechanismNotEnabledError` classifies as `unavailable`; a genuine fault stays `failed`.
+  Verified to fail before the fix and pass after.
+
+## Not in this work-order
+
+The calibration report and `/q-shield/calibration` (needs ≥7 clean overlap days — the c7i box was
+offline and has produced one run). Diagnosing the 2026-08-17 host change. The liboqs rebuild. The
+cutover itself.

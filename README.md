@@ -21,7 +21,7 @@ The PQC migration market runs on vendor claims and analyst PDFs. Q-Advantage run
 
 - Q-Shield benchmark harness — liboqs 0.15.0, self-hosted GHA runner on AWS EC2, daily cron, full environment capture (CPU, kernel, git SHA, steal-time)
 - Protocol benchmarks — TLS composed (ML-KEM + X25519MLKEM768), SSH composed, signature track
-- Cross-architecture — x86_64 (c7i.large) and ARM Graviton3 (c7g.large), results side by side
+- Cross-architecture — x86_64 and ARM Graviton3, results side by side. The x86 measurement host is `t3.medium`; a `c7i.large` overlap is running in parallel and has not been cut over. Instance type is recorded per run and shown on every page that publishes a number.
 - eBACS / liboqs cross-validation — three-pattern story locked, ML-KEM-768 −46.9% x86 / −47.7% ARM vs reference
 - Q-Day Index scoring engine — multiplicative-gate, Gidney 2025 RSA-2048 resource estimate anchor
 - P-CBOM v0.1 — published at Q-Advantage/p-cbom, CC0 spec, Apache-2.0 tooling, CycloneDX 1.6+ compatible

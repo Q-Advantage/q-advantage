@@ -74,12 +74,31 @@ jiffies across the timed loop), and load averages at start and end. On
 burstable cloud instances this makes throttling visible in the audit trail
 rather than silently corrupting numbers.
 
-**Hardware.** Currently AWS EC2 t3.medium in us-east-1, a burstable
-instance class. Steal-time data shows the instance runs clean (around
-0.24% on representative runs), so the planned c7i.large migration is
-deferred until budget or load justifies it. When the hardware changes,
-this document will be updated, the historical runs will remain available,
-and the change will be explicitly dated.
+**Hardware.** The x86 measurement host is AWS EC2 t3.medium in us-east-1,
+a burstable instance class. A c7i.large overlap has run in parallel since
+2026-08-27, writing to a separate result path; it has **not** been cut
+over, and t3.medium remains the host every published x86 figure is
+measured on.
+
+The instance type is recorded in every result file, and the site derives
+its hardware **eras** from that field rather than from a date written by
+hand. When the host changes, the historical runs remain available, the
+change is dated from the data itself, and the trend chart **breaks the
+line** at that point rather than drawing across it — a change of machine
+is not a performance trend. Results are not silently migrated.
+
+**A caveat this document previously got wrong.** Until 2026-08-30 this
+section attributed the x86 baseline's run-to-run movement to burstable
+CPU steal, citing around 0.24% on representative runs. From 2026-08-17
+the X25519 baseline's floor became bimodal — `min_us` had sat at
+160.2–160.8 µs for 68 consecutive runs, then began alternating with a
+~186–193 µs floor — and **steal time does not correlate with it**:
+affected runs report 0.0–0.5% steal while several unaffected runs report
+3–4%. The cause is `#unverified` and under investigation against the c7i
+overlap data. Comparisons between algorithms measured in the same run
+remain sound; an x86 classical-baseline percentage from an affected run
+does not, and the site now withholds any comparison that is structurally
+impossible rather than publishing it.
 
 **CI discipline.** Workflow at `.github/workflows/benchmark.yml` has two
 triggers only: scheduled (daily at 06:00 UTC) and manual
@@ -192,9 +211,12 @@ methods glossary:** <https://qadvantage.io/methodology#q-day-index>
 
 ## Known limitations
 
-- **t3.medium is burstable.** Steal-time data shows runs are clean today;
-  if it ever isn't, the audit trail surfaces it. Migration to a fixed
-  instance class is on the roadmap.
+- **t3.medium is burstable**, and since 2026-08-17 its X25519 baseline has
+  been bimodal for reasons steal time does not explain (`#unverified`).
+  Same-run comparisons between algorithms remain sound; a classical-baseline
+  percentage from an affected run does not, and the site withholds any that
+  is structurally impossible. A c7i.large overlap is running; migration to
+  that fixed instance class has not been cut over.
 - **Single machine for Q-Shield.** Cross-architecture comparison (Graviton,
   AMD EPYC) is a future deliverable.
 - **`liboqs` is a prototyping library**, not a production cryptographic
