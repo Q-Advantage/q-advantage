@@ -10,6 +10,7 @@ const TABS: ProductTab[] = [
   { label: "Overview", href: "/q-shield" },
   { label: "Compare", href: "/q-shield/compare" },
   { label: "Protocols", href: "/q-shield/protocols" },
+  { label: "Layer B", href: "/q-shield/layer-b" },
   { label: "Methodology", href: "/methodology" },
 ];
 

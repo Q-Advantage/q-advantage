@@ -3,7 +3,7 @@ import { PageShell } from "@/components/chrome/PageShell";
 import { AuditBand, Caveat, DataTable, RowName, Section, Tag, type KitRow } from "@/components/product/kit";
 import { loadLayerBData } from "@/lib/layer-b/load";
 import {
-  SCENARIO_BLURB,
+  scenarioBlurb,
   crossedTheCliff,
   groupLabel,
   negotiatedFromWire,
@@ -42,7 +42,7 @@ function scenarioRows(byScenario: Record<string, LayerBResult>): KitRow[] {
     return {
       key: label,
       cells: [
-        <RowName key="n" name={label} note={SCENARIO_BLURB[label] ?? ""} />,
+        <RowName key="n" name={label} note={scenarioBlurb(label)} />,
         <OutcomeTag key="o" result={r} />,
         <span key="g" className="tabular-nums">
           {g ? (

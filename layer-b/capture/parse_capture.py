@@ -241,7 +241,7 @@ def main(argv: list[str] | None = None) -> int:
             "environment": environment,
             "audit": _audit(),
         }
-    elif args.label == "concurrency" or len(convs) > 3:
+    elif args.label.startswith("concurrency") or len(convs) > 3:
         payload = build_concurrency_result(
             convs,
             label=args.label,

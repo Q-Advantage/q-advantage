@@ -118,21 +118,41 @@ export function crossedTheCliff(result: LayerBResult): boolean | null {
 /** Scenario ordering for display: baseline first, then the interesting ones. */
 const SCENARIO_ORDER = ["pairwise", "mismatch", "rtt", "concurrency", "middlebox"];
 
+/** The scenario family a label belongs to: `middlebox-nginx` -> `middlebox`. */
+export function scenarioFamily(label: string): string {
+  const dash = label.indexOf("-");
+  return dash === -1 ? label : label.slice(0, dash);
+}
+
 export function orderScenarios(labels: string[]): string[] {
   return [...labels].sort((a, b) => {
-    const ia = SCENARIO_ORDER.indexOf(a);
-    const ib = SCENARIO_ORDER.indexOf(b);
+    const ia = SCENARIO_ORDER.indexOf(scenarioFamily(a));
+    const ib = SCENARIO_ORDER.indexOf(scenarioFamily(b));
     if (ia === -1 && ib === -1) return a.localeCompare(b);
     if (ia === -1) return 1;
     if (ib === -1) return -1;
-    return ia - ib;
+    return ia === ib ? a.localeCompare(b) : ia - ib;
   });
+}
+
+/**
+ * Blurb for a label, falling back to its family.
+ *
+ * Two proxies are two separate rows on purpose: middlebox compatibility is a
+ * property of each product, so collapsing them would state something broader
+ * than what was measured.
+ */
+export function scenarioBlurb(label: string): string {
+  return SCENARIO_BLURB[label] ?? SCENARIO_BLURB[scenarioFamily(label)] ?? "";
 }
 
 export const SCENARIO_BLURB: Record<string, string> = {
   pairwise: "One hybrid handshake between two stacks we control. The baseline every other row is read against.",
   mismatch: "Client and server deliberately share no group. What happens then is the finding — a clean rejection and a silent fall back to classical look identical from the outside.",
-  rtt: "The same handshake with latency injected on the client's egress. Synthetic delay, not real distance.",
+  rtt: "The same handshake with latency injected on both egress paths. Synthetic delay, not real distance — it reproduces the round-trip cost, not the route.",
   concurrency: "Many live connections at once — real sockets, real accept queue, not concurrent crypto calls.",
-  middlebox: "A TCP passthrough proxy in the path, asking whether a box that is not even inspecting the handshake still damages it.",
+  middlebox:
+    "A TCP passthrough proxy in the path, asking whether a box that is not even inspecting the handshake still damages it.",
+  "middlebox-haproxy": "HAProxy in TCP passthrough. A pass means this product at this version with this config, not proxies in general.",
+  "middlebox-nginx": "nginx in TCP passthrough. Tested separately because middlebox compatibility is a property of each product, not of the category.",
 };

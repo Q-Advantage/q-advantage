@@ -21,6 +21,10 @@ mkdir -p out
 # here rather than inside the images so a run's configuration is visible in the
 # result rather than baked into a container.
 CLIENT_PROFILE="$SCENARIO"
+# The result's LABEL can be finer-grained than the scenario. Middlebox
+# compatibility is a property of each product, so two proxies must not
+# collide on one label and silently overwrite each other's finding.
+LABEL="$SCENARIO"
 ENV_NOTE=""
 case "$SCENARIO" in
   pairwise)
@@ -77,6 +81,7 @@ case "$SCENARIO" in
         echo "unknown proxy: ${PROXY}" >&2; exit 2 ;;
     esac
     export CAPTURE_SECONDS=45
+    LABEL="middlebox-${PROXY:-haproxy}"
     ENV_NOTE="TCP passthrough proxy in the path: ${PROXY_IMAGE}"
     ;;
   *)
@@ -123,7 +128,7 @@ SOCKSTAT_ARG=()
 [ -f "out/sockstat-${SCENARIO}.csv" ] && SOCKSTAT_ARG=(--sockstat "out/sockstat-${SCENARIO}.csv")
 
 python3 capture/parse_capture.py "out/${SCENARIO}.pcap" \
-  --label "$SCENARIO" \
+  --label "$LABEL" \
   --client-groups "$GROUPS_CLIENT" \
   --server-groups "$GROUPS_SERVER" \
   --env-note "$ENV_NOTE" \
@@ -131,4 +136,4 @@ python3 capture/parse_capture.py "out/${SCENARIO}.pcap" \
   --output-dir out/results
 
 echo "--- result ---"
-cat out/results/layer-b-"${SCENARIO}"-*.json
+cat out/results/layer-b-"${LABEL}"-*.json

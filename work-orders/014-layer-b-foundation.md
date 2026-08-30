@@ -136,3 +136,92 @@ parse failures are silently reported as findings is worse than one that crashes.
 the orchestration no longer tears the stack down between the handshake and the flush. Three tests
 cover it, including one asserting that an unsupported linktype raises rather than reporting no
 traffic.
+
+---
+
+# 014b — The scenarios, and the site
+
+**Status:** in progress, 2026-08-30. Six live scenario jobs green in CI (run `33292970824`).
+
+## What the instrument now measures
+
+| Scenario | Outcome | Packets | Wire bytes | First flight |
+|---|---|---|---|---|
+| pairwise | negotiated X25519MLKEM768 | 19 | 9,488 | 1,762 B — **fits**, 12,838 B headroom |
+| mismatch | **no_server_hello** | 10 | 2,126 | — |
+| rtt (±50 ms) | negotiated | **28** | 10,136 | 1,762 B |
+| concurrency (50) | 50/50 negotiated | — | — | median 110.8 ms, p95 182.9 ms |
+| middlebox — HAProxy 3.0 | negotiated | 18 | 9,416 | fits |
+| middlebox — nginx 1.27 | negotiated | 19 | 9,489 | fits |
+
+**Four of these are things Layer A structurally cannot answer.**
+
+1. **Packets per handshake: 19.** Named as unmeasurable in the calculator's own disclaimer since it
+   shipped, because a composed harness has no socket.
+2. **The initcwnd cliff is not currently binding.** `network-calculator-spec.md` §7 carries the
+   ~14.6 KB congestion-window cliff as a qualitative callout by explicit design. Measured, the
+   server's first flight for an X25519MLKEM768 handshake is **1,762 bytes** — 12,838 bytes of
+   headroom. The cliff is real as a mechanism; at this suite it is nowhere near being hit. That is a
+   more useful published statement than the warning it replaces, and it is a number rather than a
+   caveat.
+3. **This server fails closed.** The deliberately mismatched pair produced `no_server_hello` — a
+   clean rejection, not a silent fall back to classical. From outside those two look identical, and
+   telling them apart is the whole reason the misconfiguration mode exists.
+4. **Both passthrough proxies pass PQC through undamaged**, at 18 and 19 packets against 19 direct.
+   Recorded narrowly: this product, this version, this config.
+
+Latency costs packets, visibly: 19 → **28** with 50 ms injected each way.
+
+## Two corrections the real runs forced
+
+**The first RTT run reported 40 µs against 50 ms injected, and nothing was broken.** The capture sits
+in the server's network namespace; netem was on the *client's* egress, so the delay happened before
+the SYN arrived and the server answered immediately. A server-side observer correctly saw no round
+trip. The measurement was right and the label was wrong. The field is now `syn_to_synack_seconds`,
+travels with `observed_at` and `is_full_round_trip: false`, and `assert-scenario.py` fails any run
+claiming otherwise. The scenario applies the delay to both egress paths — the condition under which
+an endpoint capture can see a round trip at all — and it now reads **0.050060 s**.
+
+The generalisation is worth keeping: an endpoint capture measures the network it can see, and
+presenting a one-sided observation as a path property is the same class of error as trusting a
+stack's own report of what it negotiated.
+
+**The first live run reported `no_traffic_captured` on a capture containing a real handshake.**
+`tcpdump -i any` writes `LINKTYPE_LINUX_SLL2` (276); the reader handled `LINUX_SLL` (113) and skipped
+every packet. The missing linktype is the shallow half — the dangerous half is that "no traffic
+captured" is a *real* Layer B outcome, so an unreadable capture was indistinguishable from a genuine
+negative result. The reader now raises on any linktype it cannot parse.
+
+## The site
+
+`/q-shield/layer-b`, fed from `layer-b/results/` through `publish-results.py`.
+
+**`lib/layer-b/derive.ts` is the gate.** `publishableDuration()` is the only supported way to get a
+duration out of a result and returns null unless the run asserted the measurement host — the point of
+the flag is lost the moment a component reads `duration_seconds` directly. `publish-results.py`
+**strips** those durations rather than trusting the site to hide them: a value that never reaches the
+bundle cannot be rendered by a component that forgets to ask. Both are asserted by
+`scripts/smoke-layerb.ts` against the real committed data.
+
+Also in the gate: `crossedTheCliff()` returns null rather than false when the flight was not
+measurable, because not seeing a flight and the flight fitting are different claims; `outcomeTone()`
+reads a downgrade as a **finding** rather than an error, since rendering the most valuable thing the
+instrument produces in the failure style would bury it; and an unverified group code point always
+renders with its marker.
+
+Middlebox results are labelled per product. Two proxies collapsing onto one label would have
+silently overwritten one product's finding with the other's.
+
+## Still not done, and why
+
+- **§3b public-endpoint checks.** Buildable and in v1 scope. It is outward-facing, so the trigger
+  belongs to a human rather than to an overnight session. It inherits `measurement-ethics.md` whole.
+- **Cross-library interop** (BoringSSL, AWS-LC, wolfSSL). Shares this container investment and is the
+  natural next build, but it is a real one, not a finish-up.
+- **TLS-terminating middlebox, and DPI/inspection appliances.** Different questions from passthrough;
+  folding them into the same scenario would produce a result nobody could interpret.
+- **Bytes per half-open connection** is refused, not measured. SYN_RECV is genuinely brief under
+  honest concurrency and the sampler caught zero observations. Manufacturing more would mean building
+  a SYN flood tool. Peak established connections (14) is real and is reported.
+- The hybrid group code points remain `#unverified` against the IANA registry. Agreement between our
+  table and one implementation is not a primary source.
