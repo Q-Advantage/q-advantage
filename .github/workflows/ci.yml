@@ -40,5 +40,8 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Unit tests
+        run: npm test
+
       - name: Smoke test data loader
         run: npm run smoke

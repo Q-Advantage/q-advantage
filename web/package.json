@@ -10,7 +10,9 @@
     "start": "next start",
     "lint": "next lint",
     "smoke": "node scripts/copy-data.mjs && node scripts/build-openapi.mjs && tsx scripts/smoke-loader.ts && tsx scripts/smoke-protocols.ts && tsx scripts/smoke-kit.ts && tsx scripts/smoke-board.ts && tsx scripts/smoke-api.ts && tsx scripts/smoke-qday.ts && tsx scripts/smoke-trends.ts && tsx scripts/smoke-calculator.ts && tsx scripts/smoke-pcbom.ts",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "next": "14.2.35",
@@ -37,6 +39,7 @@
     "postcss": "^8.4.49",
     "eslint": "^8.57.1",
     "eslint-config-next": "14.2.35",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "vitest": "^2.1.9"
   }
 }

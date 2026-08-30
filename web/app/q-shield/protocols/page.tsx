@@ -22,8 +22,8 @@ import {
   aesBaselinesByArch,
   formatTailRatio,
   tailRatio,
-  vsBaselinePct,
 } from "@/lib/protocols/metrics";
+import { detectFileAnomalies, publishableVsBaselinePct } from "@/lib/protocols/anomaly";
 import type { ComposedSuite, TimingBlock } from "@/lib/protocols/types";
 import {
   formatBytes,
@@ -154,7 +154,7 @@ function suiteRows(suites: Record<string, ComposedSuite> | undefined): KitRow[] 
     .map(([name, s]) => {
       // Recomputed against the baseline measured in this same run — never the
       // stored pct_over_classical, which compares across passes. See metrics.ts.
-      const pct = vsBaselinePct(s, suites);
+      const pct = publishableVsBaselinePct(s, suites);
       const tail = tailRatio(s.timing);
       return {
         key: name,
@@ -204,6 +204,13 @@ export default function ProtocolsPage() {
   const primary = data.byArch["x86_64"] ?? data.byArch[arches[0]];
   const env = primary?.tls?.environment;
   const aes = aesBaselinesByArch(data);
+
+  // Structurally impossible comparisons in this build's committed data. The
+  // number is withheld from every table above (publishableVsBaselinePct); this
+  // states why, rather than letting a row quietly render an em-dash.
+  const anomalies = arches.flatMap((arch) =>
+    detectFileAnomalies(data.byArch[arch].tls?.suites).map((a) => ({ arch, ...a })),
+  );
 
   /** One track's table, split by architecture when more than one was measured. */
   function trackPanel(pick: (arch: string) => Record<string, ComposedSuite> | undefined) {
@@ -358,6 +365,24 @@ export default function ProtocolsPage() {
             <p className="text-[13px] text-fg-subtle">No protocol data is present in this build.</p>
           )}
         </Section>
+
+        {anomalies.length > 0 && (
+          <Caveat label="One comparison is withheld from this run">
+            {anomalies.map((a) => (
+              <p key={`${a.arch}-${a.suite}`} className="mb-2 last:mb-0">
+                <strong className="font-bold text-fg">
+                  {a.arch} · {a.suite}
+                </strong>{" "}
+                {a.reason}
+              </p>
+            ))}
+            <p className="mt-2">
+              The suite&rsquo;s own timings are unchanged and still shown above — only its
+              percentage against the classical baseline is withheld. We publish the gap rather than
+              a number that cannot be true.
+            </p>
+          </Caveat>
+        )}
 
         <Caveat label="How the handshake figure is built">
           The handshake mean is <strong className="font-bold text-fg">composed</strong>, not timed

@@ -12,7 +12,7 @@
 import { useMemo } from "react";
 import type { ComposedSuite } from "@/lib/protocols/types";
 import { amplificationFactor, formatAmplificationFactor, BYTES_ON_WIRE_LABEL } from "@/lib/protocols/derive";
-import { vsBaselinePct } from "@/lib/protocols/metrics";
+import { publishableVsBaselinePct } from "@/lib/protocols/anomaly";
 import { formatDuration, formatBytes, githubCommitUrl } from "@/lib/format";
 import { toCsv, downloadCsv } from "@/lib/csv";
 import { ShareButton } from "./ShareButton";
@@ -62,7 +62,7 @@ function SuiteRow({
             <span className="text-2xs text-fg-subtle border border-border rounded px-1.5 py-0.5">classical</span>
           )}
         </div>
-        <DeltaBadge pct={vsBaselinePct(suite, siblings) ?? undefined} />
+        <DeltaBadge pct={publishableVsBaselinePct(suite, siblings) ?? undefined} />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -130,7 +130,7 @@ export function HybridVsClassical({
       protocol,
       name,
       suite.timing.median_us,
-      vsBaselinePct(suite, siblings) ?? "",
+      publishableVsBaselinePct(suite, siblings) ?? "",
       suite.size?.bytes_client_to_server ?? "",
       suite.size?.bytes_server_to_client ?? "",
       suite.size?.bytes_total ?? "",
