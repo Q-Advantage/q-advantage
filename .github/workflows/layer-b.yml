@@ -122,6 +122,70 @@ jobs:
             layer-b/out/results/cert-chain-*.json
           if-no-files-found: warn
 
+  compat:
+    name: application compatibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The probe runs inside the reference stack because that is where the
+      # minted certificates and a Python with `cryptography` already are.
+      - name: Build the reference stack
+        working-directory: layer-b
+        run: docker build -t q-advantage/layer-b:dev .
+
+      - name: Probe real software on its defaults
+        working-directory: layer-b
+        # Invoked through bash rather than relying on the executable bit: this
+        # repo is developed on Windows, where git does not track mode by default.
+        run: bash ./run-compat.sh
+
+      - name: Fail only if the probe itself could not run
+        working-directory: layer-b
+        # A rejection by a front door is a FINDING, not a build failure -- the
+        # whole point is to record what breaks. What must fail the job is the
+        # probe not reaching its targets at all, because a run where nothing
+        # connected would otherwise publish "nothing broke".
+        run: |
+          python - <<'EOF'
+          import glob, json, sys
+          files = sorted(glob.glob("out/results/app-compat-*.json"))
+          if not files:
+              sys.exit("no result file was written")
+          r = json.load(open(files[-1]))
+          doors = r["http_front_doors"]
+          if not doors:
+              sys.exit("no front door was probed")
+          unreachable = [
+              d["target"] for d in doors
+              if all(v["outcome"] == "connect_failed" for v in d["by_token"].values())
+          ]
+          if unreachable:
+              sys.exit("never reached: %s -- this is a broken probe, not a finding"
+                       % ", ".join(unreachable))
+          h = r["headline"]
+          print("probed %d front door(s), %d algorithm(s)"
+                % (h["targets_probed"], h["algorithms_probed"]))
+          print("silent rejections: %d" % h["silent_rejections"])
+          print("certificates invisible to a parser: %d"
+                % h["certificates_invisible_to_a_parser"])
+          EOF
+
+      - name: Upload the compatibility result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: layer-b-app-compat
+          path: |
+            layer-b/out/results/app-compat-*.json
+            layer-b/out/compat-containers.log
+          if-no-files-found: warn
+
   scenarios:
     name: "live: ${{ matrix.scenario }}${{ matrix.proxy && format(' ({0})', matrix.proxy) || '' }}"
     runs-on: ubuntu-latest

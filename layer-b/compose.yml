@@ -15,6 +15,9 @@
 #   concurrency  N simultaneous live connections (spec 7's "connections per core")
 #   rtt          netem-injected latency, to price the extra round trips
 #   middlebox    nginx / HAProxy / Envoy in the path (spec 3a middlebox stack)
+#   compat       real software on DEFAULT settings, meeting post-quantum-sized
+#                artifacts -- oversized tokens at HTTP front doors, and ML-DSA
+#                certificates handed to parsers that do not know the algorithm
 services:
   server:
     build: .
@@ -121,6 +124,56 @@ services:
     command: ["/layer-b/scripts/client.sh"]
     networks: [testbed]
     profiles: [middlebox]
+
+  # --- application compatibility (work-order 023) -------------------------
+  #
+  # Three HTTP front doors with three different default limits, each on a stock
+  # image with no buffer tuning applied. Tuning them in either direction would
+  # make the probe a statement about these config files rather than about what
+  # the products do out of the box.
+
+  compat-nginx:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./compat/nginx-http.conf:/etc/nginx/nginx.conf:ro
+    networks: [testbed]
+    profiles: [compat]
+
+  compat-haproxy:
+    image: haproxy:3.0-alpine
+    depends_on: [compat-nginx]
+    volumes:
+      - ./compat/haproxy-http.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    networks: [testbed]
+    profiles: [compat]
+
+  compat-node:
+    image: node:20-alpine
+    volumes:
+      - ./compat/node-origin.js:/srv/node-origin.js:ro
+    command: ["node", "/srv/node-origin.js"]
+    networks: [testbed]
+    profiles: [compat]
+
+  # The probe runs inside the Layer B image because that is where the minted
+  # certificates and a Python with `cryptography` already are.
+  compat-probe:
+    image: q-advantage/layer-b:dev
+    depends_on: [compat-nginx, compat-haproxy, compat-node]
+    volumes:
+      - ./compat:/layer-b/compat:ro
+      - ./out:/out
+    command:
+      - bash
+      - -lc
+      - |
+        # The front doors need a moment to bind before the first request; a
+        # connect failure here would be recorded as a compatibility finding,
+        # which it is not.
+        sleep 6
+        python3 /layer-b/compat/run_compat.py --certs-dir /out/certs --output-dir /out/results
+    networks: [testbed]
+    profiles: [compat]
 
 networks:
   testbed:
