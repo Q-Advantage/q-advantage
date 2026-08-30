@@ -4,36 +4,81 @@
   "title": "Q-Shield protocol benchmark result",
   "description": "One measured record per (protocol, mode, suite). Designed so the Week-7 P-CBOM export is a mapping, not a redesign.",
   "type": "object",
-  "required": ["identity", "timing", "size", "toolchain", "host", "audit"],
+  "required": [
+    "identity",
+    "timing",
+    "size",
+    "toolchain",
+    "host",
+    "audit"
+  ],
   "additionalProperties": false,
   "properties": {
     "identity": {
       "type": "object",
-      "required": ["protocol", "mode", "suite"],
+      "required": [
+        "protocol",
+        "mode",
+        "suite"
+      ],
       "additionalProperties": false,
       "properties": {
-        "protocol": { "type": "string", "enum": ["tls", "ssh"] },
-        "mode": { "type": "string", "enum": ["composed", "live"] },
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "tls",
+            "ssh"
+          ]
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "composed",
+            "live"
+          ]
+        },
         "suite": {
           "type": "string",
           "description": "Group / kex string, e.g. X25519MLKEM768 or mlkem768x25519-sha256"
         }
       }
     },
-    "timing": { "$ref": "#/$defs/timing_stats" },
+    "timing": {
+      "$ref": "#/$defs/timing_stats"
+    },
     "phases": {
       "type": "object",
       "description": "Layer-A phase decomposition. Keys are phase names; absent for live mode (black-box total).",
-      "additionalProperties": { "$ref": "#/$defs/timing_stats" }
+      "additionalProperties": {
+        "$ref": "#/$defs/timing_stats"
+      }
     },
     "size": {
       "type": "object",
-      "required": ["bytes_client_to_server", "bytes_server_to_client", "bytes_total"],
+      "required": [
+        "bytes_client_to_server",
+        "bytes_server_to_client",
+        "bytes_total"
+      ],
       "additionalProperties": false,
       "properties": {
-        "bytes_client_to_server": { "type": "integer", "minimum": 0 },
-        "bytes_server_to_client": { "type": "integer", "minimum": 0 },
-        "bytes_total": { "type": "integer", "minimum": 0 }
+        "bytes_client_to_server": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes_server_to_client": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "secret_key_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Secret key length in bytes, read from the liboqs binding's own details block. Recorded because storage for larger private keys cannot be priced from public key sizes alone -- qshield-update-spec.md 16.3 makes it blocking for the TCM's Expansion & Retention line item. Absent on suites where the binding does not expose it."
+        }
       }
     },
     "baseline": {
@@ -41,8 +86,18 @@
       "description": "Comparison to the matched classical suite. Null on a baseline record itself.",
       "additionalProperties": false,
       "properties": {
-        "baseline_suite": { "type": ["string", "null"] },
-        "pct_over_classical": { "type": ["number", "null"] }
+        "baseline_suite": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pct_over_classical": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
       }
     },
     "cross_validation": {
@@ -50,57 +105,227 @@
       "description": "Agreement against canonical references (eBACS/SUPERCOP, liboqs speed tools). See reference_notes for the cycles-vs-nanoseconds caveat.",
       "additionalProperties": false,
       "properties": {
-        "ebacs_reference_cycles": { "type": ["number", "null"] },
-        "liboqs_speed_number": { "type": ["number", "null"] },
-        "measured_vs_reference_pct": { "type": ["number", "null"] },
-        "reference_notes": { "type": ["string", "null"] }
+        "ebacs_reference_cycles": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "liboqs_speed_number": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "measured_vs_reference_pct": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "reference_notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
     "auth": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "description": "Signature/auth track. First-class because it serves both PQ-cert handshakes and the blockchain framing (signature size + verify speed).",
       "additionalProperties": false,
       "properties": {
-        "scheme": { "type": "string" },
-        "sign": { "$ref": "#/$defs/timing_stats" },
-        "verify": { "$ref": "#/$defs/timing_stats" },
-        "signature_bytes": { "type": "integer", "minimum": 0 },
-        "public_key_bytes": { "type": "integer", "minimum": 0 }
+        "scheme": {
+          "type": "string"
+        },
+        "sign": {
+          "$ref": "#/$defs/timing_stats"
+        },
+        "verify": {
+          "$ref": "#/$defs/timing_stats"
+        },
+        "signature_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "public_key_bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "toolchain": {
       "type": "object",
-      "required": ["liboqs", "liboqs_python"],
+      "required": [
+        "liboqs",
+        "liboqs_python"
+      ],
       "additionalProperties": false,
       "properties": {
-        "liboqs": { "type": ["string", "null"] },
-        "liboqs_python": { "type": ["string", "null"] },
-        "openssl_runtime": { "type": ["string", "null"], "description": "OpenSSL Python was linked against (ssl.OPENSSL_VERSION)" },
-        "openssl_cli": { "type": ["string", "null"], "description": "System `openssl version` (relevant to live mode)" },
-        "oqs_provider": { "type": ["string", "null"] },
-        "openssh": { "type": ["string", "null"] }
+        "liboqs": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "liboqs_python": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "openssl_runtime": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "OpenSSL Python was linked against (ssl.OPENSSL_VERSION)"
+        },
+        "openssl_cli": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "System `openssl version` (relevant to live mode)"
+        },
+        "oqs_provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "openssh": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
     "host": {
       "type": "object",
-      "required": ["arch"],
+      "required": [
+        "arch"
+      ],
       "additionalProperties": false,
       "properties": {
-        "cpu_model": { "type": ["string", "null"] },
-        "arch": { "type": "string", "description": "x86_64 / aarch64" },
-        "build_path": { "type": ["string", "null"], "description": "AVX2 / AVX512 / NEON / reference. Confirming the actual liboqs code path is a documented manual step." },
-        "cpu_flags": { "type": "array", "items": { "type": "string" }, "description": "Detected SIMD flags as a proxy for build_path" },
-        "cpu_hz_nominal": { "type": ["number", "null"], "description": "Approximate; turbo/scaling/steal make absolute cycle conversion unreliable" },
-        "steal_time_pct": { "type": ["number", "null"], "description": "CPU steal during the run. The thing that forces the c7i.large decision." }
+        "cpu_model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "arch": {
+          "type": "string",
+          "description": "x86_64 / aarch64"
+        },
+        "build_path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "AVX2 / AVX512 / NEON / reference. Confirming the actual liboqs code path is a documented manual step."
+        },
+        "cpu_flags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Detected SIMD flags as a proxy for build_path"
+        },
+        "cpu_hz_nominal": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Approximate; turbo/scaling/steal make absolute cycle conversion unreliable"
+        },
+        "steal_time_pct": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "CPU steal during the run. Non-zero sustained steal on a burstable instance means the timings were taken while the hypervisor was taking cycles away. Published rather than smoothed."
+        },
+        "ec2_instance_type": {
+          "type": "string",
+          "description": "Instance type this record was measured on. Recorded because two hosts can share an architecture: without it, results from different machines collapse into one bucket and a hardware change becomes invisible. See web/lib/data/hosts.ts."
+        }
       }
     },
     "audit": {
       "type": "object",
-      "required": ["git_commit", "timestamp_utc"],
+      "required": [
+        "git_commit",
+        "timestamp_utc"
+      ],
       "additionalProperties": false,
       "properties": {
-        "git_commit": { "type": ["string", "null"] },
-        "timestamp_utc": { "type": "string", "format": "date-time" }
+        "git_commit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "timestamp_utc": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "description": "Per-operation resource accounting, sampled around the timed loop rather than inside it -- sampling per iteration would perturb the timings the loop exists to collect. qshield-update-spec.md section 15, Tier 1.",
+      "additionalProperties": true,
+      "properties": {
+        "measured": {
+          "type": "boolean",
+          "description": "False where the POSIX resource module is unavailable. The measurement host is Linux; this is only false in local development."
+        },
+        "cpu_us_per_op": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "User+system CPU across the loop divided by iterations. On a single-core-pinned harness with nothing else scheduled this reads close to wall time BY CONSTRUCTION; it becomes informative only under contention, which this harness deliberately does not create. Read it as a sanity check, not a finding."
+        },
+        "max_rss_delta_bytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "Growth in the process resident high-water mark across the loop. NOT a per-operation footprint: ru_maxrss is a peak that never falls, so it is deliberately not divided by the iteration count."
+        },
+        "max_rss_bytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "cpu_seconds_total": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "cpu_note": {
+          "type": "string"
+        },
+        "rss_note": {
+          "type": "string"
+        },
+        "rss_unit_note": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
       }
     }
   },
@@ -108,18 +333,79 @@
     "timing_stats": {
       "type": "object",
       "description": "Microseconds. Same shape as benchmark.py compute_stats so protocol results slot into the existing pipeline.",
-      "required": ["mean_us", "median_us", "p95_us", "p99_us", "stdev_us", "min_us", "max_us", "ops_per_sec", "n_iterations"],
+      "required": [
+        "mean_us",
+        "median_us",
+        "p95_us",
+        "p99_us",
+        "stdev_us",
+        "min_us",
+        "max_us",
+        "ops_per_sec",
+        "n_iterations"
+      ],
       "additionalProperties": false,
       "properties": {
-        "mean_us": { "type": "number", "minimum": 0 },
-        "median_us": { "type": "number", "minimum": 0 },
-        "p95_us": { "type": "number", "minimum": 0 },
-        "p99_us": { "type": "number", "minimum": 0 },
-        "stdev_us": { "type": "number", "minimum": 0 },
-        "min_us": { "type": "number", "minimum": 0 },
-        "max_us": { "type": "number", "minimum": 0 },
-        "ops_per_sec": { "type": "number", "minimum": 0 },
-        "n_iterations": { "type": "integer", "minimum": 1 }
+        "mean_us": {
+          "type": "number",
+          "minimum": 0
+        },
+        "median_us": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p95_us": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p99_us": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stdev_us": {
+          "type": "number",
+          "minimum": 0
+        },
+        "min_us": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max_us": {
+          "type": "number",
+          "minimum": 0
+        },
+        "ops_per_sec": {
+          "type": "number",
+          "minimum": 0
+        },
+        "n_iterations": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ci95_low_us": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Lower bound of a 95% confidence interval on the MEAN (normal approximation, z=1.96). Null when fewer than two samples. Not a prediction interval for a single operation."
+        },
+        "ci95_high_us": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Upper bound of the same interval."
+        },
+        "std_error_us": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "stdev_us / sqrt(n). The quantity the interval is built from. Published alongside stdev_us because the two are routinely confused: stdev describes how far individual samples scattered, this describes how precisely the mean is known."
+        },
+        "ci_note": {
+          "type": "string"
+        }
       }
     }
   }

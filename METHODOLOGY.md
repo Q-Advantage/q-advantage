@@ -209,6 +209,30 @@ methods glossary:** <https://qadvantage.io/methodology#q-day-index>
 
 ---
 
+## Statistical reporting
+
+Every operation records mean, median, p95, p99, standard deviation, min, max and
+iteration count. From 2026-08-30 each also carries a **95% confidence interval
+on the mean**, and the site derives the same interval for every earlier run from
+the fields those runs already published.
+
+The two are different quantities and are routinely confused, in one direction:
+
+- **Standard deviation** says how far individual samples scattered. On a shared
+  host that number is large and mostly describes the machine.
+- **The confidence interval** says how precisely the *average* is pinned down.
+  It is built from the standard error, which shrinks with the square root of the
+  iteration count — at n=1000 it is roughly 3% of the standard deviation.
+
+A large standard deviation therefore does not mean the mean is imprecise. It is
+a prediction interval that would be wide; the interval on the mean is narrow.
+Neither figure is withheld, because dropping the standard deviation would hide
+the host noise this project publishes on purpose.
+
+Where two measured means sit inside each other's intervals, the difference
+between them is not distinguishable from noise on this host and is not quoted as
+a finding.
+
 ## Known limitations
 
 - **t3.medium is burstable**, and since 2026-08-17 its X25519 baseline has

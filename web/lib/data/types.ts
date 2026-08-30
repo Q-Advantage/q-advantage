@@ -37,6 +37,17 @@ export interface RuntimeMetrics {
 }
 
 export interface OperationStats {
+  /**
+   * 95% confidence interval on the MEAN, emitted by the harness from
+   * 2026-08-30. Absent on every run committed before that — the web layer
+   * derives the same interval from mean/stdev/n for the whole historical
+   * record, so nothing depends on these being present. See lib/data/statistics.ts.
+   */
+  ci95_low_us?: number | null;
+  ci95_high_us?: number | null;
+  /** stdev_us / sqrt(n). Not the same quantity as stdev_us; see statistics.ts. */
+  std_error_us?: number | null;
+  ci_note?: string;
   mean_us: number;
   median_us: number;
   p95_us: number;
