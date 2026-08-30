@@ -57,9 +57,21 @@ CONNECT_TIMEOUT_S = 5.0
 READ_TIMEOUT_S = 10.0
 
 
-def build_request(host: str, token_bytes: int, path: str = "/") -> bytes:
+#: The two ways a token actually reaches a server, which have different limits.
+#:
+#: This distinction is load-bearing. The JOSE track flagged the 4,096-byte
+#: cookie default (RFC 6265 §6.1), and a probe that only sent Authorization
+#: headers would come back clean and appear to CONTRADICT that finding, when in
+#: fact it never tested the path the finding was about. Both are probed, and
+#: every result says which carrier it used.
+CARRIERS = ("authorization", "cookie")
+
+
+def build_request(
+    host: str, token_bytes: int, carrier: str = "authorization", path: str = "/"
+) -> bytes:
     """
-    An HTTP/1.1 request carrying a bearer token of exactly `token_bytes`.
+    An HTTP/1.1 request carrying a token of exactly `token_bytes`.
 
     The token is filler of the right length rather than a real signed token:
     what is under test is the receiving software's size handling, and a real
@@ -68,12 +80,18 @@ def build_request(host: str, token_bytes: int, path: str = "/") -> bytes:
     signature.
     """
     token = "A" * token_bytes
+    if carrier == "cookie":
+        line = "Cookie: session=%s" % token
+    elif carrier == "authorization":
+        line = "Authorization: Bearer %s" % token
+    else:
+        raise ValueError("unknown carrier %r" % carrier)
     return (
         "GET %s HTTP/1.1\r\n"
         "Host: %s\r\n"
-        "Authorization: Bearer %s\r\n"
+        "%s\r\n"
         "Connection: close\r\n"
-        "\r\n" % (path, host, token)
+        "\r\n" % (path, host, line)
     ).encode()
 
 
@@ -87,7 +105,7 @@ def parse_status(raw: bytes) -> int | None:
         return None
 
 
-def probe(host: str, port: int, token_bytes: int) -> dict:
+def probe(host: str, port: int, token_bytes: int, carrier: str = "authorization") -> dict:
     """
     Send one request and report exactly what came back.
 
@@ -101,7 +119,7 @@ def probe(host: str, port: int, token_bytes: int) -> dict:
     try:
         with socket.create_connection((host, port), timeout=CONNECT_TIMEOUT_S) as sock:
             sock.settimeout(READ_TIMEOUT_S)
-            sock.sendall(build_request(host, token_bytes))
+            sock.sendall(build_request(host, token_bytes, carrier))
             while True:
                 chunk = sock.recv(4096)
                 if not chunk:
@@ -173,8 +191,16 @@ def probe(host: str, port: int, token_bytes: int) -> dict:
 def probe_target(name: str, host: str, port: int, product: str, default_note: str) -> dict:
     """Every token size against one target, with the target's own defaults named."""
     results = {}
-    for label, size in TOKEN_SIZES.items():
-        results[label] = {"token_bytes": size, **probe(host, port, size)}
+    for carrier in CARRIERS:
+        for label, size in TOKEN_SIZES.items():
+            # Keyed by carrier as well as size: the same token in a cookie and
+            # in an Authorization header meets different limits, and collapsing
+            # them would hide exactly the case the JOSE track flagged.
+            results["%s / %s" % (carrier, label)] = {
+                "carrier": carrier,
+                "token_bytes": size,
+                **probe(host, port, size, carrier),
+            }
 
     accepted = [k for k, v in results.items() if v["outcome"] == "accepted"]
     rejected = [k for k, v in results.items() if v["outcome"] != "accepted"]
@@ -189,6 +215,7 @@ def probe_target(name: str, host: str, port: int, product: str, default_note: st
         "product": product,
         "defaults": default_note,
         "by_token": results,
+        "carriers": list(CARRIERS),
         "accepted": accepted,
         "rejected": rejected,
         # Named separately because it is the actionable half of the finding.

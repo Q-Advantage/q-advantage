@@ -26,6 +26,10 @@ import probe_headers  # noqa: E402
 import probe_parsers  # noqa: E402
 import run_compat  # noqa: E402
 
+#: Written as a constant rather than an escape so the literal survives every
+#: layer of quoting this repo is edited through.
+CRLF = (chr(13) + chr(10)).encode()
+
 
 class TestTheRequestIsARealRequest:
     def test_the_token_is_exactly_the_requested_length(self):
@@ -51,6 +55,59 @@ class TestTheRequestIsARealRequest:
         # And a classical arm, so a rejection at every size is diagnosable as a
         # broken probe rather than published as a post-quantum finding.
         assert probe_headers.TOKEN_SIZES["ES256 (ECDSA-P256)"] < 1000
+
+
+class TestBothCarriersAreProbed:
+    """
+    An Authorization header and a Cookie meet different limits.
+
+    Load-bearing rather than thorough. The JOSE track's finding was about the
+    4,096-byte cookie default; a probe that only sent Authorization headers
+    would come back clean and look like it CONTRADICTED that finding, when in
+    fact it never tested the path the finding was about.
+    """
+
+    def test_the_cookie_carrier_produces_a_cookie_header(self):
+        req = probe_headers.build_request("h", 4730, "cookie")
+        assert CRLF + b"Cookie: session=" in req
+        assert b"Authorization" not in req
+
+    def test_the_authorization_carrier_produces_a_bearer_header(self):
+        req = probe_headers.build_request("h", 4730, "authorization")
+        assert CRLF + b"Authorization: Bearer " in req
+        assert b"Cookie" not in req
+
+    def test_both_carriers_carry_the_same_token_length(self):
+        # Otherwise the two rows would not be comparable, and the difference
+        # between them would be the probe's rather than the product's.
+        for carrier, prefix in (
+            ("cookie", b"Cookie: session="),
+            ("authorization", b"Authorization: Bearer "),
+        ):
+            req = probe_headers.build_request("h", 4730, carrier)
+            line = next(
+                ln for ln in req.split(CRLF) if ln.startswith(prefix.split(b":")[0])
+            )
+            assert len(line) - len(prefix) == 4730
+
+    def test_an_unknown_carrier_raises_rather_than_defaulting(self):
+        # Silently falling back to a header would publish a cookie row that was
+        # never sent as a cookie.
+        with pytest.raises(ValueError):
+            probe_headers.build_request("h", 100, "querystring")
+
+    def test_a_target_is_probed_on_every_carrier(self, monkeypatch):
+        _fake_response(monkeypatch, b"HTTP/1.1 200 OK" + CRLF + CRLF)
+        r = probe_headers.probe_target("nginx", "h", 1, "product", "defaults")
+        assert set(r["carriers"]) == {"authorization", "cookie"}
+        assert len(r["by_token"]) == 2 * len(probe_headers.TOKEN_SIZES)
+
+    def test_every_row_says_which_carrier_it_used(self, monkeypatch):
+        # A reader must never have to guess which path a row describes.
+        _fake_response(monkeypatch, b"HTTP/1.1 200 OK" + CRLF + CRLF)
+        r = probe_headers.probe_target("nginx", "h", 1, "product", "defaults")
+        assert all("carrier" in v for v in r["by_token"].values())
+        assert all("/" in k for k in r["by_token"])
 
 
 class TestOutcomesAreLabelledNeverInferred:

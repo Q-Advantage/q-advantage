@@ -41,6 +41,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       openssl \
       python3 \
       python3-pip \
+      # A SECOND, independent X.509 parser for the application-compatibility
+      # probe (work-order 023). One implementation cannot distinguish "this
+      # certificate is malformed" from "this tool cannot read this algorithm",
+      # and `cryptography` carries its own parser rather than shelling out to
+      # the OpenSSL CLI whose provider configuration the probe manipulates.
+      python3-cryptography \
       tcpdump \
       iproute2 \
     && rm -rf /var/lib/apt/lists/*
