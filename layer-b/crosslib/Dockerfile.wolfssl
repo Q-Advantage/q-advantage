@@ -1,0 +1,27 @@
+# wolfSSL, built from source with post-quantum support explicitly enabled.
+#
+# Unlike the other two, wolfSSL's post-quantum support is opt-in at configure
+# time. The flags are named here rather than left to a default so that a
+# "not exposed" result can be read against what was actually asked for -- and
+# so a dropped flag in a future release fails the build loudly instead of
+# quietly producing a negative result that is really a build regression.
+FROM debian:bookworm-slim AS build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential autoconf automake libtool git ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+ARG REF=v5.7.4-stable
+RUN git clone --depth 1 --branch "${REF}" https://github.com/wolfSSL/wolfssl.git
+WORKDIR /src/wolfssl
+RUN ./autogen.sh \
+    && ./configure --enable-kyber --enable-dilithium --enable-static --disable-shared \
+    && make -j"$(nproc)"
+
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends python3 \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=build /src/wolfssl/wolfcrypt/benchmark/benchmark /usr/local/bin/wolfssl-benchmark
+COPY probe_crosslib.py /crosslib/probe_crosslib.py
+ENV CROSSLIB_LIBRARY=wolfSSL
+WORKDIR /crosslib
+CMD ["python3", "probe_crosslib.py"]

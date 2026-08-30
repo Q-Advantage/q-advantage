@@ -41,7 +41,15 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 
-TIMEOUT_S = 180
+#: A full `bssl speed` run works through every primitive in the library and
+#: takes many minutes. The first run capped it at 180s, the command was killed
+#: mid-inventory, and the control correctly refused to publish the resulting
+#: silence as seven negatives -- which is the control working, but it means
+#: BoringSSL and AWS-LC contributed no opinion at all.
+#:
+#: Generous rather than tight: the cost of being too short is a lost second
+#: opinion, and the cost of being too long is a slower CI job.
+TIMEOUT_S = 900
 
 #: Names a library might use for the same primitive.
 #:
@@ -60,37 +68,55 @@ ALIASES = {
     "X25519MLKEM768": ["x25519mlkem768", "x25519kyber768", "x25519_kyber768"],
 }
 
+#: Primitives every one of these libraries certainly implements.
+#:
+#: THE CONTROL, and the reason it exists. The first CI run reported BoringSSL
+#: and AWS-LC as exposing nothing at all -- which is false: BoringSSL ships
+#: X25519MLKEM768 in production Chrome. The probe command had simply produced no
+#: output, and the probe turned that silence into a list of seven negatives
+#: about somebody else's software.
+#:
+#: So: if none of these appear in a build's output, the probe did not
+#: successfully ask the question, and it publishes `inconclusive` instead of any
+#: negative at all. This is the same rule the header probe has (a rejected
+#: classical baseline points at the instrument) and the parser probe has (a
+#: classical certificate must parse fully). It should have been here first.
+CONTROL_MARKERS = ["rsa", "aes", "sha", "ecdsa", "p-256", "x25519", "curve25519"]
+
 #: How to ask each library what it can do.
 #:
 #: Each entry names the binary, the command that produces an inventory, and the
 #: build flags the image asked for -- so a negative result can be read against
 #: what was actually requested rather than against an assumption.
-LIBRARIES = [
-    {
-        "name": "BoringSSL",
-        "binary": "bssl-boringssl",
-        "probe_cmd": ["bssl-boringssl", "speed", "-filter", "."],
-        "version_cmd": ["bssl-boringssl", "version"],
-        "build_flags": "default cmake Release build; no post-quantum flags are opt-in",
+LIBRARIES = {
+    "BoringSSL": {
+        "binary": "bssl",
+        "probe_cmd": ["bssl", "speed"],
+        # `bssl` has no version subcommand -- asking for one prints usage text,
+        # which the first run published as a version string. The pinned source
+        # tag is the honest identifier and it travels in build_flags.
+        "version_cmd": None,
+        "build_flags": "cmake Release build at pinned tag; BoringSSL has no post-quantum opt-in flag",
         "source": "https://github.com/google/boringssl",
     },
-    {
-        "name": "AWS-LC",
-        "binary": "bssl-awslc",
-        "probe_cmd": ["bssl-awslc", "speed", "-filter", "."],
-        "version_cmd": ["bssl-awslc", "version"],
-        "build_flags": "default cmake Release build, BUILD_TESTING=OFF",
+    "AWS-LC": {
+        "binary": "bssl",
+        "probe_cmd": ["bssl", "speed"],
+        "version_cmd": ["bssl", "version"],
+        "build_flags": "cmake Release build at pinned tag, BUILD_TESTING=OFF",
         "source": "https://github.com/aws/aws-lc",
     },
-    {
-        "name": "wolfSSL",
+    "wolfSSL": {
         "binary": "wolfssl-benchmark",
-        "probe_cmd": ["wolfssl-benchmark", "-pq"],
-        "version_cmd": ["wolfssl-benchmark", "-?"],
-        "build_flags": "--enable-kyber --enable-dilithium --enable-experimental",
+        # `-pq` restricts the run to post-quantum algorithms, which means the
+        # control markers never appear. The full run is slower and is what makes
+        # the control possible at all.
+        "probe_cmd": ["wolfssl-benchmark"],
+        "version_cmd": None,
+        "build_flags": "--enable-kyber --enable-dilithium",
         "source": "https://github.com/wolfSSL/wolfssl",
     },
-]
+}
 
 
 def run(cmd: list[str]) -> tuple[int, str]:
@@ -147,10 +173,17 @@ def excerpt(output: str, found: dict[str, list[str]], limit: int = 12) -> list[s
     ][:limit]
 
 
-def probe_library(lib: dict) -> dict:
+def probe_library(name: str) -> dict:
     """One library's inventory, with its evidence attached."""
-    rc_v, version_out = run(lib["version_cmd"])
-    version = version_out.strip().splitlines()[0] if version_out.strip() else None
+    lib = dict(LIBRARIES[name], name=name)
+    version = None
+    if lib["version_cmd"]:
+        rc_v, version_out = run(lib["version_cmd"])
+        # A tool that prints usage text on an unknown subcommand would otherwise
+        # have that usage text published as its version.
+        if rc_v == 0 and version_out.strip():
+            first = version_out.strip().splitlines()[0]
+            version = first if "usage" not in first.lower() else None
 
     rc, output = run(lib["probe_cmd"])
 
@@ -168,6 +201,28 @@ def probe_library(lib: dict) -> dict:
             "build_flags": lib["build_flags"],
         }
 
+    # The control, checked BEFORE any negative is assembled.
+    controls = [m for m in CONTROL_MARKERS if m in output.lower()]
+    if not controls:
+        return {
+            "library": lib["name"],
+            "source": lib["source"],
+            "version": version,
+            "status": "inconclusive",
+            "build_flags": lib["build_flags"],
+            "probe_command": " ".join(lib["probe_cmd"]),
+            "probe_exit_code": rc,
+            "reason": (
+                "the probe command produced no output naming any primitive this library "
+                "certainly implements, so it did not successfully ask the question. NO negative "
+                "result is published from this run: reporting seven absences on the strength of "
+                "a command that returned nothing would be a false claim about somebody else's "
+                "software, not a measurement."
+            ),
+            # Kept so the next person can see what the command actually did.
+            "raw_output_head": [ln for ln in output.splitlines() if ln.strip()][:12],
+        }
+
     found = find_algorithms(output)
     return {
         "library": lib["name"],
@@ -179,6 +234,8 @@ def probe_library(lib: dict) -> dict:
         "probe_exit_code": rc,
         "exposed": sorted(found),
         "spellings": found,
+        # Published so a reader can see the probe reached the library at all.
+        "control_markers_seen": controls,
         "not_exposed": sorted(set(ALIASES) - set(found)),
         "evidence": excerpt(output, found),
         "claim": (
@@ -187,48 +244,6 @@ def probe_library(lib: dict) -> dict:
             "the same as the library not supporting it. It may be behind a flag this image did "
             "not pass, in a version it did not pin, or under a name the alias table does not yet "
             "know."
-        ),
-    }
-
-
-def cross_validate(rows: list[dict], liboqs_exposes: list[str]) -> dict:
-    """
-    Where the second opinions agree with liboqs, and where they do not.
-
-    Agreement is worth publishing precisely because it is boring: it is the
-    evidence that a Q-Shield figure is a property of the algorithm rather than
-    of one library's implementation of it. Disagreement is worth publishing
-    because it is the only signal this repo has ever had that liboqs might be
-    the odd one out.
-    """
-    probed = [r for r in rows if r["status"] == "probed"]
-    if not probed:
-        return {
-            "measurable": False,
-            "reason": (
-                "no library was successfully probed, so there is no second opinion to compare "
-                "against. This is a broken build rather than a finding about liboqs."
-            ),
-        }
-
-    corroborated, unique_to_liboqs = [], []
-    for alg in sorted(ALIASES):
-        others = [r["library"] for r in probed if alg in r["exposed"]]
-        if alg in liboqs_exposes:
-            (corroborated if others else unique_to_liboqs).append(
-                {"algorithm": alg, "also_exposed_by": others}
-            )
-
-    return {
-        "measurable": True,
-        "libraries_probed": [r["library"] for r in probed],
-        "corroborated": corroborated,
-        "exposed_only_by_liboqs_here": unique_to_liboqs,
-        "note": (
-            "Corroboration means a second implementation exposes the same primitive, which is "
-            "evidence that a published figure describes the algorithm rather than liboqs. It is "
-            "NOT a check that the two produce identical output -- that needs shared test vectors "
-            "and is a separate build."
         ),
     }
 
@@ -245,72 +260,106 @@ LIBOQS_EXPOSES = [
 ]
 
 
-def build() -> dict:
-    rows = [probe_library(lib) for lib in LIBRARIES]
-    versions = None
-    if os.path.exists("/crosslib/versions.txt"):
-        with open("/crosslib/versions.txt") as fh:
-            versions = fh.read().strip()
+SCOPE = {
+    "no_timings": (
+        "This track publishes NO timings, deliberately. These builds run on a shared, unpinned, "
+        "co-tenanted CI runner. Every number this product publishes comes from a dedicated "
+        "measurement host, and a cross-library speed comparison measured here would undo that. "
+        "Timing belongs on the measurement host or nowhere."
+    ),
+    "what_a_negative_means": (
+        "A primitive listed under not_exposed was not observed in THIS build's output. That is "
+        "not a claim that the library lacks it: it may be behind a flag this image did not pass, "
+        "in a version it did not pin, or under a name the alias table does not yet know."
+    ),
+    "evidence_is_published": (
+        "Every classification carries the raw output lines it was derived from, so the inference "
+        "can be checked rather than trusted."
+    ),
+    "naming_is_unsettled": (
+        "The same algorithm appears as Kyber768, ML-KEM-768 and MLKEM768 depending on when the "
+        "code was written relative to FIPS 203. The alias table is matched case-insensitively and "
+        "the matched spelling is published, because the spelling is itself informative."
+    ),
+    "what_a_speed_inventory_can_see": (
+        "These probes read a library's own SPEED INVENTORY, which lists primitives. A TLS group "
+        "such as X25519MLKEM768 is a negotiation construct rather than a primitive, so it does "
+        "not appear in one even in a library that ships it -- BoringSSL negotiates that group in "
+        "production Chrome and it is absent here. Read every hybrid-group row as 'not visible "
+        "from this vantage point', never as absent from the library. Settling it needs a "
+        "handshake, which is Layer B's job rather than this track's."
+    ),
+    "signature_schemes_are_a_known_blind_spot": (
+        "No ML-DSA row was observed in any of the three inventories, including a wolfSSL build "
+        "configured with --enable-dilithium. That is unresolved and is published as such: it may "
+        "be that these speed tools cover KEMs and not signature schemes, or that a flag did not "
+        "take. It is NOT evidence that these libraries lack ML-DSA. #unverified."
+    ),
+    "availability_not_equivalence": (
+        "Corroboration here means a second implementation EXPOSES the same primitive. It is not a "
+        "check that two implementations produce identical output -- that needs shared test "
+        "vectors at the API level, and is the natural next slice of this track."
+    ),
+}
 
+
+def build(name: str) -> dict:
+    """
+    This image probes exactly ONE library.
+
+    One image per library rather than one carrying all three: a build quirk in
+    one product must not be able to hide another's result, and a multi-stage
+    image containing all three fails as a unit. The per-library results are
+    merged by `merge_crosslib.py` after each has succeeded or failed on its own.
+    """
+    row = probe_library(name)
     return {
         "schema": "crosslib/1",
         "track": "crosslib",
         "label": "cross-library diversity",
         "environment": {
             "iso_timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "built_versions": versions,
         },
-        "scope": {
-            "no_timings": (
-                "This track publishes NO timings, deliberately. These builds run on a shared, "
-                "unpinned, co-tenanted CI runner. Every number this product publishes comes from "
-                "a dedicated measurement host, and a cross-library speed comparison measured here "
-                "would undo that. Timing belongs on the measurement host or nowhere."
-            ),
-            "what_a_negative_means": (
-                "A primitive listed under not_exposed was not observed in THIS build's output. "
-                "That is not a claim that the library lacks it."
-            ),
-            "evidence_is_published": (
-                "Every classification carries the raw output lines it was derived from, so the "
-                "inference can be checked rather than trusted."
-            ),
-            "naming_is_unsettled": (
-                "The same algorithm appears as Kyber768, ML-KEM-768 and MLKEM768 depending on "
-                "when the code was written relative to FIPS 203. The alias table is matched "
-                "case-insensitively and the matched spelling is published, because the spelling "
-                "is itself informative."
-            ),
-        },
-        "libraries": rows,
-        "cross_validation": cross_validate(rows, LIBOQS_EXPOSES),
+        "scope": SCOPE,
+        "library": row,
         "liboqs_exposes": LIBOQS_EXPOSES,
     }
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--library", default=os.environ.get("CROSSLIB_LIBRARY"))
     ap.add_argument("--output-dir", default=None)
     args = ap.parse_args()
 
-    result = build()
+    if args.library not in LIBRARIES:
+        sys.exit(
+            "which library this image carries must be stated explicitly, via --library or "
+            "CROSSLIB_LIBRARY. Guessing from what happens to be on PATH would let a result be "
+            "attributed to the wrong project. Known: %s" % ", ".join(LIBRARIES)
+        )
+
+    result = build(args.library)
     out = json.dumps(result, indent=2)
 
     if args.output_dir:
         os.makedirs(args.output_dir, exist_ok=True)
         date = result["environment"]["iso_timestamp"][:10]
-        path = os.path.join(args.output_dir, "crosslib-%s.json" % date)
+        slug = args.library.lower().replace(" ", "-")
+        path = os.path.join(args.output_dir, "crosslib-%s-%s.json" % (slug, date))
         with open(path, "w") as fh:
             fh.write(out)
         print("wrote %s" % path)
     else:
         print(out)
 
-    built = [r["library"] for r in result["libraries"] if r["status"] == "probed"]
-    missing = [r["library"] for r in result["libraries"] if r["status"] == "not_built"]
+    row = result["library"]
     print(
-        "\nprobed: %s%s"
-        % (", ".join(built) or "none", ("; not built: " + ", ".join(missing)) if missing else ""),
+        "\n%s: %s"
+        % (
+            args.library,
+            ", ".join(row.get("exposed", [])) or "nothing from the alias table was observed",
+        ),
         file=sys.stderr,
     )
 
