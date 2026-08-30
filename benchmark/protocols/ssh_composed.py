@@ -64,6 +64,13 @@ def run(iterations: int, warmup: int) -> dict:
             cross_validation=cv,
             toolchain=toolchain,
             host=host,
+            # These come from the measurement, not from a size table: the KEM's
+            # secret key length is read off the liboqs binding during the run,
+            # and the resource accounting is sampled around the timed loop.
+            # Both were declared in the schema before this and never reached a
+            # record -- the seam was the missing piece, not the measurement.
+            secret_key_bytes=kex["sizes"].get("kem_secret_key_bytes"),
+            resources=kex.get("resources") or None,
         )
 
     steal = sampler.result_pct()

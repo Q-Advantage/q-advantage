@@ -84,3 +84,44 @@ alternative and is equally impossible to mistake for a measurement.
 
 §16's CFDIR alignment, the glossary page, classical signature baselines, and everything in Tier 2.
 Those follow separately.
+
+---
+
+## Correction, same day — three fields never reached a record
+
+The first daily run after this work-order merged (2026-08-30, `d0dd45f`) showed the confidence
+intervals working exactly as intended and **three other fields entirely absent** from the composed
+record:
+
+| Field | In the run |
+|---|---|
+| `timing.ci95_low_us` / `ci95_high_us` / `std_error_us` | **present** |
+| `identity.use_cases` / `cfdir_framework` / `tls_version` | **present** |
+| `size.secret_key_bytes` | absent |
+| `resources` | absent |
+| `host.ec2_instance_type` | absent |
+
+**Nothing that was tested was broken.** `resource_delta()` worked. `confidence_interval()` worked.
+The schema accepted all three fields. What did not exist was the **seam**: `time_hybrid_kex()`
+computed the secret key size and the resource block, `build_result()` had no parameter to receive
+either, and the tracks never passed them. `capture_host()` never populated the instance type at all —
+`HostInfo` had no such field, though the schema declared one.
+
+The tests could not have caught it. They tested the parts in isolation and the schema in isolation,
+and the thing that was missing was the join between them.
+
+`benchmark/tests/test_record_seam.py` now tests that join: a record built the way a track builds one
+must contain what the schema says it can, `secret_key_bytes` is absent rather than zero on a suite
+with no KEM, the `resources` block is omitted rather than emitted empty, and each of the three
+composed tracks is checked to actually forward both values.
+
+**One thing the fix had to get right.** `host.ec2_instance_type` is null off EC2 and the schema
+declared it a bare `string`, so the first fully-built record failed validation. Made nullable, which
+matches every other optional field in that block — the host record is built with `asdict()`, so an
+unpopulated field arrives as null rather than being omitted. The IMDS lookup is also time-boxed to a
+second per call, because a hanging metadata request inside `capture_host()` would stall every run on
+any machine that is not EC2.
+
+**One consequence worth noting:** the primitives file (`benchmark.py`) has carried `privkey_bytes`
+and `ec2_instance_type` all along. It was only the *composed* tracks that were missing them, which is
+why the gap was invisible until someone looked at a composed record specifically.

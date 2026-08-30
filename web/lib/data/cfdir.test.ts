@@ -8,6 +8,7 @@ import {
   tracksPresent,
   coverageByUseCase,
   hasClassicalSignatureArm,
+  hasCryptoThroughputUnderLoad,
   lineItemsFor,
 } from "./cfdir";
 import type { ProtocolsData } from "@/lib/protocols/types";
@@ -15,6 +16,7 @@ import type { ProtocolsData } from "@/lib/protocols/types";
 function data(tracks: {
   tls?: boolean;
   ipsec?: boolean;
+  concurrency?: boolean;
   ssh?: boolean;
   sig?: boolean;
   aes?: boolean;
@@ -25,6 +27,9 @@ function data(tracks: {
       x86_64: {
         tls: tracks.tls ? ({ suites: { X25519: {} } } as never) : null,
         ipsec: tracks.ipsec ? ({ suites: { curve25519: {} } } as never) : null,
+        concurrency: tracks.concurrency
+          ? ({ operations: { spin: { points: [{ measured: true }] } } } as never)
+          : null,
         ssh: tracks.ssh ? ({ suites: { curve25519: {} } } as never) : null,
         sig: tracks.sig ? ({} as never) : null,
         aes: tracks.aes ? ({} as never) : null,
@@ -76,7 +81,10 @@ describe("tracksPresent", () => {
     const empty = {
       manifest: null,
       byArch: {
-        x86_64: { tls: { suites: {} } as never, ipsec: null, ssh: null, sig: null, aes: null, lmsXmss: null },
+        x86_64: {
+          tls: { suites: {} } as never, ipsec: null, concurrency: null,
+          ssh: null, sig: null, aes: null, lmsXmss: null,
+        },
       },
     } as ProtocolsData;
     expect(tracksPresent(empty).has("tls-composed")).toBe(false);
@@ -156,6 +164,7 @@ describe("hasClassicalSignatureArm", () => {
         x86_64: {
           tls: null,
           ipsec: null,
+          concurrency: null,
           ssh: null,
           sig: { schemes } as never,
           aes: null,
@@ -212,6 +221,7 @@ describe("lineItemsFor", () => {
       x86_64: {
         tls: null,
         ipsec: null,
+        concurrency: null,
         ssh: null,
         sig: { schemes: { "ECDSA-P256": { kind: "classical", status: "ok" } } } as never,
         aes: null,
@@ -278,5 +288,54 @@ describe("the network-layer use case (3.12)", () => {
   it("counts the ipsec track as present only when it has suites", () => {
     expect(tracksPresent(data({ ipsec: true })).has("ipsec-composed")).toBe(true);
     expect(tracksPresent(data({ tls: true })).has("ipsec-composed")).toBe(false);
+  });
+});
+
+describe("MIA — the two numbers that must not share a label", () => {
+  const noData = { manifest: null, byArch: {} } as ProtocolsData;
+
+  it("keeps the pessimistic blocker while no throughput run has landed", () => {
+    const mia = lineItemsFor(noData).find((li) => li.code === "MIA")!;
+    expect(mia.blocker).toContain("not yet appeared");
+  });
+
+  it("rewrites the blocker once cryptographic throughput is measured", () => {
+    const mia = lineItemsFor(data({ concurrency: true })).find((li) => li.code === "MIA")!;
+    expect(mia.blocker).toContain("Both halves are now measured");
+    // The distinction is the whole point of layer-b-spec.md §7.
+    expect(mia.blocker).toContain("connections per core");
+    expect(mia.blocker).toContain("CPU contention");
+  });
+
+  it("keeps the core-count limit in the rewritten blocker", () => {
+    // Beyond the host's cores the figures describe the scheduler, not scaling.
+    const mia = lineItemsFor(data({ concurrency: true })).find((li) => li.code === "MIA")!;
+    expect(mia.blocker).toContain("oversubscription");
+  });
+
+  it("does not count a run whose every point failed to measure", () => {
+    const failed = {
+      manifest: null,
+      byArch: {
+        x86_64: {
+          tls: null,
+          ipsec: null,
+          concurrency: {
+            operations: { spin: { points: [{ measured: false }] } },
+          } as never,
+          ssh: null,
+          sig: null,
+          aes: null,
+          lmsXmss: null,
+        },
+      },
+    } as ProtocolsData;
+    expect(hasCryptoThroughputUnderLoad(failed)).toBe(false);
+  });
+
+  it("is independent of the classical signature arm", () => {
+    // T and MIA move for different reasons; neither may drag the other.
+    const onlyConcurrency = lineItemsFor(data({ concurrency: true }));
+    expect(onlyConcurrency.find((li) => li.code === "T")!.blocker).toContain("not yet appeared");
   });
 });

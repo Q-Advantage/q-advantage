@@ -219,9 +219,61 @@ export interface IPsecComposedFile {
   suites: Record<string, ComposedSuite>;
 }
 
+/**
+ * Cryptographic throughput under load — Layer A's answer to CFDIR's MIA line
+ * item.
+ *
+ * `layer-b-spec.md` §7 exists to keep this and Layer B's connections-per-core
+ * number apart: this one is N concurrent crypto operations contending for CPU
+ * with no sockets involved. The `label` field carries that distinction in the
+ * data so a page cannot lose it, and `oversubscribed` marks the points that
+ * measure the scheduler rather than parallel scaling.
+ */
+export interface ConcurrencyPoint {
+  n_workers: number;
+  measured: boolean;
+  reason?: string;
+  workers_reporting?: number;
+  duration_s?: number;
+  ops_completed_total?: number;
+  aggregate_ops_per_sec?: number;
+  per_worker_ops_per_sec?: { min: number; median: number; max: number };
+  /** True when worker count exceeded the host's logical cores. */
+  oversubscribed?: boolean;
+  scaling_efficiency?: number | null;
+  efficiency_note?: string;
+}
+
+export interface ConcurrencyOperation {
+  label: string;
+  label_note: string;
+  single_worker_ops_per_sec: number | null;
+  points: ConcurrencyPoint[];
+}
+
+export interface ConcurrencyFile {
+  environment: ComposedEnvironment & {
+    cpu_model?: string;
+    arch?: string;
+    cpu_cores_logical?: number;
+    steal_time_pct?: number;
+  };
+  method: {
+    label: string;
+    label_note: string;
+    parallelism: string;
+    timing: string;
+    synchronisation: string;
+    core_count_caveat: string;
+    relationship_to_single_op_track: string;
+  };
+  operations: Record<string, ConcurrencyOperation>;
+}
+
 export interface ArchBucket {
   tls: TLSComposedFile | null;
   ipsec: IPsecComposedFile | null;
+  concurrency: ConcurrencyFile | null;
   sig: SigTrackFile | null;
   ssh: SSHComposedFile | null;
   aes: AesBaselineFile | null;

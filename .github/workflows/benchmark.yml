@@ -73,6 +73,48 @@ jobs:
           python3 benchmark/protocols/lms_xmss.py \
             --output-dir benchmark/results/protocols
 
+      # --- Tracks added 2026-08-30 -------------------------------------------
+      #
+      # continue-on-error is deliberate and load-bearing, not defensive habit.
+      # Steps in this job run sequentially and a failure aborts the job before
+      # "Commit results" -- so without it, a bug in a new and comparatively
+      # unproven track would stop the whole daily record from being committed.
+      # The established tracks above have already written their output by this
+      # point; nothing new is allowed to take them down with it.
+      #
+      # The cost is that a silent failure here would go unnoticed, so the
+      # "New tracks - status" step below reports presence or absence into the
+      # job summary. Remove continue-on-error once a track has a few weeks of
+      # clean runs behind it and is no longer the newest thing in the file.
+
+      - name: Run benchmark — IPsec/IKEv2 composed (Layer A)
+        continue-on-error: true
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/protocols/ipsec_composed.py             --output-dir benchmark/results/protocols
+
+      - name: Run benchmark — cryptographic throughput under load
+        continue-on-error: true
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/protocols/concurrency.py             --output-dir benchmark/results/protocols
+
+      - name: New tracks — status
+        if: always()
+        run: |
+          # Reports rather than fails: these tracks must never gate the daily
+          # commit, but a track that quietly stopped producing output should
+          # still be visible to whoever reads the run.
+          echo "### New track output" >> $GITHUB_STEP_SUMMARY
+          today=$(date -u +%Y-%m-%d)
+          for track in ipsec-composed concurrency; do
+            if ls benchmark/results/protocols/${track}-${today}-*.json >/dev/null 2>&1; then
+              echo "- \`${track}\`: wrote output" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- \`${track}\`: **no output this run** — check the step above" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
       - name: Build protocol manifest for web
         run: |
           source ~/q-advantage/venv/bin/activate

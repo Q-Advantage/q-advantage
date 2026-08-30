@@ -270,8 +270,11 @@
           "description": "CPU steal during the run. Non-zero sustained steal on a burstable instance means the timings were taken while the hypervisor was taking cycles away. Published rather than smoothed."
         },
         "ec2_instance_type": {
-          "type": "string",
-          "description": "Instance type this record was measured on. Recorded because two hosts can share an architecture: without it, results from different machines collapse into one bucket and a hardware change becomes invisible. See web/lib/data/hosts.ts."
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Instance type this record was measured on, or null off EC2. Nullable to match every other optional field in this block: the host record is built with asdict(), so an unpopulated field arrives as null rather than being omitted. Recorded because two hosts can share an architecture and a CPU model string -- without it, results from different machines collapse into one bucket and a hardware change becomes invisible. See web/lib/data/hosts.ts."
         }
       }
     },
