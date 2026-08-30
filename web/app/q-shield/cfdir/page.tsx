@@ -24,6 +24,10 @@ import {
 } from "@/lib/data/cert-chain";
 
 export const metadata: Metadata = {
+  // Unlinked and de-indexed 2026-08-30 — see app/q-shield/layout.tsx for why.
+  // Orphaning a page without this leaves it in search results, reachable by
+  // exactly the people we least want landing on it cold.
+  robots: { index: false, follow: false },
   title: "CFDIR coverage | Q-Shield",
   description:
     "Q-Shield's measurements arranged by the CFDIR migration-cost framework's own use cases and line items, with the uncovered cells shown as empty.",

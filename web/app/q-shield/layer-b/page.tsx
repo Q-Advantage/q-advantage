@@ -16,6 +16,10 @@ import type { LayerBResult } from "@/lib/layer-b/types";
 import { formatBytes } from "@/lib/format";
 
 export const metadata: Metadata = {
+  // Unlinked and de-indexed 2026-08-30 — see app/q-shield/layout.tsx for why.
+  // Orphaning a page without this leaves it in search results, reachable by
+  // exactly the people we least want landing on it cold.
+  robots: { index: false, follow: false },
   title: "Layer B — live handshakes | Q-Shield",
   description:
     "Real TLS handshakes between stacks we control, captured on the wire. Packets per handshake, congestion-window pressure, and downgrade behaviour — measurements the composed harness structurally cannot produce.",
