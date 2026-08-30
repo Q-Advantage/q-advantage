@@ -12,6 +12,7 @@ import type {
   TLSComposedFile,
   IPsecComposedFile,
   ConcurrencyFile,
+  JoseComposedFile,
   SigTrackFile,
   SSHComposedFile,
   AesBaselineFile,
@@ -40,7 +41,7 @@ export function loadProtocolsData(): ProtocolsData {
   const byArch: Record<string, ArchBucket> = {};
 
   for (const arch of manifest.arches) {
-    byArch[arch] = { tls: null, ipsec: null, concurrency: null, sig: null, ssh: null, aes: null, lmsXmss: null };
+    byArch[arch] = { tls: null, ipsec: null, concurrency: null, jose: null, sig: null, ssh: null, aes: null, lmsXmss: null };
   }
 
   for (const entry of Object.values(manifest.files)) {
@@ -54,6 +55,8 @@ export function loadProtocolsData(): ProtocolsData {
     // and byArch[arch].aes/lmsXmss stay null. Consumers must handle null.
     if (entry.track === "concurrency") {
       bucket.concurrency = readJson<ConcurrencyFile>(filePath);
+    } else if (entry.track === "jose-composed") {
+      bucket.jose = readJson<JoseComposedFile>(filePath);
     } else if (entry.track === "ipsec-composed") {
       bucket.ipsec = readJson<IPsecComposedFile>(filePath);
     } else if (entry.track === "tls-composed") {

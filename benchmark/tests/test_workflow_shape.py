@@ -32,6 +32,7 @@ WORKFLOW = Path(__file__).resolve().parents[2] / ".github" / "workflows" / "benc
 PROVISIONAL_TRACKS = (
     "IPsec/IKEv2 composed",
     "cryptographic throughput under load",
+    "JWT/JOSE composed signing",
 )
 
 
@@ -100,7 +101,7 @@ class TestSilentFailureIsVisible:
 
     def test_the_status_step_covers_every_provisional_track(self, steps, names):
         status = next(s for s, n in zip(steps, names) if "New tracks" in n)
-        for slug in ("ipsec-composed", "concurrency"):
+        for slug in ("ipsec-composed", "concurrency", "jose-composed"):
             assert slug in status["run"], slug
 
 
