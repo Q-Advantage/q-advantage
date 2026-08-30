@@ -90,3 +90,49 @@ load"*; Layer B's is *connections per core*. Two different numbers must never sh
 The oqs-provider version pin is asserted, not yet confirmed — the CI image build is what confirms it.
 The hybrid group code points are `#unverified` against the IANA registry. Neither blocks the
 foundation; both are flagged in the code rather than assumed.
+
+## Confirmed working, 2026-08-30
+
+CI run `33289960347`, both jobs green. The image built, the stack negotiated, and the pipeline read
+the result back out of the wire:
+
+```json
+"outcome":  { "outcome": "negotiated", "detail": "Negotiated X25519MLKEM768." },
+"negotiated_group": { "code": 4588, "name": "X25519MLKEM768",
+                      "identity_verified": false,
+                      "source": "wire bytes (ServerHello key_share extension)" },
+"client_hello_bytes": 1388,   "server_hello_bytes": 1210,
+"packets_total": 19,          "packets_client_to_server": 11,
+                              "packets_server_to_client": 8,
+"wire_bytes_total": 9489,     "ip_fragments": 0
+```
+
+**`packets_total: 19` is the first Layer B measurement this repo has ever produced**, and it closes a
+gap Layer A is structurally incapable of answering — the composed harness has no socket, so
+"packets per handshake" has been named as unmeasurable in the calculator's own disclaimer since it
+shipped. This is a captured count, not an estimate.
+
+Two other things the run confirms: the oqs-provider pin is correct (previously asserted, not
+verified), and `/usr/local/include/oqs/sig_stfl.h` is present in the image — **the LMS/XMSS build
+flags work**, which is what the rebuild on the measurement host still needs.
+
+`code 4588` is `0x11EC`, matching the mapping in `tls_wire.py`. It remains flagged
+`identity_verified: false` because agreement between our table and one implementation is not a
+primary source; the IANA registry check is still outstanding.
+
+## What the first CI run caught, and why it mattered
+
+The run before this one built the image, negotiated a real handshake, captured it — and reported
+**`no_traffic_captured`**. The handshake was fine; the reader was not. `tcpdump -i any` on a modern
+kernel writes `LINKTYPE_LINUX_SLL2` (276), not the `LINUX_SLL` (113) the reader handled, so every
+packet fell through and was skipped.
+
+The missing linktype is the shallow half. The dangerous half is the failure mode: **"no traffic
+captured" is a real Layer B outcome** — it is exactly what a client that never connected looks like —
+so an unreadable capture was indistinguishable from a genuine negative result. An instrument whose
+parse failures are silently reported as findings is worse than one that crashes.
+
+`iter_packets` now raises on any linktype it cannot parse, `tcpdump` runs packet-buffered (`-U`), and
+the orchestration no longer tears the stack down between the handshake and the flush. Three tests
+cover it, including one asserting that an unsupported linktype raises rather than reporting no
+traffic.
