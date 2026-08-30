@@ -31,21 +31,39 @@ survivable, and the difference is invisible unless somebody actually sends the r
 ## What the first real run found
 
 **Front doors: nothing broke.** nginx, HAProxy and Node.js each accepted every token size tested up
-to ML-DSA-87's ~6.5 KB, on default configuration, in an `Authorization` header. That is a useful
-negative result and it is published as one.
+to ML-DSA-87's ~6.5 KB, on default configuration, **in both carriers** — `Authorization` header and
+`Cookie`. 30 request/outcome pairs, all accepted. That is a useful negative result and it is
+published as one.
 
-**Certificate parsers: the reassuring middle outcome.** Stock OpenSSL with only the default provider
-read every ML-DSA certificate's subject, expiry and serial, and could not read the public key —
-`parsed_structure_key_opaque`, not `refused_the_file`. That distinction is the whole point of the
-probe: an inventory built on this is **complete**, and the unknown algorithm is a labelling problem
-rather than a data problem. Had it been `refused_the_file`, every ML-DSA certificate would be
-invisible to scanners, and an inventory that silently omits the certificates a migration is about is
-worse than no inventory.
+Worth stating plainly, because it qualifies work-order 022's finding rather than contradicting it:
+022 measured an ML-DSA-65 token at 4,730 bytes against RFC 6265 §6.1's 4,096-byte figure, which is
+a floor the specification asks servers to *support*, not a ceiling they enforce. These three, on
+their defaults, all carry considerably more than the floor. The size finding stands; the "and
+therefore it will be rejected" inference does not, for these products.
 
-## Two gaps the first run exposed in the probe itself
+**Certificate parsers: the reassuring middle outcome, and two independent implementations agree on
+it exactly.**
 
-Both are fixed, and both are worth recording because they were failures of the instrument rather
-than findings about the software.
+| Certificate | OpenSSL (default provider only) | python-cryptography 41 |
+|---|---|---|
+| ecdsa-p256, rsa-2048, rsa-3072 | parsed fully | parsed fully |
+| ML-DSA-44 / -65 / -87 | structure read, key opaque | structure read, key opaque |
+
+Both read every ML-DSA certificate's subject, expiry and serial, and neither could read the public
+key — `parsed_structure_key_opaque`, **not** `refused_the_file`. That distinction is the whole point
+of the probe: an inventory built on this is **complete**, and the unknown algorithm is a labelling
+problem rather than a data problem. Had it been `refused_the_file`, every ML-DSA certificate would
+be invisible to scanners, and an inventory that silently omits the certificates a migration is about
+is worse than no inventory.
+
+The agreement matters as much as the result. Two independent X.509 implementations — not one library
+and its own CLI — reaching the same verdict is evidence about the certificates rather than about a
+single parser.
+
+## Three gaps the CI runs exposed in the probe itself
+
+All fixed, and all worth recording because they were failures of the instrument rather than findings
+about the software. Two of the three would have been published as findings.
 
 1. **Only the `Authorization` header was probed.** The JOSE track's finding was about the
    4,096-byte **cookie** default (RFC 6265 §6.1). A clean result would have looked like it
@@ -55,6 +73,13 @@ than findings about the software.
    certificate, silently reducing "two independent parsers" to one — and one implementation cannot
    distinguish *"this certificate is malformed"* from *"this tool cannot read this algorithm"*,
    which is the entire reason there are two.
+3. **Then it ran, and failed its own control.** With the library installed, every algorithm came
+   back `parsed_partially` — **the classical arms included**. A classical certificate failing is the
+   probe's control failing. The cause was one line: the probe read only `not_valid_after_utc`, which
+   arrived in cryptography 42, on an image carrying 41. Published unfixed it would have read as "no
+   parser can fully read these certificates" when in fact the probe was wrong. The header probe
+   already had the rule that a failing baseline points at the instrument; the parser probe did not,
+   and now does.
 
 ## Done looks like
 
