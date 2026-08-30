@@ -209,6 +209,44 @@ methods glossary:** <https://qadvantage.io/methodology#q-day-index>
 
 ---
 
+## CFDIR alignment
+
+The CFDIR migration-cost framework is **use-case shaped** — fourteen named use
+cases, applied per use case rather than system-wide. Q-Shield's output is
+**algorithm shaped**. A cost model cannot consume the second directly, so each
+composed track declares which CFDIR use case it prices, in the result record
+itself:
+
+- `tls_composed` prices **3.4, TLS cipher suites**. Deliberately not 3.5, TLS
+  certificates: the certificate chain is out of scope for this measurement, and
+  the chain is the cost in 3.5.
+- `ssh_composed` prices **3.13, SSH/SFTP distributed**. Not 3.14, which needs a
+  key-management dimension this track does not have.
+
+Declaring it per track is what makes de-duplication mechanical. CFDIR's own
+assumption 8 warns that redundant costs may be counted in different line items
+and leaves it to the reader to avoid; once anything sums several tracks, that is
+a live arithmetic risk rather than a hypothetical one.
+
+The framework version is pinned in the record (`cfdir_framework`), the same way
+liboqs and OpenSSL versions are. Their document is dated and states it will be
+reviewed annually, so a revision to it is a methodology event here.
+
+**Both TLS arms are TLS 1.3, and this is recorded explicitly rather than implied
+by the suite name.** CFDIR notes that PQC migration may also require moving from
+TLS 1.2 to 1.3, and that this uplift is *independent* of quantum-safe migration.
+A classical arm measured on 1.2 would silently bundle that uplift into every
+delta published as the PQC increment.
+
+**No blended overhead figure is published.** The CPU and wire components of the
+cost delta can have opposite signs — pure ML-KEM is faster than X25519 on CPU
+while being heavier on the wire — so collapsing them into one number requires a
+price for microseconds against bytes. That price belongs to whoever is doing the
+costing. Components are published signed and separate.
+
+Coverage today is published at `/q-shield/cfdir`, with the uncovered cells shown
+as empty. Those cells are the roadmap.
+
 ## Statistical reporting
 
 Every operation records mean, median, p95, p99, standard deviation, min, max and

@@ -81,6 +81,12 @@ def run(iterations: int, warmup: int) -> dict:
             cross_validation=cv,
             toolchain=toolchain,
             host=host,
+            # Every arm is TLS 1.3, classical included. Stated in the record
+            # rather than implied by the suite name: CFDIR notes the 1.2->1.3
+            # uplift is independent of quantum-safe migration, so a classical
+            # arm on 1.2 would fold that uplift into a figure published as the
+            # PQC increment.
+            tls_version="1.3",
         )
         records[suite] = rec
 

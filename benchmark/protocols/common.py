@@ -532,6 +532,45 @@ def utc_timestamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+
+# ----------------------------------------------------------------------------
+# CFDIR alignment (qshield-update-spec.md section 16)
+# ----------------------------------------------------------------------------
+#
+# CFDIR's framework is USE-CASE shaped -- fourteen named use cases, applied per
+# use case rather than system-wide -- while our output is ALGORITHM shaped. A
+# cost model cannot consume the second directly.
+#
+# The composed-protocol tracks are already the use-case layer, so the join is
+# a declaration rather than a re-architecture: each track says which use
+# case(s) it prices.
+#
+# Why declare it in the record instead of in a table somewhere: CFDIR's own
+# assumption 8 warns that "redundant costs may be accounted for in different
+# line items" and leaves it to the reader to avoid. Once anything sums several
+# tracks, double-counting is a live arithmetic risk -- their own worked example
+# is TLS cipher suites and TLS certificates riding the same server upgrade. A
+# per-track declaration makes the de-duplication rule mechanical rather than
+# editorial.
+
+#: Pinned like a library version. Their document is dated and states it will be
+#: reviewed annually, so a revision is a methodology event, not a silent change
+#: in what our mapping means.
+CFDIR_FRAMEWORK_VERSION = "v.01"
+
+#: Which CFDIR use case each track prices. A track absent from this map emits
+#: no declaration at all, which is the honest default -- claiming a use case we
+#: have not thought about would be worse than claiming none.
+CFDIR_USE_CASES: dict[str, list[str]] = {
+    # 3.4 TLS cipher suites. Deliberately NOT also 3.5 (TLS certificates):
+    # the certificate chain is explicitly out of scope for this measurement,
+    # and the chain is the cost in 3.5.
+    "tls": ["cfdir-3.4"],
+    # 3.13 SSH/SFTP distributed. Not 3.14, which needs a key-management
+    # dimension this track does not have.
+    "ssh": ["cfdir-3.13"],
+}
+
 # ----------------------------------------------------------------------------
 # Result-record builder (conforms to schema/protocol_result.schema.json)
 # ----------------------------------------------------------------------------
@@ -550,9 +589,27 @@ def build_result(
     auth: dict | None = None,
     toolchain: ToolchainVersions | None = None,
     host: HostInfo | None = None,
+    tls_version: str | None = None,
 ) -> dict:
+    identity: dict[str, Any] = {"protocol": protocol, "mode": mode, "suite": suite}
+
+    use_cases = CFDIR_USE_CASES.get(protocol)
+    if use_cases:
+        identity["use_cases"] = list(use_cases)
+        identity["cfdir_framework"] = CFDIR_FRAMEWORK_VERSION
+
+    # The inherent/net boundary, drawn through the measurement itself. CFDIR
+    # notes that PQC migration may also require moving from TLS 1.2 to 1.3, and
+    # that this uplift is INDEPENDENT of quantum-safe migration. If our
+    # classical arm were 1.2, every delta we publish would silently bundle that
+    # uplift into a figure presented as the PQC increment -- inflating it by
+    # exactly the amount their document warns about. Both arms are 1.3. Recorded
+    # so the choice is defensible rather than incidental.
+    if tls_version:
+        identity["tls_version"] = tls_version
+
     rec = {
-        "identity": {"protocol": protocol, "mode": mode, "suite": suite},
+        "identity": identity,
         "timing": timing,
         "size": asdict(size),
         "baseline": {"baseline_suite": baseline_suite, "pct_over_classical": pct_over_classical},

@@ -40,6 +40,22 @@
         "suite": {
           "type": "string",
           "description": "Group / kex string, e.g. X25519MLKEM768 or mlkem768x25519-sha256"
+        },
+        "use_cases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^cfdir-3\\.\\d+$"
+          },
+          "description": "Which CFDIR use case(s) this track prices, e.g. [\"cfdir-3.4\"]. Declared per track so the de-duplication rule across overlapping tracks is mechanical rather than editorial: CFDIR's own assumption 8 warns that redundant costs may be counted in different line items and leaves it to the reader to avoid. Once a cost model sums several tracks, double-counting is a live arithmetic risk, so each track states what it prices."
+        },
+        "cfdir_framework": {
+          "type": "string",
+          "description": "The CFDIR framework version the use_cases mapping targets, pinned the way a library version is. Their document is dated and states it will be reviewed annually, so a revision is a methodology event rather than a silent change in meaning."
+        },
+        "tls_version": {
+          "type": "string",
+          "description": "TLS version of the arm being measured, recorded explicitly rather than left implicit in the suite name. This is the inherent/net boundary drawn through the measurement: CFDIR notes that PQC migration may also require moving from TLS 1.2 to 1.3, and that this uplift is INDEPENDENT of quantum-safe migration. A classical arm on 1.2 would silently bundle that uplift into a figure published as the PQC increment. Both arms are 1.3, deliberately."
         }
       }
     },
