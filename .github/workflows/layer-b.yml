@@ -1,0 +1,124 @@
+name: Layer B
+
+# Layer B's parsers are pure and are tested on every PR by the harness job in
+# ci.yml. THIS workflow does the expensive half: it builds the reference stack
+# and runs a real handshake between two containers.
+#
+# It is deliberately NOT on every pull request. Building liboqs and
+# oqs-provider from source takes many minutes, and nothing in web/ depends on
+# it. It runs when Layer B itself changes, and on demand.
+#
+# What this workflow proves, and what it does not. It proves the image builds,
+# the stack negotiates a post-quantum group, and the capture pipeline reads
+# that group back out of the wire. It does NOT produce a published figure:
+# a handshake timed on a shared GitHub runner is not a Q-Shield measurement,
+# the emitted result says so in its own timing block, and nothing here is
+# committed to the record.
+
+on:
+  push:
+    paths:
+      - "layer-b/**"
+      - ".github/workflows/layer-b.yml"
+      - "schema/layer_b_result.schema.json"
+  pull_request:
+    paths:
+      - "layer-b/**"
+      - ".github/workflows/layer-b.yml"
+      - "schema/layer_b_result.schema.json"
+  workflow_dispatch:
+
+jobs:
+  parsers:
+    name: wire and capture parsers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r benchmark/requirements-dev.txt
+      - name: Parser tests
+        run: python -m pytest layer-b/tests -q
+
+  live-handshake:
+    name: build the stack and negotiate for real
+    runs-on: ubuntu-latest
+    # Building liboqs + oqs-provider from source is slow but bounded.
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build the reference stack
+        working-directory: layer-b
+        run: docker build -t q-advantage/layer-b:dev .
+
+      - name: Record what actually got built
+        run: |
+          docker run --rm q-advantage/layer-b:dev cat /layer-b/openssl-version.txt
+          docker run --rm q-advantage/layer-b:dev cat /layer-b/providers.txt
+
+      - name: Confirm the stateful signature flags took
+        # Layer A's LMS/XMSS harness has reported unavailable since 2026-08-14
+        # because the measurement host's liboqs lacks these. Proving them here
+        # first is the whole point of pinning them in this image: it de-risks
+        # the rebuild on the box that produces the product's data.
+        run: |
+          docker run --rm q-advantage/layer-b:dev bash -lc \
+            'ls /usr/local/include/oqs/sig_stfl.h && echo "stateful signature headers present"'
+
+      - name: Pairwise handshake, captured
+        working-directory: layer-b
+        run: |
+          mkdir -p out
+          GROUPS_CLIENT=X25519MLKEM768:x25519 \
+          GROUPS_SERVER=X25519MLKEM768:x25519 \
+          docker compose up --abort-on-container-exit --exit-code-from client || true
+          docker compose down -v || true
+          ls -la out/
+
+      - name: Read the negotiated group back out of the wire
+        working-directory: layer-b
+        run: |
+          python capture/parse_capture.py out/handshake.pcap \
+            --label pairwise \
+            --client-groups X25519MLKEM768:x25519 \
+            --server-groups X25519MLKEM768:x25519 \
+            --output-dir out/results
+          cat out/results/*.json
+
+      - name: Assert the pipeline read a real negotiation
+        working-directory: layer-b
+        run: |
+          python - <<'PY'
+          import glob, json, sys
+          paths = glob.glob("out/results/*.json")
+          if not paths:
+              sys.exit("no result file was produced")
+          r = json.load(open(paths[0]))
+          print(json.dumps(r["outcome"], indent=2))
+          if r["outcome"]["outcome"] not in ("negotiated", "negotiated_after_retry"):
+              sys.exit("expected a successful negotiation, got %r" % r["outcome"])
+          if not r["wire"]["negotiated_group"]:
+              sys.exit("no negotiated group was read from the wire")
+          # The one non-negotiable property: this came from the bytes, not from
+          # s_client's own report.
+          assert r["wire"]["negotiated_group"]["source"].startswith("wire bytes")
+          # And a CI timing must never be marked publishable.
+          assert r["timing"]["publishable"] is False, "CI timings are not Q-Shield figures"
+          print("OK:", r["wire"]["negotiated_group"]["name"])
+          PY
+
+      - name: Upload the capture and result for inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: layer-b-capture
+          path: |
+            layer-b/out/handshake.pcap
+            layer-b/out/results/*.json
+          if-no-files-found: warn

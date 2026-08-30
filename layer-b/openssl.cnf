@@ -1,0 +1,20 @@
+# OpenSSL configuration for the Layer B reference stack.
+#
+# Loads oqs-provider alongside the default provider so PQC and hybrid groups
+# are available at the TLS layer. Nothing here selects a group: the group under
+# test is passed per-run by the client and server scripts, so a run's
+# configuration is visible in the result file rather than buried in an image.
+openssl_conf = openssl_init
+
+[openssl_init]
+providers = provider_sect
+
+[provider_sect]
+default = default_sect
+oqsprovider = oqsprovider_sect
+
+[default_sect]
+activate = 1
+
+[oqsprovider_sect]
+activate = 1

@@ -1,0 +1,60 @@
+# Layer B pairwise testbed.
+#
+# Three containers on one bridge: a TLS server, a TLS client, and a capture
+# sidecar. The sidecar shares the SERVER's network namespace, so tcpdump sees
+# the same packets the server's stack does -- capturing on the docker bridge
+# from the host would also work but would put the host's networking config
+# between us and the wire.
+#
+# GROUPS_CLIENT and GROUPS_SERVER are separate on purpose. Setting them to
+# non-overlapping lists is the deliberate-misconfiguration mode from
+# layer-b-spec.md section 3a: a rejected handshake is a labelled result, not a
+# broken run.
+services:
+  server:
+    build: .
+    image: q-advantage/layer-b:dev
+    environment:
+      GROUPS: ${GROUPS_SERVER:-X25519MLKEM768:x25519}
+      PORT: "4433"
+    command: ["/layer-b/scripts/server.sh"]
+    networks: [testbed]
+
+  capture:
+    image: q-advantage/layer-b:dev
+    depends_on: [server]
+    # Shares the server's namespace so the capture is taken at the endpoint.
+    network_mode: "service:server"
+    cap_add: [NET_ADMIN, NET_RAW]
+    volumes:
+      - ./out:/out
+    command:
+      - /bin/bash
+      - -lc
+      - |
+        mkdir -p /out
+        # -s 0 keeps whole packets: a truncated snaplen would silently cut off
+        # the very key_share bytes this whole exercise exists to read.
+        timeout "${CAPTURE_SECONDS:-25}" tcpdump -i any -s 0 -w /out/handshake.pcap \
+          "tcp port 4433" || true
+        echo "capture: done"
+
+  client:
+    image: q-advantage/layer-b:dev
+    depends_on: [capture]
+    environment:
+      GROUPS: ${GROUPS_CLIENT:-X25519MLKEM768:x25519}
+      HOST: server
+      PORT: "4433"
+    command:
+      - /bin/bash
+      - -lc
+      - |
+        # Let the server bind and the capture start before generating traffic.
+        sleep 6
+        /layer-b/scripts/client.sh
+    networks: [testbed]
+
+networks:
+  testbed:
+    driver: bridge
