@@ -139,9 +139,13 @@ export const USE_CASES: UseCase[] = [
   {
     id: "3.12",
     name: "Network layer (IPsec / IKE / MACsec)",
-    track: null,
-    gap: "No IPsec composed track. Not a reskin of the TLS one — a missing track.",
-    coverageWhenPresent: "none",
+    track: "ipsec-composed",
+    // Partial rather than covered, and the reason is in the use case's own
+    // name: it bundles IPsec/IKE with MACsec, and only the first is measured.
+    // A tunnel's real cost also turns on its rekey rate, which is a deployment
+    // setting rather than a property of the cryptography.
+    gap: "IKEv2 key establishment is measured. MACsec, named in the same use case, is not — and MODP groups, still common in deployed IPsec, are not yet measured either.",
+    coverageWhenPresent: "partial",
   },
   {
     id: "3.13",
@@ -255,6 +259,9 @@ export function tracksPresent(data: ProtocolsData): Set<string> {
   for (const arch of Object.keys(data.byArch ?? {})) {
     const bucket = data.byArch[arch];
     if (bucket?.tls?.suites && Object.keys(bucket.tls.suites).length) present.add("tls-composed");
+    if (bucket?.ipsec?.suites && Object.keys(bucket.ipsec.suites).length) {
+      present.add("ipsec-composed");
+    }
     if (bucket?.ssh?.suites && Object.keys(bucket.ssh.suites).length) present.add("ssh-composed");
     if (bucket?.sig) present.add("sig-track");
     if (bucket?.aes) present.add("aes-baseline");

@@ -10,6 +10,7 @@ import path from "path";
 import type {
   Manifest,
   TLSComposedFile,
+  IPsecComposedFile,
   SigTrackFile,
   SSHComposedFile,
   AesBaselineFile,
@@ -38,7 +39,7 @@ export function loadProtocolsData(): ProtocolsData {
   const byArch: Record<string, ArchBucket> = {};
 
   for (const arch of manifest.arches) {
-    byArch[arch] = { tls: null, sig: null, ssh: null, aes: null, lmsXmss: null };
+    byArch[arch] = { tls: null, ipsec: null, sig: null, ssh: null, aes: null, lmsXmss: null };
   }
 
   for (const entry of Object.values(manifest.files)) {
@@ -50,7 +51,9 @@ export function loadProtocolsData(): ProtocolsData {
     // New track prefixes (aes-baseline, lms-xmss) are additive — a manifest
     // built before PR A's harness ever runs simply won't have these keys,
     // and byArch[arch].aes/lmsXmss stay null. Consumers must handle null.
-    if (entry.track === "tls-composed") {
+    if (entry.track === "ipsec-composed") {
+      bucket.ipsec = readJson<IPsecComposedFile>(filePath);
+    } else if (entry.track === "tls-composed") {
       bucket.tls = readJson<TLSComposedFile>(filePath);
     } else if (entry.track === "sig-track") {
       bucket.sig = readJson<SigTrackFile>(filePath);

@@ -204,6 +204,9 @@ export default function ProtocolsPage() {
   const primary = data.byArch["x86_64"] ?? data.byArch[arches[0]];
   const env = primary?.tls?.environment;
   const aes = aesBaselinesByArch(data);
+  // Published from the track itself rather than retyped here, so the page
+  // cannot drift from what the harness actually disclaims.
+  const ipsecScope = primary?.ipsec?.scope ?? null;
 
   // Structurally impossible comparisons in this build's committed data. The
   // number is withheld from every table above (publishableVsBaselinePct); this
@@ -240,6 +243,7 @@ export default function ProtocolsPage() {
 
   const tlsPanel = trackPanel((a) => data.byArch[a]?.tls?.suites);
   const sshPanel = trackPanel((a) => data.byArch[a]?.ssh?.suites);
+  const ipsecPanel = trackPanel((a) => data.byArch[a]?.ipsec?.suites);
 
   const sigPanel = primary?.sig?.schemes ? (
           <SortableTable
@@ -316,6 +320,7 @@ export default function ProtocolsPage() {
   const tabs: TabItem[] = [
     tlsPanel && { id: "tls", label: "TLS 1.3", content: tlsPanel },
     sshPanel && { id: "ssh", label: "SSH", content: sshPanel },
+    ipsecPanel && { id: "ipsec", label: "IPsec / IKEv2", content: ipsecPanel },
     sigPanel && { id: "sig", label: "Signatures", content: sigPanel },
     aesPanel && { id: "aes", label: "AES-GCM", content: aesPanel },
   ].filter(Boolean) as TabItem[];
@@ -381,6 +386,23 @@ export default function ProtocolsPage() {
               percentage against the classical baseline is withheld. We publish the gap rather than
               a number that cannot be true.
             </p>
+          </Caveat>
+        )}
+
+        {ipsecScope && (
+          <Caveat label="What the IPsec track measures, and what it leaves out">
+            {ipsecScope.measures} {ipsecScope.excludes}
+            <br />
+            <br />
+            <strong className="font-bold text-fg">The weighting is the same as TLS on purpose.</strong>{" "}
+            {ipsecScope.weights_note}
+            <br />
+            <br />
+            <strong className="font-bold text-fg">Two gaps worth naming.</strong> {ipsecScope.modp_gap}{" "}
+            {ipsecScope.macsec_gap}
+            <br />
+            <br />
+            {ipsecScope.rekey_note}
           </Caveat>
         )}
 

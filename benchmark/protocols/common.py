@@ -47,6 +47,28 @@ SSH_KEX = {                            # KEX public values; host key + sig belon
     "curve25519-sha256":     (32, 32),
 }
 
+# IKEv2 key-exchange payloads (RFC 7296 KE payload contents, initiator -> responder
+# and back). Authentication payloads belong to the signature track, not here.
+#
+# THE DETAIL THAT MAKES THIS NOT A COPY OF THE TLS TABLE. IKEv2 encodes an ECP
+# public value as the raw concatenation of x and y (RFC 5903 §7), where TLS
+# sends a SEC1 uncompressed point with a leading 0x04 byte. So P-256 is 64 bytes
+# here against 65 in TLS_KEYSHARE, and the hybrid rows differ from their TLS
+# counterparts by exactly one byte in each direction. Small, but it is a real
+# protocol difference and copying the TLS numbers across would have published a
+# wrong one.
+#
+# Post-quantum key exchange is carried as an ADDITIONAL key exchange under
+# RFC 9370, negotiated in IKE_SA_INIT and performed in IKE_INTERMEDIATE, so a
+# hybrid row is the sum of its classical and its KEM payloads.
+IKEV2_KEX = {
+    "curve25519":            (32, 32),        # group 31, RFC 8031
+    "ecp256":                (64, 64),        # group 19, raw x||y per RFC 5903 §7
+    "mlkem768":              (1184, 1088),    # pure PQC: pubkey up, ciphertext down
+    "curve25519+mlkem768":   (1216, 1120),    # 1184+32 up, 1088+32 down
+    "ecp256+mlkem768":       (1248, 1152),    # 1184+64 up, 1088+64 down
+}
+
 # Handshake multiplicity for the composed total (ephemeral KEX, server-auth):
 #   client KEM keygen, server encaps, client decaps  -> 1 each
 #   client + server ephemeral classical keygen        -> 2
@@ -569,6 +591,10 @@ CFDIR_USE_CASES: dict[str, list[str]] = {
     # 3.13 SSH/SFTP distributed. Not 3.14, which needs a key-management
     # dimension this track does not have.
     "ssh": ["cfdir-3.13"],
+    # 3.12 Network layer. Declared for IKEv2 key establishment only -- MACsec
+    # is named in the same CFDIR use case and is not measured here, so this is
+    # a partial claim on a shared cell rather than a complete one.
+    "ipsec": ["cfdir-3.12"],
 }
 
 # ----------------------------------------------------------------------------

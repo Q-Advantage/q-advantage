@@ -189,8 +189,39 @@ export interface LmsXmssFile {
   schemes: Record<string, StatefulSigScheme>;
 }
 
+/**
+ * IKEv2 key establishment.
+ *
+ * Carries a `scope` block the other composed tracks do not, because this one
+ * has more to disclaim: MODP groups are unmeasured, MACsec shares its CFDIR
+ * cell and is also unmeasured, and an IPsec tunnel's real cost depends on a
+ * rekey rate that is a deployment setting rather than a property of the
+ * cryptography.
+ */
+export interface IPsecComposedFile {
+  environment: ComposedEnvironment & {
+    cpu_model?: string;
+    arch?: string;
+    build_path?: string;
+    steal_time_pct?: number;
+  };
+  scope?: {
+    measures?: string;
+    excludes?: string;
+    weights_note?: string;
+    rekey_note?: string;
+    modp_gap?: string;
+    macsec_gap?: string;
+    baseline_note?: string;
+  };
+  /** Suites this liboqs build could not provide, with the harness's reason. */
+  unavailable?: Record<string, string>;
+  suites: Record<string, ComposedSuite>;
+}
+
 export interface ArchBucket {
   tls: TLSComposedFile | null;
+  ipsec: IPsecComposedFile | null;
   sig: SigTrackFile | null;
   ssh: SSHComposedFile | null;
   aes: AesBaselineFile | null;

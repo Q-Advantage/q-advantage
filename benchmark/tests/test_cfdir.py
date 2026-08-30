@@ -60,10 +60,18 @@ class TestUseCaseDeclaration:
         assert ids == ["cfdir-3.13"]
         assert "cfdir-3.14" not in ids
 
+    def test_ipsec_declares_the_network_use_case(self):
+        # Added 2026-08-30 with the IKEv2 track. Deliberately 3.12 alone --
+        # that use case also names MACsec, which is not measured, so this is a
+        # partial claim on a shared cell rather than a complete one.
+        assert record("ipsec")["identity"]["use_cases"] == ["cfdir-3.12"]
+
     def test_an_undeclared_protocol_claims_nothing(self):
         # The honest default. Claiming a use case nobody has thought about
-        # would be worse than claiming none.
-        identity = record("ipsec")["identity"]
+        # would be worse than claiming none. `macsec` is the live example: it
+        # shares CFDIR 3.12 with IKEv2 and is not measured, so it must not
+        # inherit IKEv2's declaration by being adjacent to it.
+        identity = record("macsec")["identity"]
         assert "use_cases" not in identity
         assert "cfdir_framework" not in identity
 

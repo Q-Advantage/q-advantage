@@ -14,6 +14,7 @@ import type { ProtocolsData } from "@/lib/protocols/types";
 
 function data(tracks: {
   tls?: boolean;
+  ipsec?: boolean;
   ssh?: boolean;
   sig?: boolean;
   aes?: boolean;
@@ -23,6 +24,7 @@ function data(tracks: {
     byArch: {
       x86_64: {
         tls: tracks.tls ? ({ suites: { X25519: {} } } as never) : null,
+        ipsec: tracks.ipsec ? ({ suites: { curve25519: {} } } as never) : null,
         ssh: tracks.ssh ? ({ suites: { curve25519: {} } } as never) : null,
         sig: tracks.sig ? ({} as never) : null,
         aes: tracks.aes ? ({} as never) : null,
@@ -73,7 +75,9 @@ describe("tracksPresent", () => {
   it("does not count a track whose suite set is empty", () => {
     const empty = {
       manifest: null,
-      byArch: { x86_64: { tls: { suites: {} } as never, ssh: null, sig: null, aes: null, lmsXmss: null } },
+      byArch: {
+        x86_64: { tls: { suites: {} } as never, ipsec: null, ssh: null, sig: null, aes: null, lmsXmss: null },
+      },
     } as ProtocolsData;
     expect(tracksPresent(empty).has("tls-composed")).toBe(false);
   });
@@ -151,6 +155,7 @@ describe("hasClassicalSignatureArm", () => {
       byArch: {
         x86_64: {
           tls: null,
+          ipsec: null,
           ssh: null,
           sig: { schemes } as never,
           aes: null,
@@ -206,6 +211,7 @@ describe("lineItemsFor", () => {
     byArch: {
       x86_64: {
         tls: null,
+        ipsec: null,
         ssh: null,
         sig: { schemes: { "ECDSA-P256": { kind: "classical", status: "ok" } } } as never,
         aes: null,
@@ -233,5 +239,44 @@ describe("lineItemsFor", () => {
 
   it("still returns all eleven line items", () => {
     expect(lineItemsFor(withArm)).toHaveLength(11);
+  });
+});
+
+describe("the network-layer use case (3.12)", () => {
+  it("is not covered while no IPsec track has produced data", () => {
+    const row = coverageByUseCase(data({ tls: true, ssh: true })).find((r) => r.id === "3.12")!;
+    expect(row.coverage).toBe("none");
+    expect(row.trackMissing).toBe(true);
+  });
+
+  it("becomes PARTIAL, never covered, once the track lands", () => {
+    // The use case bundles IPsec/IKE with MACsec and only the first is
+    // measured. Marking it covered would claim the whole cell.
+    const row = coverageByUseCase(data({ ipsec: true })).find((r) => r.id === "3.12")!;
+    expect(row.coverage).toBe("partial");
+    expect(row.trackMissing).toBe(false);
+  });
+
+  it("names both of what it leaves out", () => {
+    const row = coverageByUseCase(data({ ipsec: true })).find((r) => r.id === "3.12")!;
+    expect(row.gap).toContain("MACsec");
+    expect(row.gap).toContain("MODP");
+  });
+
+  it("moves the tally from six uncovered to five", () => {
+    // The first time the use-case count has moved, rather than a line item.
+    const before = tally(coverageByUseCase(data({ tls: true, ssh: true, sig: true, aes: true })));
+    const after = tally(
+      coverageByUseCase(data({ tls: true, ssh: true, sig: true, aes: true, ipsec: true })),
+    );
+    expect(after.none).toBe(before.none - 1);
+    expect(after.partial).toBe(before.partial + 1);
+    // Still two fully covered: partial is not covered.
+    expect(after.covered).toBe(before.covered);
+  });
+
+  it("counts the ipsec track as present only when it has suites", () => {
+    expect(tracksPresent(data({ ipsec: true })).has("ipsec-composed")).toBe(true);
+    expect(tracksPresent(data({ tls: true })).has("ipsec-composed")).toBe(false);
   });
 });
