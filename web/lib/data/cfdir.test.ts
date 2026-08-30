@@ -20,6 +20,7 @@ function data(tracks: {
   ssh?: boolean;
   sig?: boolean;
   aes?: boolean;
+  jose?: boolean;
 }): ProtocolsData {
   return {
     manifest: null,
@@ -31,6 +32,9 @@ function data(tracks: {
           ? ({ operations: { spin: { points: [{ measured: true }] } } } as never)
           : null,
         ssh: tracks.ssh ? ({ suites: { curve25519: {} } } as never) : null,
+        jose: tracks.jose
+          ? ({ arms: { "ML-DSA-65": { status: "ok" } } } as never)
+          : null,
         sig: tracks.sig ? ({} as never) : null,
         aes: tracks.aes ? ({} as never) : null,
         lmsXmss: null,
@@ -82,7 +86,7 @@ describe("tracksPresent", () => {
       manifest: null,
       byArch: {
         x86_64: {
-          tls: { suites: {} } as never, ipsec: null, concurrency: null,
+          tls: { suites: {} } as never, ipsec: null, concurrency: null, jose: null,
           ssh: null, sig: null, aes: null, lmsXmss: null,
         },
       },
@@ -162,6 +166,7 @@ describe("hasClassicalSignatureArm", () => {
       manifest: null,
       byArch: {
         x86_64: {
+          jose: null,
           tls: null,
           ipsec: null,
           concurrency: null,
@@ -219,6 +224,7 @@ describe("lineItemsFor", () => {
     manifest: null,
     byArch: {
       x86_64: {
+        jose: null,
         tls: null,
         ipsec: null,
         concurrency: null,
@@ -318,6 +324,7 @@ describe("MIA — the two numbers that must not share a label", () => {
       manifest: null,
       byArch: {
         x86_64: {
+          jose: null,
           tls: null,
           ipsec: null,
           concurrency: {
@@ -375,5 +382,41 @@ describe("CFDIR 3.5 and the chain measurement", () => {
     const before = coverageByUseCase(withTls).filter((r) => r.id !== "3.5");
     const after = coverageByUseCase(withTls, { chainSizing: true }).filter((r) => r.id !== "3.5");
     expect(after).toEqual(before);
+  });
+});
+
+describe("the JOSE track and CFDIR 3.9", () => {
+  function withJose(status: "ok" | "unavailable") {
+    return {
+      byArch: {
+        x86_64: {
+          jose: { arms: { "ML-DSA-65": { scheme: "ML-DSA-65", kind: "post-quantum", status } } },
+        },
+      },
+    } as unknown as ProtocolsData;
+  }
+
+  it("counts the track as present once an arm produced a token", () => {
+    expect(tracksPresent(withJose("ok")).has("jose-composed")).toBe(true);
+  });
+
+  it("does not count a run where every arm was unavailable", () => {
+    // The file still gets written. Treating that as coverage would turn a
+    // liboqs build gap into a claim on the public page.
+    expect(tracksPresent(withJose("unavailable")).has("jose-composed")).toBe(false);
+  });
+
+  it("moves 3.9 off none once the track lands, but not all the way to covered", () => {
+    // SAML's own XML-DSig envelope is still unmeasured, and the use case is
+    // named "SSO / SAML" — claiming it covered would overstate by half.
+    const row = coverageByUseCase(withJose("ok")).find((r) => r.id === "3.9")!;
+    expect(row.coverage).toBe("partial");
+    expect(row.gap).toContain("XML-DSig");
+  });
+
+  it("leaves 3.9 uncovered while the track has produced nothing", () => {
+    const row = coverageByUseCase(withJose("unavailable")).find((r) => r.id === "3.9")!;
+    expect(row.coverage).toBe("none");
+    expect(row.trackMissing).toBe(true);
   });
 });

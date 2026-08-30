@@ -91,13 +91,19 @@ jobs:
         continue-on-error: true
         run: |
           source ~/q-advantage/venv/bin/activate
-          python3 benchmark/protocols/ipsec_composed.py             --output-dir benchmark/results/protocols
+          python3 benchmark/protocols/ipsec_composed.py --output-dir benchmark/results/protocols
 
       - name: Run benchmark — cryptographic throughput under load
         continue-on-error: true
         run: |
           source ~/q-advantage/venv/bin/activate
-          python3 benchmark/protocols/concurrency.py             --output-dir benchmark/results/protocols
+          python3 benchmark/protocols/concurrency.py --output-dir benchmark/results/protocols
+
+      - name: Run benchmark — JWT/JOSE composed signing
+        continue-on-error: true
+        run: |
+          source ~/q-advantage/venv/bin/activate
+          python3 benchmark/protocols/jose_composed.py --output-dir benchmark/results/protocols
 
       - name: New tracks — status
         if: always()
@@ -107,7 +113,7 @@ jobs:
           # still be visible to whoever reads the run.
           echo "### New track output" >> $GITHUB_STEP_SUMMARY
           today=$(date -u +%Y-%m-%d)
-          for track in ipsec-composed concurrency; do
+          for track in ipsec-composed concurrency jose-composed; do
             if ls benchmark/results/protocols/${track}-${today}-*.json >/dev/null 2>&1; then
               echo "- \`${track}\`: wrote output" >> $GITHUB_STEP_SUMMARY
             else

@@ -36,6 +36,11 @@ const COVERAGE_STYLE: Record<Coverage, { label: string; cls: string }> = {
   "not-applicable": { label: "n/a", cls: "text-fg-subtle/70" },
 };
 
+/** The arch the rest of this page reads, chosen once. */
+function primaryBucket(data: ReturnType<typeof loadProtocolsData>) {
+  return data.byArch["x86_64"] ?? data.byArch[Object.keys(data.byArch)[0]];
+}
+
 function useCaseRows(rows: UseCaseCoverage[]): KitRow[] {
   return rows.map((r) => {
     const style = COVERAGE_STYLE[r.coverage];
@@ -68,6 +73,8 @@ export default function CfdirPage() {
   const chains = measuredChains(chainFile);
   const rows = coverageByUseCase(data, { chainSizing: hasChainSizing(chainFile) });
   const overWindow = overTheWindow(chainFile);
+  const jose = primaryBucket(data)?.jose ?? null;
+  const joseArms = Object.values(jose?.arms ?? {}).filter((a) => a.status === "ok" && a.size);
   const worst = worstMultiple(chainFile);
   const t = tally(rows);
 
@@ -220,6 +227,70 @@ export default function CfdirPage() {
           all of which push the total up rather than down. The honest way to settle it is to make that
           testbed serve a post-quantum chain and capture the flight directly.
         </Caveat>
+      )}
+
+      {joseArms.length > 0 && (
+        <Section
+          eyebrow="3.9 · SSO and token-based auth"
+          title="A signature that fits in a handshake does not necessarily fit in a header."
+          hint="Real JOSE tokens, signed and verified end to end. The signature is base64url-encoded in a compact serialization, so it costs about a third more in a header than its raw length — an expansion that belongs to the encoding, not the algorithm, and is invisible in a primitive benchmark."
+        >
+          <DataTable
+            head={["Scheme", "alg", "Token", "Signature share", "4 KB cookie default"]}
+            rows={joseArms
+              .slice()
+              .sort((a, b) => (b.size!.token_bytes ?? 0) - (a.size!.token_bytes ?? 0))
+              .map((a) => {
+                const cookie = a.limits?.find((l) => l.limit_bytes === 4096);
+                return {
+                  key: a.scheme,
+                  cells: [
+                    <RowName key="n" name={a.scheme} />,
+                    <span key="a" className="text-fg-muted">
+                      {a.alg}
+                      {a.alg_is_registered === false && (
+                        <span className="ml-1.5 text-2xs uppercase tracking-eyebrow text-fg-subtle">
+                          not registered
+                        </span>
+                      )}
+                    </span>,
+                    <span key="t" className="tabular-nums font-bold text-fg">
+                      {formatBytes(a.size!.token_bytes)}
+                    </span>,
+                    <span key="s" className="tabular-nums text-fg-muted">
+                      {a.size!.signature_share_pct.toFixed(1)}%
+                    </span>,
+                    <span
+                      key="c"
+                      className={
+                        cookie && !cookie.within_default
+                          ? "font-bold text-status-warn"
+                          : "tabular-nums text-fg-muted"
+                      }
+                    >
+                      {cookie
+                        ? cookie.within_default
+                          ? `fits, ${formatBytes(cookie.headroom_bytes)} spare`
+                          : `over by ${formatBytes(-cookie.headroom_bytes)}`
+                        : "—"}
+                    </span>,
+                  ],
+                };
+              })}
+          />
+          <p className="mt-3 text-[11px] leading-relaxed text-fg-muted">
+            <strong className="font-bold text-fg">No registered JOSE algorithm identifier is
+            asserted</strong> for any post-quantum scheme. The <code>alg</code> header carries the
+            scheme&rsquo;s own name as a non-standard value, and no standardisation draft is named or
+            anticipated here. The measurement does not depend on which identifier eventually wins:
+            a token&rsquo;s size is driven by the signature and by base64url, and the{" "}
+            <code>alg</code> string&rsquo;s own contribution is counted in the header where it can be
+            seen.
+          </p>
+          {jose?.limits_note && (
+            <p className="mt-2 text-[11px] leading-relaxed text-fg-muted">{jose.limits_note}</p>
+          )}
+        </Section>
       )}
 
       <Section
