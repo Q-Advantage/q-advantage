@@ -2,7 +2,7 @@ import { getLatestRun } from "./load";
 import { getQDayIndex } from "./q-day";
 import { loadProtocolsData } from "@/lib/protocols/load";
 import { computeStealPercent } from "@/lib/format";
-import { vsBaselinePct } from "@/lib/protocols/metrics";
+import { publishableVsBaselinePct } from "@/lib/protocols/anomaly";
 import type { ComposedSuite } from "@/lib/protocols/types";
 
 /**
@@ -94,7 +94,7 @@ function suiteRows(suites: Record<string, ComposedSuite>): SuiteRow[] {
     note: SUITE_NOTES[name] ?? "Composed key exchange",
     meanUs: s.timing.mean_us,
     bytesTotal: s.size?.bytes_total ?? null,
-    pctOverClassical: vsBaselinePct(s, suites) ?? null,
+    pctOverClassical: publishableVsBaselinePct(s, suites) ?? null,
     isBaseline: s.baseline?.baseline_suite == null,
   }));
 

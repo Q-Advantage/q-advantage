@@ -11,6 +11,7 @@ Usage:
 import argparse
 import gc
 import json
+import math
 import os
 import platform
 import statistics
@@ -213,16 +214,59 @@ def compute_stats(timings_ns: list[int]) -> dict[str, Any]:
         hi = min(lo + 1, n - 1)
         return sorted_us[lo] + (idx - lo) * (sorted_us[hi] - sorted_us[lo])
 
-    return {
+    stdev = statistics.stdev(us) if n > 1 else 0.0
+
+    out = {
         "mean_us": round(mean, 3),
         "median_us": round(statistics.median(us), 3),
         "p95_us": round(percentile(95), 3),
         "p99_us": round(percentile(99), 3),
-        "stdev_us": round(statistics.stdev(us) if n > 1 else 0.0, 3),
+        "stdev_us": round(stdev, 3),
         "min_us": round(min(us), 3),
         "max_us": round(max(us), 3),
         "ops_per_sec": round(1_000_000.0 / mean, 2) if mean > 0 else 0.0,
         "n_iterations": n,
+    }
+    out.update(confidence_interval(mean, stdev, n))
+    return out
+
+
+#: 1.96 sigma. The normal approximation is sound because n is 1000 by default
+#: and the central limit theorem applies to the MEAN however skewed the
+#: underlying timings are -- and on a shared host they are skewed, heavily.
+Z_95 = 1.959964
+
+
+def confidence_interval(mean: float, stdev: float, n: int) -> dict[str, Any]:
+    """
+    A 95% confidence interval on the mean, and the standard error behind it.
+
+    Kept byte-identical in intent to benchmark/protocols/common.py's version;
+    the two stats functions have always mirrored each other deliberately.
+
+    stdev_us describes how far individual samples scatter, which on this host
+    mostly describes the machine. A reader comparing two algorithms needs
+    instead to know how precisely the MEAN is pinned down -- the standard
+    error, which shrinks with sqrt(n). Publishing only the former invites the
+    wrong arithmetic, so both travel together and the note says which is which.
+    """
+    if n < 2 or mean <= 0:
+        return {
+            "ci95_low_us": None,
+            "ci95_high_us": None,
+            "std_error_us": None,
+            "ci_note": "A confidence interval needs at least two samples.",
+        }
+    stderr = stdev / math.sqrt(n)
+    return {
+        "ci95_low_us": round(mean - Z_95 * stderr, 3),
+        "ci95_high_us": round(mean + Z_95 * stderr, 3),
+        "std_error_us": round(stderr, 4),
+        "ci_note": (
+            "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval "
+            "for a single operation. stdev_us describes how much individual samples scatter on "
+            "this host; this describes how precisely the mean is known."
+        ),
     }
 
 

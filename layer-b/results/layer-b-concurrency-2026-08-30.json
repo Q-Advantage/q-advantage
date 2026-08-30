@@ -1,0 +1,65 @@
+{
+  "schema": "layer-b/0.2.0",
+  "identity": {
+    "layer": "B",
+    "protocol": "tls",
+    "mode": "live_handshake",
+    "label": "concurrency",
+    "client_groups_offered": "X25519MLKEM768:x25519",
+    "server_groups_accepted": "X25519MLKEM768:x25519"
+  },
+  "outcome": {
+    "outcome": "negotiated",
+    "detail": "Outcomes across 50 captured connections: negotiated=50"
+  },
+  "concurrency": {
+    "connections": 50,
+    "measurable": true,
+    "label": "connections per core (live sockets)",
+    "label_note": "Deliberately NOT called 'concurrency' unqualified. Layer A measures cryptographic throughput under CPU contention; this measures full TCP+TLS connections including socket setup and handshake state. Two different numbers, never one name.",
+    "duration_seconds": {
+      "min": 0.0246429443359375,
+      "median": 0.11075687408447266,
+      "p95": 0.18292713165283203,
+      "max": 0.1890411376953125
+    },
+    "wall_clock_seconds": 1.305860996246338,
+    "completed_per_second": 38.288914473840364,
+    "packets_total": 1030,
+    "wire_bytes_total": 480256
+  },
+  "outcomes_by_kind": {
+    "negotiated": 50
+  },
+  "negotiated_groups": {
+    "X25519MLKEM768": 50
+  },
+  "timing": {
+    "duration_seconds": 0.1890411376953125,
+    "publishable": false,
+    "note": "NOT a published figure. This ran on whatever machine took the capture -- a developer laptop or a shared CI runner -- which is not publication-grade. Only the structural fields are portable."
+  },
+  "environment": {
+    "path_note": "50 simultaneous live connections",
+    "sockets": {
+      "measurable": true,
+      "samples": 210,
+      "sample_interval_note": "Sampled every ~200 ms for the duration of the capture.",
+      "peak_syn_recv": 0,
+      "peak_established": 14,
+      "peak_tcp_mem_pages": 0,
+      "peak_tcp_mem_bytes": 0,
+      "idle_baseline_tcp_mem_pages": 0,
+      "method_note": "Read from /proc/net/sockstat and ss while the run was in progress. Connections reach SYN_RECV by handshaking normally -- no synthetic half-open connections are manufactured, so these are the depths a server actually sees under load.",
+      "bytes_per_established_connection": null,
+      "bytes_per_established_reason": "No idle baseline was observed, or fewer than 5 loaded samples. Refused rather than published from a thin sample.",
+      "syn_recv_observations": 0,
+      "bytes_per_half_open_connection": null,
+      "bytes_per_half_open_reason": "Only 0 sample(s) caught a connection in SYN_RECV -- too few to divide memory by. Connections here reach that state by handshaking normally rather than being held half-open synthetically, so the state is genuinely brief. Deliberately manufacturing half-open connections would mean building a SYN flood tool, which is out of scope."
+    }
+  },
+  "audit": {
+    "git_commit": "762cec064adf4a36c0b550dc4bb99f58a8c0b1a6",
+    "timestamp_utc": "2026-08-30T04:46:59.243989Z"
+  }
+}

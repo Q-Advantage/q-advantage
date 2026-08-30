@@ -66,8 +66,40 @@ export function hasLiveStatefulSigs(file: LmsXmssFile | null | undefined): boole
  */
 export function statefulSigsUnavailableReason(file: LmsXmssFile | null | undefined): string | null {
   if (!file) return null;
+
+  // Prefer a scheme that recorded a real `reason`. From 2026-08-17 to
+  // 2026-08-30 the harness misclassified "this liboqs build does not have the
+  // mechanism compiled in" as status "failed" with the raw exception string as
+  // its only explanation, so /q-shield/compare showed readers
+  // "MechanismNotEnabledError: LMS_SHA256_H10_W8" as the reason there is no
+  // hash-based signature data. The harness is fixed, but every file already
+  // committed still carries the raw string, so the read side translates it
+  // rather than waiting for the record to age out.
   for (const s of Object.values(file.schemes ?? {})) {
-    if (s.status !== "ok" && (s.reason || s.error)) return s.reason ?? s.error ?? null;
+    if (s.status !== "ok" && s.reason) return s.reason;
+  }
+  for (const s of Object.values(file.schemes ?? {})) {
+    if (s.status !== "ok" && s.error) return humanizeStatefulSigError(s.error);
   }
   return null;
+}
+
+/**
+ * Turn a recorded harness exception into something a reader can act on.
+ *
+ * Only translates the one case whose meaning is unambiguous — the mechanism is
+ * not compiled into this liboqs build. Anything else is passed through
+ * verbatim: inventing an explanation for an error we have not diagnosed would
+ * be worse than showing the raw string.
+ */
+export function humanizeStatefulSigError(error: string): string {
+  if (error.includes("MechanismNotEnabledError")) {
+    return (
+      "The benchmark host's liboqs build does not have stateful hash-based signatures compiled " +
+      "in, so there is nothing to measure yet. Enabling them is a rebuild on the measurement " +
+      "host (OQS_ENABLE_SIG_STFL_LMS and OQS_ENABLE_SIG_STFL_XMSS), not a change to what is " +
+      "published here."
+    );
+  }
+  return error;
 }

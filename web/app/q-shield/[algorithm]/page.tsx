@@ -19,6 +19,12 @@ import {
   githubCommitUrl,
   shortSha,
 } from "@/lib/format";
+import {
+  CI_MEANING,
+  confidenceInterval,
+  formatInterval,
+  formatRelativeMargin,
+} from "@/lib/data/statistics";
 import type {
   NormalizedAlgorithm,
   Operation,
@@ -191,6 +197,7 @@ function OperationSection({ operation, stats, totalRuns, history }: OperationSec
       {/* Stat grid */}
       <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-x-4 gap-y-3 px-4 py-4 text-xs border-b border-border-subtle">
         <StatField label="Mean" value={formatDuration(stats.mean_us)} highlight />
+        <StatField label="95% CI on mean" value={formatRelativeMargin(confidenceInterval(stats))} />
         <StatField label="Median" value={formatDuration(stats.median_us)} />
         <StatField label="p95" value={formatDuration(stats.p95_us)} />
         <StatField label="p99" value={formatDuration(stats.p99_us)} />
@@ -198,6 +205,24 @@ function OperationSection({ operation, stats, totalRuns, history }: OperationSec
         <StatField label="Min" value={formatDuration(stats.min_us)} />
         <StatField label="Ops/sec" value={formatOpsPerSec(stats.ops_per_sec)} highlight />
       </dl>
+
+      {/*
+        The stdev and the interval are next to each other on purpose. They are
+        routinely confused, and the confusion runs one way: a reader sees a
+        large stdev and concludes the measurement is imprecise. It is not --
+        the stdev says individual samples scattered, which on this host is
+        mostly a fact about the machine, while the interval says how precisely
+        the mean itself is known, and at n=1000 that is roughly 3% of the stdev.
+      */}
+      {confidenceInterval(stats) && (
+        <p className="border-b border-border-subtle px-4 py-2.5 text-2xs leading-relaxed text-fg-subtle">
+          Mean is known to{" "}
+          <strong className="font-bold text-fg-muted">
+            {formatInterval(confidenceInterval(stats))}
+          </strong>{" "}
+          across {stats.n_iterations.toLocaleString()} iterations. {CI_MEANING}
+        </p>
+      )}
 
       {/* Sparkline */}
       <div className="px-4 py-4">

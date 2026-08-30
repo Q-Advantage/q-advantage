@@ -40,5 +40,34 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Unit tests
+        run: npm test
+
       - name: Smoke test data loader
         run: npm run smoke
+
+  harness:
+    name: benchmark harness
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # No liboqs on this runner, by design. These tests cover the harness's
+      # pure logic only -- status classification, statistics, result shaping.
+      # Anything that produces a measurement is verified by the daily run on
+      # the measurement host, never here. See benchmark/tests/README.md.
+      - name: Install test dependencies
+        run: pip install -r benchmark/requirements-dev.txt
+
+      - name: Harness tests
+        run: python -m pytest benchmark/tests/ -q

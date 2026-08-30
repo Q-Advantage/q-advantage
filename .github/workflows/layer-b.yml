@@ -1,0 +1,113 @@
+name: Layer B
+
+# Layer B's parsers are pure and run in seconds. THIS workflow does the
+# expensive half: it builds the reference stack and runs real handshakes
+# between real containers, one job per scenario.
+#
+# Deliberately NOT on every pull request -- building liboqs and oqs-provider
+# from source takes minutes and nothing in web/ depends on it. It runs when
+# Layer B itself changes, and on demand.
+#
+# What these jobs prove, and what they do not. They prove the stack negotiates,
+# that a deliberately mismatched pair fails the way we claim, that N live
+# connections behave, that injected latency costs what it costs, and that a
+# passthrough proxy does not damage the handshake. They do NOT produce
+# published figures: a handshake timed on a shared GitHub runner is not a
+# Q-Shield measurement, every result says so in its own timing block, and
+# assert-scenario.py fails the job if one ever claims otherwise.
+
+on:
+  push:
+    paths:
+      - "layer-b/**"
+      - ".github/workflows/layer-b.yml"
+      - "schema/layer_b_result.schema.json"
+  pull_request:
+    paths:
+      - "layer-b/**"
+      - ".github/workflows/layer-b.yml"
+      - "schema/layer_b_result.schema.json"
+  workflow_dispatch:
+
+jobs:
+  parsers:
+    name: wire, capture and analysis parsers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r benchmark/requirements-dev.txt
+      - name: Parser tests
+        run: python -m pytest layer-b/tests -q
+
+  scenarios:
+    name: "live: ${{ matrix.scenario }}${{ matrix.proxy && format(' ({0})', matrix.proxy) || '' }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      # One scenario failing should not hide the others' findings.
+      fail-fast: false
+      matrix:
+        include:
+          - scenario: pairwise
+          - scenario: mismatch
+          - scenario: concurrency
+          - scenario: rtt
+          - scenario: middlebox
+            proxy: haproxy
+          # A second product, because middlebox compatibility is a property of
+          # each product rather than of the category. Isolated as its own job so
+          # one proxy's packaging quirk cannot hide the other's result.
+          - scenario: middlebox
+            proxy: nginx
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build the reference stack
+        working-directory: layer-b
+        run: docker build -t q-advantage/layer-b:dev .
+
+      - name: Record what actually got built
+        if: matrix.scenario == 'pairwise'
+        run: |
+          docker run --rm q-advantage/layer-b:dev cat /layer-b/openssl-version.txt
+          docker run --rm q-advantage/layer-b:dev cat /layer-b/providers.txt
+
+      - name: Confirm the stateful signature flags took
+        if: matrix.scenario == 'pairwise'
+        # Layer A's LMS/XMSS harness has reported unavailable since 2026-08-14
+        # because the measurement host's liboqs lacks these. Proving them here
+        # de-risks the rebuild on the box that produces the product's data.
+        run: |
+          docker run --rm q-advantage/layer-b:dev bash -lc \
+            'ls /usr/local/include/oqs/sig_stfl.h && echo "stateful signature headers present"'
+
+      - name: Run the scenario
+        working-directory: layer-b
+        # Invoked through bash rather than relying on the executable bit: this repo
+        # is developed on Windows, where git does not track mode by default.
+        env:
+          PROXY: ${{ matrix.proxy }}
+        run: bash ./run-scenario.sh ${{ matrix.scenario }}
+
+      - name: Assert it established what it claims to
+        working-directory: layer-b
+        run: python assert-scenario.py ${{ matrix.scenario }}
+
+      - name: Upload capture and result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: layer-b-${{ matrix.scenario }}${{ matrix.proxy && format('-{0}', matrix.proxy) || '' }}
+          path: |
+            layer-b/out/*.pcap
+            layer-b/out/*.csv
+            layer-b/out/*.log
+            layer-b/out/results/*.json
+          if-no-files-found: warn

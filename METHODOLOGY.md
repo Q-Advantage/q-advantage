@@ -74,12 +74,31 @@ jiffies across the timed loop), and load averages at start and end. On
 burstable cloud instances this makes throttling visible in the audit trail
 rather than silently corrupting numbers.
 
-**Hardware.** Currently AWS EC2 t3.medium in us-east-1, a burstable
-instance class. Steal-time data shows the instance runs clean (around
-0.24% on representative runs), so the planned c7i.large migration is
-deferred until budget or load justifies it. When the hardware changes,
-this document will be updated, the historical runs will remain available,
-and the change will be explicitly dated.
+**Hardware.** The x86 measurement host is AWS EC2 t3.medium in us-east-1,
+a burstable instance class. A c7i.large overlap has run in parallel since
+2026-08-27, writing to a separate result path; it has **not** been cut
+over, and t3.medium remains the host every published x86 figure is
+measured on.
+
+The instance type is recorded in every result file, and the site derives
+its hardware **eras** from that field rather than from a date written by
+hand. When the host changes, the historical runs remain available, the
+change is dated from the data itself, and the trend chart **breaks the
+line** at that point rather than drawing across it — a change of machine
+is not a performance trend. Results are not silently migrated.
+
+**A caveat this document previously got wrong.** Until 2026-08-30 this
+section attributed the x86 baseline's run-to-run movement to burstable
+CPU steal, citing around 0.24% on representative runs. From 2026-08-17
+the X25519 baseline's floor became bimodal — `min_us` had sat at
+160.2–160.8 µs for 68 consecutive runs, then began alternating with a
+~186–193 µs floor — and **steal time does not correlate with it**:
+affected runs report 0.0–0.5% steal while several unaffected runs report
+3–4%. The cause is `#unverified` and under investigation against the c7i
+overlap data. Comparisons between algorithms measured in the same run
+remain sound; an x86 classical-baseline percentage from an affected run
+does not, and the site now withholds any comparison that is structurally
+impossible rather than publishing it.
 
 **CI discipline.** Workflow at `.github/workflows/benchmark.yml` has two
 triggers only: scheduled (daily at 06:00 UTC) and manual
@@ -190,11 +209,76 @@ methods glossary:** <https://qadvantage.io/methodology#q-day-index>
 
 ---
 
+## CFDIR alignment
+
+The CFDIR migration-cost framework is **use-case shaped** — fourteen named use
+cases, applied per use case rather than system-wide. Q-Shield's output is
+**algorithm shaped**. A cost model cannot consume the second directly, so each
+composed track declares which CFDIR use case it prices, in the result record
+itself:
+
+- `tls_composed` prices **3.4, TLS cipher suites**. Deliberately not 3.5, TLS
+  certificates: the certificate chain is out of scope for this measurement, and
+  the chain is the cost in 3.5.
+- `ssh_composed` prices **3.13, SSH/SFTP distributed**. Not 3.14, which needs a
+  key-management dimension this track does not have.
+
+Declaring it per track is what makes de-duplication mechanical. CFDIR's own
+assumption 8 warns that redundant costs may be counted in different line items
+and leaves it to the reader to avoid; once anything sums several tracks, that is
+a live arithmetic risk rather than a hypothetical one.
+
+The framework version is pinned in the record (`cfdir_framework`), the same way
+liboqs and OpenSSL versions are. Their document is dated and states it will be
+reviewed annually, so a revision to it is a methodology event here.
+
+**Both TLS arms are TLS 1.3, and this is recorded explicitly rather than implied
+by the suite name.** CFDIR notes that PQC migration may also require moving from
+TLS 1.2 to 1.3, and that this uplift is *independent* of quantum-safe migration.
+A classical arm measured on 1.2 would silently bundle that uplift into every
+delta published as the PQC increment.
+
+**No blended overhead figure is published.** The CPU and wire components of the
+cost delta can have opposite signs — pure ML-KEM is faster than X25519 on CPU
+while being heavier on the wire — so collapsing them into one number requires a
+price for microseconds against bytes. That price belongs to whoever is doing the
+costing. Components are published signed and separate.
+
+Coverage today is published at `/q-shield/cfdir`, with the uncovered cells shown
+as empty. Those cells are the roadmap.
+
+## Statistical reporting
+
+Every operation records mean, median, p95, p99, standard deviation, min, max and
+iteration count. From 2026-08-30 each also carries a **95% confidence interval
+on the mean**, and the site derives the same interval for every earlier run from
+the fields those runs already published.
+
+The two are different quantities and are routinely confused, in one direction:
+
+- **Standard deviation** says how far individual samples scattered. On a shared
+  host that number is large and mostly describes the machine.
+- **The confidence interval** says how precisely the *average* is pinned down.
+  It is built from the standard error, which shrinks with the square root of the
+  iteration count — at n=1000 it is roughly 3% of the standard deviation.
+
+A large standard deviation therefore does not mean the mean is imprecise. It is
+a prediction interval that would be wide; the interval on the mean is narrow.
+Neither figure is withheld, because dropping the standard deviation would hide
+the host noise this project publishes on purpose.
+
+Where two measured means sit inside each other's intervals, the difference
+between them is not distinguishable from noise on this host and is not quoted as
+a finding.
+
 ## Known limitations
 
-- **t3.medium is burstable.** Steal-time data shows runs are clean today;
-  if it ever isn't, the audit trail surfaces it. Migration to a fixed
-  instance class is on the roadmap.
+- **t3.medium is burstable**, and since 2026-08-17 its X25519 baseline has
+  been bimodal for reasons steal time does not explain (`#unverified`).
+  Same-run comparisons between algorithms remain sound; a classical-baseline
+  percentage from an affected run does not, and the site withholds any that
+  is structurally impossible. A c7i.large overlap is running; migration to
+  that fixed instance class has not been cut over.
 - **Single machine for Q-Shield.** Cross-architecture comparison (Graviton,
   AMD EPYC) is a future deliverable.
 - **`liboqs` is a prototyping library**, not a production cryptographic

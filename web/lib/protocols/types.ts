@@ -35,10 +35,42 @@ export interface CrossValidation {
   reference_notes?: string;
 }
 
+/**
+ * Per-operation resource accounting (`qshield-update-spec.md` §15, Tier 1).
+ *
+ * Read the CPU figure with its own caveat attached: on a single-core-pinned
+ * harness it reads close to wall time by construction. And `max_rss_delta_bytes`
+ * is the growth in a process high-water mark across the whole loop, not a
+ * per-operation footprint — it is deliberately not divided by the iteration
+ * count, because doing so would produce a confident, meaningless number.
+ */
+export interface ResourceAccounting {
+  measured: boolean;
+  reason?: string;
+  cpu_us_per_op?: number | null;
+  cpu_seconds_total?: number | null;
+  max_rss_delta_bytes?: number | null;
+  max_rss_bytes?: number | null;
+  cpu_note?: string;
+  rss_note?: string;
+  rss_unit_note?: string;
+}
+
 export interface ComposedSuite {
   identity: { protocol: string; mode: string; suite: string };
   timing: TimingBlock;
-  size?: { bytes_client_to_server: number; bytes_server_to_client: number; bytes_total: number };
+  size?: {
+    bytes_client_to_server: number;
+    bytes_server_to_client: number;
+    bytes_total: number;
+    /**
+     * Secret key length. §16.3 makes this blocking for the TCM's Expansion &
+     * Retention line item — storage for larger private keys cannot be priced
+     * from public key sizes alone. Emitted from 2026-08-30 onward.
+     */
+    secret_key_bytes?: number;
+  };
+  resources?: ResourceAccounting;
   baseline?: { baseline_suite: string; pct_over_classical: number };
   cross_validation?: CrossValidation;
   auth?: null;
@@ -53,6 +85,11 @@ export interface ComposedSuite {
   host?: {
     cpu_model?: string;
     arch?: string;
+    /**
+     * Which machine measured this. Two hosts can share an architecture, and
+     * without this they collapse into one bucket — see lib/data/hosts.ts.
+     */
+    ec2_instance_type?: string;
     build_path?: string;
     cpu_flags?: string[];
     cpu_hz_nominal?: number;
@@ -97,6 +134,14 @@ export interface SigTrackEnvironment {
   build_path?: string;
   steal_time_pct?: number;
 }
+
+/**
+ * Whether a signature record is a candidate or a reference line.
+ *
+ * Emitted from 2026-08-30. Absent on every earlier committed run, which is why
+ * consumers must treat `undefined` as "not stated" rather than as post-quantum.
+ */
+export type SigKind = "post-quantum" | "classical";
 
 export interface SigTrackFile {
   environment: SigTrackEnvironment;

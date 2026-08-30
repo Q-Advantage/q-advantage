@@ -179,6 +179,30 @@ def bench_verify_only(name: str, iterations: int, warmup: int) -> dict:
             )
 
     except Exception as exc:  # noqa: BLE001 — report, never fabricate
+        # A build that simply does not have the mechanism compiled in is the
+        # "unavailable" case, not the "failed" case. liboqs signals that by
+        # raising MechanismNotEnabledError from the StatefulSignature
+        # constructor, and until 2026-08-17 it never reached here — the
+        # enabled-mechanisms check in bench_scheme() caught it first and
+        # returned _unavailable(). When that check stopped short-circuiting,
+        # every scheme started reporting status "failed" with the raw
+        # exception string as its reason, and /q-shield/compare rendered
+        # "MechanismNotEnabledError: LMS_SHA256_H10_W8" to readers as the
+        # explanation for missing data.
+        #
+        # The distinction matters beyond cosmetics: "failed" is the louder
+        # signal, reserved for a KAT that will not verify or a genuine fault
+        # that needs investigating. A missing build flag is expected, benign,
+        # and already documented in docs/runbook.md. Classifying it as a
+        # failure buries the real ones.
+        if type(exc).__name__ == "MechanismNotEnabledError":
+            return _unavailable(
+                name,
+                f"{name} is not compiled into this liboqs build — it is absent from "
+                f"get_enabled_stateful_sig_mechanisms(). Rebuild with "
+                f"OQS_ENABLE_SIG_STFL_LMS=ON and OQS_ENABLE_SIG_STFL_XMSS=ON; see "
+                f"docs/runbook.md, 'Enabling LMS / XMSS stateful signatures'.",
+            )
         return {
             "scheme": name,
             "status": "failed",

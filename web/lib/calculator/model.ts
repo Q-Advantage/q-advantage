@@ -16,7 +16,7 @@
 //   - charge egress on inbound bytes (cloud egress bills outbound only)
 
 import type { ComposedSuite } from "../protocols/types";
-import { vsBaselinePct } from "../protocols/metrics";
+import { publishableVsBaselinePct } from "../protocols/anomaly";
 
 /** Average days per month — 365.25/12. Stated rather than a magic 30. */
 export const DAYS_PER_MONTH = 30.4375;
@@ -148,7 +148,7 @@ export function runScenario(
       medianUs: suite.timing.median_us,
       bytesTotal: suite.size?.bytes_total ?? null,
       bytesOut: suite.size?.bytes_server_to_client ?? null,
-      vsBaselinePct: vsBaselinePct(suite, allSuites),
+      vsBaselinePct: publishableVsBaselinePct(suite, allSuites),
       cpuUsd,
       egressUsd,
       totalUsd,

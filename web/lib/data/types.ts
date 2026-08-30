@@ -37,6 +37,17 @@ export interface RuntimeMetrics {
 }
 
 export interface OperationStats {
+  /**
+   * 95% confidence interval on the MEAN, emitted by the harness from
+   * 2026-08-30. Absent on every run committed before that — the web layer
+   * derives the same interval from mean/stdev/n for the whole historical
+   * record, so nothing depends on these being present. See lib/data/statistics.ts.
+   */
+  ci95_low_us?: number | null;
+  ci95_high_us?: number | null;
+  /** stdev_us / sqrt(n). Not the same quantity as stdev_us; see statistics.ts. */
+  std_error_us?: number | null;
+  ci_note?: string;
   mean_us: number;
   median_us: number;
   p95_us: number;
@@ -130,6 +141,13 @@ export interface NormalizedRun {
   is_legacy_filename: boolean;
   /** True when runtime_metrics was missing */
   is_legacy_schema: boolean;
+  /**
+   * Hardware era this run belongs to (see lib/data/hosts.ts). Derived from
+   * `environment.ec2_instance_type` at load time, never authored. Runs in
+   * different eras were measured on different machines and must not be drawn
+   * as one continuous series.
+   */
+  host_era_id: string;
   algorithms: NormalizedAlgorithm[];
   /** Quick lookup by algorithm id */
   algorithms_by_id: Record<string, NormalizedAlgorithm>;
