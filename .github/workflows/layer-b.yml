@@ -79,7 +79,9 @@ jobs:
 
       - name: Run the scenario
         working-directory: layer-b
-        run: ./run-scenario.sh ${{ matrix.scenario }}
+        # Invoked through bash rather than relying on the executable bit: this repo
+        # is developed on Windows, where git does not track mode by default.
+        run: bash ./run-scenario.sh ${{ matrix.scenario }}
 
       - name: Assert it established what it claims to
         working-directory: layer-b
