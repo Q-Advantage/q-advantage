@@ -166,12 +166,22 @@ class TestRoundTrips:
 
 
 class TestRttEstimate:
-    def test_measures_syn_to_synack(self):
+    def test_measures_syn_to_synack_and_says_where_it_looked(self):
         c = conv_of([up(b"", flags=SYN), down(b"", flags=SYN | ACK)])
         r = rtt_estimate(c)
         assert r["measurable"] is True
-        assert r["rtt_seconds"] >= 0
+        assert r["syn_to_synack_seconds"] >= 0
         assert r["source"] == "TCP SYN to SYN/ACK"
+        # The correction the first real run forced: this is NOT a round trip.
+        # With 50 ms injected on the client egress it read 40 microseconds,
+        # because the delay happened before the SYN reached the server.
+        assert r["is_full_round_trip"] is False
+        assert "server" in r["observed_at"]
+        assert "invisible from this end" in r["note"]
+
+    def test_it_never_calls_a_one_sided_observation_a_round_trip(self):
+        r = rtt_estimate(conv_of([up(b"", flags=SYN), down(b"", flags=SYN | ACK)]))
+        assert "rtt_seconds" not in r
 
     def test_a_capture_that_began_mid_connection_says_so(self):
         # Estimating from a later exchange would fold server think time into a

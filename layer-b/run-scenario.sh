@@ -48,10 +48,13 @@ case "$SCENARIO" in
     export GROUPS_CLIENT="X25519MLKEM768:x25519"
     export GROUPS_SERVER="X25519MLKEM768:x25519"
     export DELAY_MS="${DELAY_MS:-50}"
+    # Both directions. See scripts/capture.sh: a one-sided delay is invisible
+    # to a capture taken at the far end.
+    export EGRESS_DELAY_MS="${DELAY_MS:-50}"
     export CAPTURE_SECONDS=40
     # Recorded explicitly because an injected delay must never be read as real
     # geography. netem reproduces the round-trip cost, not the path.
-    ENV_NOTE="netem ${DELAY_MS}ms injected on the client egress (synthetic, not real distance)"
+    ENV_NOTE="netem ${DELAY_MS}ms injected on BOTH egress paths, ~$((2 * DELAY_MS))ms round trip (synthetic, not real distance)"
     ;;
   middlebox)
     export GROUPS_CLIENT="X25519MLKEM768:x25519"

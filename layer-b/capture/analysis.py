@@ -212,13 +212,26 @@ def concurrency_summary(convs: list) -> dict:
 
 def rtt_estimate(conv) -> dict:
     """
-    Round-trip time estimated from the TCP handshake, when it was captured.
+    SYN to SYN/ACK, measured AT THE CAPTURE POINT.
 
-    Uses SYN -> SYN/ACK, which is the one exchange whose timing is pure network
-    latency with no application work in between. If the capture began after the
-    connection was established there is nothing to measure, and that is said
-    rather than approximated from a later exchange that includes server think
-    time.
+    WHAT THIS IS NOT. It is tempting to call this the round-trip time. It is
+    not, and the difference bit on the first real run: our capture is taken in
+    the server's network namespace, so with 50 ms injected on the client's
+    egress the figure came back at 40 microseconds. Nothing was broken. The
+    delay happened before the SYN reached the server, and the server answered
+    immediately -- so a server-side observer correctly sees no round trip at
+    all.
+
+    What a capture at one endpoint can see is the latency of the path from the
+    peer to itself and back, and only when the delay is symmetric. A
+    one-directional delay is invisible from the wrong end. So this reports the
+    observed SYN-to-SYN/ACK interval and says where it was observed, leaving
+    the caller to know whether that constitutes a round trip.
+
+    The generalisation worth keeping: an endpoint capture measures the network
+    it can see. Presenting a one-sided observation as a path property is the
+    same class of error as trusting a stack's own report of what it
+    negotiated -- which is the thing this whole layer exists to avoid.
     """
     syn_time: float | None = None
     for to_server, pkt in conv.packets:
@@ -228,11 +241,15 @@ def rtt_estimate(conv) -> dict:
         if not to_server and pkt.is_syn and pkt.is_ack and syn_time is not None:
             return {
                 "measurable": True,
-                "rtt_seconds": pkt.timestamp - syn_time,
+                "syn_to_synack_seconds": pkt.timestamp - syn_time,
+                "observed_at": "server (capture shares the server network namespace)",
                 "source": "TCP SYN to SYN/ACK",
+                "is_full_round_trip": False,
                 "note": (
-                    "The only exchange with no application work in between, so it is latency "
-                    "rather than latency plus server time."
+                    "Interval between the SYN arriving and the SYN/ACK leaving, as seen at the "
+                    "server. This is a full round trip only when latency is symmetric: a delay "
+                    "injected on the client's egress happens before the SYN arrives and is "
+                    "invisible from this end."
                 ),
             }
     return {

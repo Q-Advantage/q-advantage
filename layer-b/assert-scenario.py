@@ -104,11 +104,13 @@ def check_rtt(r: dict) -> None:
     if "synthetic" not in note:
         fail("the path note must not let injected delay read as real geography")
     rtt = r.get("rtt") or {}
-    print("OK rtt: %s, rtt_measurable=%s, round_trips~%s"
+    if rtt.get("is_full_round_trip") is True:
+        fail("a one-endpoint capture must never claim to have observed a full round trip")
+    print("OK rtt: %s, syn_to_synack_measurable=%s, round_trips~%s"
           % (r["wire"]["negotiated_group"]["name"], rtt.get("measurable"),
              (r.get("round_trips") or {}).get("approx_round_trips")))
     if rtt.get("measurable"):
-        print("   observed rtt: %.4fs" % rtt["rtt_seconds"])
+        print("   syn->syn/ack at the server: %.6fs" % rtt["syn_to_synack_seconds"])
 
 
 def check_middlebox(r: dict) -> None:

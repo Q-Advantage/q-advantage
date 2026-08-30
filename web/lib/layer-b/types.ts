@@ -92,9 +92,20 @@ export interface LayerBRoundTrips {
   note?: string;
 }
 
+/**
+ * SYN to SYN/ACK, measured at the capture point.
+ *
+ * Deliberately NOT called round-trip time. The capture sits in the server's
+ * network namespace, so a delay injected on the client's egress happens before
+ * the SYN arrives and is invisible from that end — the first real run read 40 µs
+ * against 50 ms injected. `is_full_round_trip` records whether the observation
+ * can be read as a path property at all.
+ */
 export interface LayerBRtt {
   measurable: boolean;
-  rtt_seconds?: number;
+  syn_to_synack_seconds?: number;
+  observed_at?: string;
+  is_full_round_trip?: boolean;
   source?: string;
   reason?: string;
   note?: string;

@@ -36,6 +36,8 @@ services:
     environment:
       CAPTURE_SECONDS: ${CAPTURE_SECONDS:-40}
       SCENARIO: ${SCENARIO:-pairwise}
+      # Set only by the rtt scenario, to make the injected latency symmetric.
+      EGRESS_DELAY_MS: ${EGRESS_DELAY_MS:-}
     command: ["/layer-b/scripts/capture.sh"]
     profiles: [pairwise, mismatch, concurrency, rtt, middlebox]
 

@@ -28,6 +28,20 @@ mkdir -p /out
   done
 ) > "/out/sockstat-${SCENARIO}.csv" 2>/dev/null &
 
+# Optionally delay the SERVER's egress as well as the client's.
+#
+# This sidecar shares the server's network namespace, so netem applied here
+# delays traffic leaving the server. That matters because the capture is taken
+# at the server: a delay injected only on the client's egress happens before
+# the SYN arrives, so a server-side observer correctly sees no round trip at
+# all. The first real RTT run read 40 microseconds against 50 ms injected for
+# exactly that reason. Delaying both directions makes the path symmetric, which
+# is the condition under which an endpoint capture can see a round trip.
+if [ -n "${EGRESS_DELAY_MS:-}" ]; then
+  tc qdisc add dev eth0 root netem delay "${EGRESS_DELAY_MS}ms" 2>/dev/null     || tc qdisc change dev eth0 root netem delay "${EGRESS_DELAY_MS}ms" 2>/dev/null     || echo "capture: WARNING could not apply server-side netem"
+  echo "capture: server egress delayed ${EGRESS_DELAY_MS}ms"
+fi
+
 echo "capture: scenario=${SCENARIO} seconds=${SECONDS_TO_RUN}"
 # -s 0 keeps whole packets: a truncated snaplen would cut off the very
 # key_share bytes this exercise exists to read.
