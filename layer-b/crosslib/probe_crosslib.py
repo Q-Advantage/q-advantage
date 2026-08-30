@@ -41,7 +41,15 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 
-TIMEOUT_S = 180
+#: A full `bssl speed` run works through every primitive in the library and
+#: takes many minutes. The first run capped it at 180s, the command was killed
+#: mid-inventory, and the control correctly refused to publish the resulting
+#: silence as seven negatives -- which is the control working, but it means
+#: BoringSSL and AWS-LC contributed no opinion at all.
+#:
+#: Generous rather than tight: the cost of being too short is a lost second
+#: opinion, and the cost of being too long is a slower CI job.
+TIMEOUT_S = 900
 
 #: Names a library might use for the same primitive.
 #:
