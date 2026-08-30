@@ -42,6 +42,86 @@ jobs:
       - name: Parser tests
         run: python -m pytest layer-b/tests -q
 
+  certificate-chains:
+    name: certificate chain sizing
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Same image as the live-handshake jobs. Certificate generation is a
+      # second use of the oqs-provider investment rather than a new dependency:
+      # the measurement host's OpenSSL 3.0.13 cannot mint an ML-DSA certificate
+      # at all, which is why this cannot live in the daily Layer A run.
+      - name: Build the reference stack
+        working-directory: layer-b
+        run: docker build -t q-advantage/layer-b:dev .
+
+      - name: Mint real chains
+        working-directory: layer-b
+        run: |
+          mkdir -p out/certs
+          # The scripts are mounted rather than baked in, so a change to them
+          # does not force an image rebuild.
+          docker run --rm             -v "$PWD/certs:/certs:ro"             -v "$PWD/out:/out"             -e OUT_DIR=/out/certs             q-advantage/layer-b:dev bash /certs/generate-chains.sh
+
+      - name: Size them
+        working-directory: layer-b
+        run: |
+          python certs/measure_chains.py             --certs-dir out/certs             --baseline ecdsa-p256             --output-dir out/results
+          cat out/results/cert-chain-*.json
+
+      - name: Assert the measurement says something
+        working-directory: layer-b
+        run: |
+          python - <<'PY'
+          import glob, json, sys
+          paths = sorted(glob.glob("out/results/cert-chain-*.json"))
+          if not paths:
+              sys.exit("no cert-chain result was written")
+          r = json.load(open(paths[-1]))
+
+          measured = [c for c in r["chains"] if c.get("measured")]
+          if len(measured) < 2:
+              sys.exit("fewer than two chains were built; nothing can be compared")
+
+          algs = {c["algorithm"] for c in measured}
+          if not any(a.startswith("mldsa") for a in algs):
+              sys.exit("no post-quantum chain was built — oqs-provider is not minting certificates")
+
+          cmp = r["comparison"]
+          if not cmp.get("measurable"):
+              sys.exit("comparison unavailable: %s" % cmp.get("reason"))
+
+          # The claim boundary is the thing most likely to erode. A named
+          # mechanism appearing here without a citation is the failure this
+          # guards, so it fails the job rather than warning.
+          blob = json.dumps(r)
+          for name in ("Merkle", "MTC", "draft-"):
+              if name in blob:
+                  sys.exit("output names a mechanism without citing it: %r" % name)
+
+          print("chains:", ", ".join(sorted(algs)))
+          for row in cmp["rows"]:
+              print("  %-12s %6d B sent  %+7d B vs %s  (%.2fx)" % (
+                  row["algorithm"], row["sent_der_bytes"], row["delta_bytes"],
+                  cmp["baseline"], row["multiple_of_baseline"]))
+          PY
+
+      - name: Upload the chains and the measurement
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: layer-b-cert-chains
+          path: |
+            layer-b/out/certs/**/*.der
+            layer-b/out/results/cert-chain-*.json
+          if-no-files-found: warn
+
   scenarios:
     name: "live: ${{ matrix.scenario }}${{ matrix.proxy && format(' ({0})', matrix.proxy) || '' }}"
     runs-on: ubuntu-latest
