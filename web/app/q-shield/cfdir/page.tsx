@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PageShell } from "@/components/chrome/PageShell";
 import { AuditBand, Caveat, DataTable, RowName, Section, type KitRow } from "@/components/product/kit";
 import { loadProtocolsData } from "@/lib/protocols/load";
+import { formatBytes } from "@/lib/format";
 import {
   CFDIR_FRAMEWORK_DATED,
   CFDIR_FRAMEWORK_VERSION,
@@ -13,6 +14,14 @@ import {
   type UseCaseCoverage,
 } from "@/lib/data/cfdir";
 import { fileOperatingCostDeltas, formatSignedDelta, mixedSignDeltas } from "@/lib/protocols/ocd";
+import {
+  congestionIsComposed,
+  hasChainSizing,
+  loadCertChain,
+  measuredChains,
+  overTheWindow,
+  worstMultiple,
+} from "@/lib/data/cert-chain";
 
 export const metadata: Metadata = {
   title: "CFDIR coverage | Q-Shield",
@@ -55,7 +64,11 @@ function useCaseRows(rows: UseCaseCoverage[]): KitRow[] {
 
 export default function CfdirPage() {
   const data = loadProtocolsData();
-  const rows = coverageByUseCase(data);
+  const chainFile = loadCertChain();
+  const chains = measuredChains(chainFile);
+  const rows = coverageByUseCase(data, { chainSizing: hasChainSizing(chainFile) });
+  const overWindow = overTheWindow(chainFile);
+  const worst = worstMultiple(chainFile);
   const t = tally(rows);
 
   const primary = data.byArch["x86_64"] ?? data.byArch[Object.keys(data.byArch)[0]];
@@ -103,6 +116,111 @@ export default function CfdirPage() {
           rows={useCaseRows(rows)}
         />
       </Section>
+
+      {chains.length > 0 && (
+        <Section
+          eyebrow="3.5 · TLS certificates"
+          title={
+            worst
+              ? `The chain, not the key exchange, is where the bytes are: ${worst.multiple.toFixed(2)}× at ${worst.algorithm}.`
+              : "Certificate chains, measured rather than summed."
+          }
+          hint="Chains minted with oqs-provider and measured as DER. Only the leaf and intermediate count as sent — in the common deployment the root is already in the client's trust store, and counting it would overstate every handshake."
+        >
+          <DataTable
+            head={["Certificate", "Leaf", "Intermediate", "Sent on the wire", "vs ECDSA-P256"]}
+            rows={chains.map((c) => {
+              const cmp = chainFile?.comparison?.rows?.find((r) => r.algorithm === c.algorithm);
+              return {
+                key: c.algorithm,
+                cells: [
+                  <RowName key="n" name={c.algorithm} />,
+                  <span key="l" className="tabular-nums text-fg-muted">
+                    {formatBytes(c.certificates_der_bytes?.leaf ?? 0)}
+                  </span>,
+                  <span key="i" className="tabular-nums text-fg-muted">
+                    {formatBytes(c.certificates_der_bytes?.intermediate ?? 0)}
+                  </span>,
+                  <span key="s" className="tabular-nums font-bold text-fg">
+                    {formatBytes(c.sent_in_handshake?.der_bytes ?? 0)}
+                  </span>,
+                  <span key="m" className="tabular-nums text-fg-muted">
+                    {cmp?.multiple_of_baseline != null ? (
+                      `${cmp.multiple_of_baseline.toFixed(2)}×`
+                    ) : (
+                      <span className="text-fg-subtle">baseline</span>
+                    )}
+                  </span>,
+                ],
+              };
+            })}
+          />
+          <p className="mt-3 text-[11px] leading-relaxed text-fg-muted">
+            These are a <strong className="font-bold text-fg">floor</strong>. The generated
+            certificates carry short names, one SAN and no Certificate Transparency extensions, where
+            a real WebPKI certificate carries more &mdash; which makes a real chain larger, and the
+            post-quantum penalty on a real chain larger still.
+          </p>
+        </Section>
+      )}
+
+      {chainFile?.congestion && (
+        <Section
+          eyebrow="The consequence"
+          title={
+            overWindow.length > 0
+              ? "Put one of those chains in a first flight and the congestion window stops being theoretical."
+              : "Composed against the initial congestion window."
+          }
+          hint={`Against ${formatBytes(chainFile.congestion.assumed_initcwnd_bytes)} — 10 segments at a 1460-byte MSS, the RFC 6928 default. Tunable per route, so the assumption is published with the verdict.`}
+        >
+          <DataTable
+            head={["Certificate", "Composed first flight", "Against the window"]}
+            rows={chainFile.congestion.rows.map((r) => ({
+              key: r.certificate_algorithm,
+              cells: [
+                <RowName key="n" name={r.certificate_algorithm} />,
+                <span key="b" className="tabular-nums font-bold text-fg">
+                  {formatBytes(r.composed_first_flight_bytes)}
+                </span>,
+                <span
+                  key="v"
+                  className={
+                    r.exceeds_initcwnd ? "font-bold text-status-warn" : "tabular-nums text-fg-muted"
+                  }
+                >
+                  {r.exceeds_initcwnd
+                    ? `over by ${formatBytes(-r.headroom_bytes)}`
+                    : `fits, ${formatBytes(r.headroom_bytes)} spare`}
+                </span>,
+              ],
+            }))}
+          />
+        </Section>
+      )}
+
+      {congestionIsComposed(chainFile) && (
+        <Caveat label="This corrects something published earlier on this site">
+          Layer B measured a real TLS first flight at{" "}
+          <strong className="font-bold text-fg">1,762 bytes</strong> and we said the congestion-window
+          cliff was not binding. That measurement is correct; the conclusion drawn from it was too
+          broad. Layer B&rsquo;s testbed serves a throwaway classical certificate by design, so its
+          flight contains no post-quantum certificate at all.
+          {" "}
+          {overWindow.length > 0 && (
+            <>
+              With one in it, the larger parameter sets cross the window. The cliff{" "}
+              <strong className="font-bold text-fg">is</strong> binding &mdash; just not where it was
+              first looked for.
+            </>
+          )}
+          {" "}The table above is a <strong className="font-bold text-fg">composition</strong> over
+          measured components, not a captured flight: every term is measured, but the flight&rsquo;s
+          structure is assumed, with no OCSP stapling, client authentication or session ticket &mdash;
+          all of which push the total up rather than down. The honest way to settle it is to make that
+          testbed serve a post-quantum chain and capture the flight directly.
+        </Caveat>
+      )}
 
       <Section
         eyebrow="Line items"

@@ -1,0 +1,285 @@
+{
+  "schema": "cert-chain/0.1.0",
+  "environment": {
+    "iso_timestamp": "2026-08-30T15:36:24.078839Z",
+    "openssl": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)",
+    "git_commit": "43172a310075bf06248858c71f145e08b170b3f2"
+  },
+  "scope": {
+    "measures": "DER sizes of real root/intermediate/leaf chains, one per signature algorithm, minted with OpenSSL and oqs-provider.",
+    "floor_not_typical": "These chains carry short names, one SAN and no Certificate Transparency extensions. A real WebPKI certificate carries more, so every figure here is a FLOOR rather than a typical size -- and the post-quantum penalty on a real chain is therefore larger, not smaller.",
+    "why_measured": "A certificate is not its key plus its signature: ASN.1 framing, names, validity, serial, extensions and the algorithm identifier all contribute, and the overhead differs between algorithms. Summing components would be confidently wrong.",
+    "not_measured": "Chain validation cost in situ, issuance and rotation cost (CFDIR 3.3), and anything about how often a chain is re-sent versus resumed.",
+    "congestion_is_composed": "The congestion block is a composition over measured components, not a captured flight. Layer B's own captured flight serves a classical certificate by design, so it cannot see this."
+  },
+  "chains": [
+    {
+      "algorithm": "ecdsa-p256",
+      "measured": true,
+      "certificates_der_bytes": {
+        "leaf": 466,
+        "intermediate": 431,
+        "root": 386
+      },
+      "full_chain_der_bytes": 1283,
+      "sent_in_handshake": {
+        "certificates": [
+          "leaf",
+          "intermediate"
+        ],
+        "der_bytes": 897,
+        "tls_message_bytes": 907,
+        "note": "Leaf and intermediate only: in the common WebPKI deployment the root is already in the client's trust store and is not sent. The full chain is published too, because which figure applies depends on the deployment."
+      }
+    },
+    {
+      "algorithm": "mldsa44",
+      "measured": true,
+      "certificates_der_bytes": {
+        "leaf": 4059,
+        "intermediate": 4020,
+        "root": 3976
+      },
+      "full_chain_der_bytes": 12055,
+      "sent_in_handshake": {
+        "certificates": [
+          "leaf",
+          "intermediate"
+        ],
+        "der_bytes": 8079,
+        "tls_message_bytes": 8089,
+        "note": "Leaf and intermediate only: in the common WebPKI deployment the root is already in the client's trust store and is not sent. The full chain is published too, because which figure applies depends on the deployment."
+      }
+    },
+    {
+      "algorithm": "mldsa65",
+      "measured": true,
+      "certificates_der_bytes": {
+        "leaf": 5588,
+        "intermediate": 5549,
+        "root": 5505
+      },
+      "full_chain_der_bytes": 16642,
+      "sent_in_handshake": {
+        "certificates": [
+          "leaf",
+          "intermediate"
+        ],
+        "der_bytes": 11137,
+        "tls_message_bytes": 11147,
+        "note": "Leaf and intermediate only: in the common WebPKI deployment the root is already in the client's trust store and is not sent. The full chain is published too, because which figure applies depends on the deployment."
+      }
+    },
+    {
+      "algorithm": "mldsa87",
+      "measured": true,
+      "certificates_der_bytes": {
+        "leaf": 7546,
+        "intermediate": 7507,
+        "root": 7463
+      },
+      "full_chain_der_bytes": 22516,
+      "sent_in_handshake": {
+        "certificates": [
+          "leaf",
+          "intermediate"
+        ],
+        "der_bytes": 15053,
+        "tls_message_bytes": 15063,
+        "note": "Leaf and intermediate only: in the common WebPKI deployment the root is already in the client's trust store and is not sent. The full chain is published too, because which figure applies depends on the deployment."
+      }
+    },
+    {
+      "algorithm": "rsa-2048",
+      "measured": true,
+      "certificates_der_bytes": {
+        "leaf": 860,
+        "intermediate": 822,
+        "root": 778
+      },
+      "full_chain_der_bytes": 2460,
+      "sent_in_handshake": {
+        "certificates": [
+          "leaf",
+          "intermediate"
+        ],
+        "der_bytes": 1682,
+        "tls_message_bytes": 1692,
+        "note": "Leaf and intermediate only: in the common WebPKI deployment the root is already in the client's trust store and is not sent. The full chain is published too, because which figure applies depends on the deployment."
+      }
+    },
+    {
+      "algorithm": "rsa-3072",
+      "measured": true,
+      "certificates_der_bytes": {
+        "leaf": 1116,
+        "intermediate": 1078,
+        "root": 1034
+      },
+      "full_chain_der_bytes": 3228,
+      "sent_in_handshake": {
+        "certificates": [
+          "leaf",
+          "intermediate"
+        ],
+        "der_bytes": 2194,
+        "tls_message_bytes": 2204,
+        "note": "Leaf and intermediate only: in the common WebPKI deployment the root is already in the client's trust store and is not sent. The full chain is published too, because which figure applies depends on the deployment."
+      }
+    }
+  ],
+  "comparison": {
+    "measurable": true,
+    "baseline": "ecdsa-p256",
+    "baseline_sent_der_bytes": 897,
+    "rows": [
+      {
+        "algorithm": "mldsa44",
+        "sent_der_bytes": 8079,
+        "delta_bytes": 7182,
+        "multiple_of_baseline": 9.01
+      },
+      {
+        "algorithm": "mldsa65",
+        "sent_der_bytes": 11137,
+        "delta_bytes": 10240,
+        "multiple_of_baseline": 12.42
+      },
+      {
+        "algorithm": "mldsa87",
+        "sent_der_bytes": 15053,
+        "delta_bytes": 14156,
+        "multiple_of_baseline": 16.78
+      },
+      {
+        "algorithm": "rsa-2048",
+        "sent_der_bytes": 1682,
+        "delta_bytes": 785,
+        "multiple_of_baseline": 1.88
+      },
+      {
+        "algorithm": "rsa-3072",
+        "sent_der_bytes": 2194,
+        "delta_bytes": 1297,
+        "multiple_of_baseline": 2.45
+      }
+    ],
+    "note": "Compared on what a handshake sends (leaf + intermediate), not the full chain, because that is the figure a per-connection cost multiplies."
+  },
+  "components": {
+    "rows": [
+      {
+        "algorithm": "ecdsa-p256",
+        "sent_der_bytes": 897,
+        "saved_if_intermediate_omitted": 431,
+        "remaining_if_intermediate_omitted": 466,
+        "intermediate_share_pct": 48.0
+      },
+      {
+        "algorithm": "mldsa44",
+        "sent_der_bytes": 8079,
+        "saved_if_intermediate_omitted": 4020,
+        "remaining_if_intermediate_omitted": 4059,
+        "intermediate_share_pct": 49.8
+      },
+      {
+        "algorithm": "mldsa65",
+        "sent_der_bytes": 11137,
+        "saved_if_intermediate_omitted": 5549,
+        "remaining_if_intermediate_omitted": 5588,
+        "intermediate_share_pct": 49.8
+      },
+      {
+        "algorithm": "mldsa87",
+        "sent_der_bytes": 15053,
+        "saved_if_intermediate_omitted": 7507,
+        "remaining_if_intermediate_omitted": 7546,
+        "intermediate_share_pct": 49.9
+      },
+      {
+        "algorithm": "rsa-2048",
+        "sent_der_bytes": 1682,
+        "saved_if_intermediate_omitted": 822,
+        "remaining_if_intermediate_omitted": 860,
+        "intermediate_share_pct": 48.9
+      },
+      {
+        "algorithm": "rsa-3072",
+        "sent_der_bytes": 2194,
+        "saved_if_intermediate_omitted": 1078,
+        "remaining_if_intermediate_omitted": 1116,
+        "intermediate_share_pct": 49.1
+      }
+    ],
+    "claim_boundary": "This is arithmetic over chains we minted and measured. It says what a chain costs and what omitting a component would save. It does not describe, endorse or specify any particular proposal for doing so -- mapping these numbers onto a named IETF draft requires citing that draft, which is not done here."
+  },
+  "congestion": {
+    "assumed_initcwnd_bytes": 14600,
+    "assumed_initcwnd_note": "10 segments x 1460-byte MSS (RFC 6928 default). Tunable per route; stated so a reader on a different setting can re-judge.",
+    "key_exchange": "X25519MLKEM768",
+    "rows": [
+      {
+        "certificate_algorithm": "ecdsa-p256",
+        "server_hello_bytes": 1210,
+        "certificate_message_bytes": 907,
+        "certificate_verify_signature_bytes": 72,
+        "other_bytes": 60,
+        "composed_first_flight_bytes": 2249,
+        "exceeds_initcwnd": false,
+        "headroom_bytes": 12351
+      },
+      {
+        "certificate_algorithm": "mldsa44",
+        "server_hello_bytes": 1210,
+        "certificate_message_bytes": 8089,
+        "certificate_verify_signature_bytes": 2420,
+        "other_bytes": 60,
+        "composed_first_flight_bytes": 11779,
+        "exceeds_initcwnd": false,
+        "headroom_bytes": 2821
+      },
+      {
+        "certificate_algorithm": "mldsa65",
+        "server_hello_bytes": 1210,
+        "certificate_message_bytes": 11147,
+        "certificate_verify_signature_bytes": 3309,
+        "other_bytes": 60,
+        "composed_first_flight_bytes": 15726,
+        "exceeds_initcwnd": true,
+        "headroom_bytes": -1126
+      },
+      {
+        "certificate_algorithm": "mldsa87",
+        "server_hello_bytes": 1210,
+        "certificate_message_bytes": 15063,
+        "certificate_verify_signature_bytes": 4627,
+        "other_bytes": 60,
+        "composed_first_flight_bytes": 20960,
+        "exceeds_initcwnd": true,
+        "headroom_bytes": -6360
+      },
+      {
+        "certificate_algorithm": "rsa-2048",
+        "server_hello_bytes": 1210,
+        "certificate_message_bytes": 1692,
+        "certificate_verify_signature_bytes": 256,
+        "other_bytes": 60,
+        "composed_first_flight_bytes": 3218,
+        "exceeds_initcwnd": false,
+        "headroom_bytes": 11382
+      },
+      {
+        "certificate_algorithm": "rsa-3072",
+        "server_hello_bytes": 1210,
+        "certificate_message_bytes": 2204,
+        "certificate_verify_signature_bytes": 384,
+        "other_bytes": 60,
+        "composed_first_flight_bytes": 3858,
+        "exceeds_initcwnd": false,
+        "headroom_bytes": 10742
+      }
+    ],
+    "claim_type": "A COMPOSITION over measured components, not a captured flight. The ServerHello size comes from a real Layer B capture, the chain from minted certificates, the signature from the signature track -- but the flight's structure is assumed: ServerHello, EncryptedExtensions, Certificate, CertificateVerify, Finished, with no OCSP stapling, no client authentication and no session ticket. A real deployment carrying more pushes the total up, not down.",
+    "why_layer_b_did_not_see_this": "Layer B measured a real first flight at 1,762 bytes, comfortably inside the window. That measurement is correct and incomplete: its testbed serves a throwaway ECDSA certificate by design, so its flight contains no post-quantum certificate. The honest way to settle this is to make that testbed serve a post-quantum chain and capture the flight directly."
+  }
+}

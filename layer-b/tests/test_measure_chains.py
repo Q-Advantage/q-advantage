@@ -154,3 +154,96 @@ class TestScopeIsPublishedWithTheNumbers:
         result = measure_chains.build(tmp_path / "nothing", "ecdsa-p256")
         assert result["chains"] == []
         assert result["comparison"]["measurable"] is False
+
+
+class TestTheCongestionInteraction:
+    """
+    The finding that reverses an earlier one, and the care it needs.
+
+    Layer B measured a real first flight at 1,762 bytes and this repo published
+    that the congestion-window cliff was not binding. That measurement is
+    correct; the conclusion drawn from it was too broad, because Layer B's
+    testbed serves a classical certificate by design. Put a post-quantum chain
+    in the same flight and the answer changes.
+    """
+
+    def _chains(self):
+        # The real measured figures from CI run 33319905023.
+        def chain(alg, leaf, inter, root):
+            sent = leaf + inter
+            return {
+                "algorithm": alg,
+                "measured": True,
+                "certificates_der_bytes": {"leaf": leaf, "intermediate": inter, "root": root},
+                "sent_in_handshake": {"der_bytes": sent, "tls_message_bytes": sent + 10},
+            }
+
+        return [
+            chain("ecdsa-p256", 466, 431, 386),
+            chain("mldsa44", 4059, 4020, 3976),
+            chain("mldsa65", 5588, 5549, 5505),
+            chain("mldsa87", 7546, 7507, 7463),
+        ]
+
+    def test_a_classical_chain_fits_comfortably(self):
+        rows = {r["certificate_algorithm"]: r for r in
+                measure_chains.congestion_interaction(self._chains())["rows"]}
+        assert rows["ecdsa-p256"]["exceeds_initcwnd"] is False
+        assert rows["ecdsa-p256"]["headroom_bytes"] > 10_000
+
+    def test_the_smallest_post_quantum_chain_still_fits(self):
+        # Worth pinning: the finding is not "post-quantum breaks it", it is
+        # "post-quantum breaks it above a specific parameter set".
+        rows = {r["certificate_algorithm"]: r for r in
+                measure_chains.congestion_interaction(self._chains())["rows"]}
+        assert rows["mldsa44"]["exceeds_initcwnd"] is False
+
+    def test_the_larger_post_quantum_chains_do_not(self):
+        rows = {r["certificate_algorithm"]: r for r in
+                measure_chains.congestion_interaction(self._chains())["rows"]}
+        assert rows["mldsa65"]["exceeds_initcwnd"] is True
+        assert rows["mldsa87"]["exceeds_initcwnd"] is True
+        assert rows["mldsa87"]["headroom_bytes"] < 0
+
+    def test_the_assumed_window_travels_with_the_verdict(self):
+        # initcwnd is a tunable default. A verdict without its assumption is
+        # not reproducible.
+        c = measure_chains.congestion_interaction(self._chains())
+        assert c["assumed_initcwnd_bytes"] == 14600
+        assert "RFC 6928" in c["assumed_initcwnd_note"]
+
+    def test_a_different_window_changes_the_verdict(self):
+        c = measure_chains.congestion_interaction(self._chains(), initcwnd_bytes=64_000)
+        assert all(not r["exceeds_initcwnd"] for r in c["rows"])
+
+    def test_it_declares_itself_a_composition_not_a_capture(self):
+        # Every term is measured; the flight's structure is assumed. Presenting
+        # that as a captured measurement would be the overreach.
+        c = measure_chains.congestion_interaction(self._chains())
+        assert "COMPOSITION" in c["claim_type"]
+        assert "not a captured flight" in c["claim_type"]
+        assert "no OCSP stapling" in c["claim_type"]
+
+    def test_it_says_why_layer_b_could_not_see_this(self):
+        # Without this, the two findings look like a contradiction rather than
+        # two correct answers to different questions.
+        c = measure_chains.congestion_interaction(self._chains())
+        assert "1,762" in c["why_layer_b_did_not_see_this"]
+        assert "classical" in c["why_layer_b_did_not_see_this"] or \
+               "ECDSA" in c["why_layer_b_did_not_see_this"]
+
+    def test_the_composition_errs_upward_not_downward(self):
+        # A real deployment carries more than the assumed flight, so the
+        # published total understates rather than overstates.
+        c = measure_chains.congestion_interaction(self._chains())
+        assert "pushes the total up, not down" in c["claim_type"]
+
+    def test_an_algorithm_with_no_known_signature_size_is_skipped(self):
+        # Rather than composed with a guessed signature length.
+        extra = self._chains() + [{
+            "algorithm": "unknown-alg", "measured": True,
+            "certificates_der_bytes": {"leaf": 1, "intermediate": 1, "root": 1},
+            "sent_in_handshake": {"der_bytes": 2, "tls_message_bytes": 12},
+        }]
+        rows = measure_chains.congestion_interaction(extra)["rows"]
+        assert all(r["certificate_algorithm"] != "unknown-alg" for r in rows)

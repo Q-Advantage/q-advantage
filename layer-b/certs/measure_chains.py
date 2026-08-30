@@ -179,6 +179,111 @@ def component_arithmetic(chains: list[dict]) -> dict:
     }
 
 
+
+#: The common Linux initial congestion window: 10 segments at a 1460-byte MSS
+#: (RFC 6928). A tunable per-route default, not a property of the network, so
+#: every verdict built on it publishes the value it assumed.
+DEFAULT_INITCWND_BYTES = 10 * 1460
+
+#: Measured components of a TLS 1.3 server flight, other than the certificate.
+#:
+#: Real figures from this repo's own tracks -- the ServerHello size from Layer
+#: B's captured X25519MLKEM768 handshake, the signature sizes from the signature
+#: track -- but combining them is a COMPOSITION, not a capture. See
+#: `congestion_interaction` for what that distinction costs.
+SERVER_HELLO_BYTES_MLKEM768 = 1210
+FINISHED_AND_EXTENSIONS_BYTES = 60
+
+#: Signature sizes, measured by the signature track.
+SIGNATURE_BYTES = {
+    "ecdsa-p256": 72,
+    "rsa-2048": 256,
+    "rsa-3072": 384,
+    "mldsa44": 2420,
+    "mldsa65": 3309,
+    "mldsa87": 4627,
+}
+
+
+def congestion_interaction(
+    chains: list[dict], initcwnd_bytes: int = DEFAULT_INITCWND_BYTES
+) -> dict:
+    """
+    Whether a server's first flight fits the initial congestion window once a
+    post-quantum certificate is in it.
+
+    WHY THIS IS HERE AND NOT IN LAYER B. Layer B measures a real first flight
+    and found 1,762 bytes -- comfortably inside the window. That measurement is
+    correct and it is also NOT the whole story: the Layer B testbed serves a
+    throwaway ECDSA certificate, deliberately, because certificate sizing was
+    out of scope for that work. Its first flight therefore contains no
+    post-quantum certificate at all.
+
+    Put a post-quantum chain in the same flight and the answer changes. That is
+    the finding, and it is why this lives next to the chain measurement.
+
+    WHAT KIND OF CLAIM THIS IS. Every term is measured -- the ServerHello from a
+    captured handshake, the chain from minted certificates, the signature from
+    the signature track. The STRUCTURE is modelled: a TLS 1.3 server flight is
+    assumed to be ServerHello, EncryptedExtensions, Certificate,
+    CertificateVerify and Finished, with no OCSP stapling, no client
+    authentication and no session ticket. A real deployment may carry more,
+    which pushes the total up rather than down.
+
+    It is a composition over measurements, not a measurement. Reported as such,
+    and the honest way to settle it is to make Layer B's testbed serve a
+    post-quantum certificate and capture the flight directly.
+    """
+    rows = []
+    for c in chains:
+        if not c.get("measured"):
+            continue
+        alg = c["algorithm"]
+        sig = SIGNATURE_BYTES.get(alg)
+        if sig is None:
+            continue
+        cert_msg = c["sent_in_handshake"]["tls_message_bytes"]
+        total = (
+            SERVER_HELLO_BYTES_MLKEM768 + cert_msg + sig + FINISHED_AND_EXTENSIONS_BYTES
+        )
+        rows.append(
+            {
+                "certificate_algorithm": alg,
+                "server_hello_bytes": SERVER_HELLO_BYTES_MLKEM768,
+                "certificate_message_bytes": cert_msg,
+                "certificate_verify_signature_bytes": sig,
+                "other_bytes": FINISHED_AND_EXTENSIONS_BYTES,
+                "composed_first_flight_bytes": total,
+                "exceeds_initcwnd": total > initcwnd_bytes,
+                "headroom_bytes": initcwnd_bytes - total,
+            }
+        )
+
+    return {
+        "assumed_initcwnd_bytes": initcwnd_bytes,
+        "assumed_initcwnd_note": (
+            "10 segments x 1460-byte MSS (RFC 6928 default). Tunable per route; stated so a "
+            "reader on a different setting can re-judge."
+        ),
+        "key_exchange": "X25519MLKEM768",
+        "rows": rows,
+        "claim_type": (
+            "A COMPOSITION over measured components, not a captured flight. The ServerHello size "
+            "comes from a real Layer B capture, the chain from minted certificates, the signature "
+            "from the signature track -- but the flight's structure is assumed: ServerHello, "
+            "EncryptedExtensions, Certificate, CertificateVerify, Finished, with no OCSP "
+            "stapling, no client authentication and no session ticket. A real deployment carrying "
+            "more pushes the total up, not down."
+        ),
+        "why_layer_b_did_not_see_this": (
+            "Layer B measured a real first flight at 1,762 bytes, comfortably inside the window. "
+            "That measurement is correct and incomplete: its testbed serves a throwaway ECDSA "
+            "certificate by design, so its flight contains no post-quantum certificate. The "
+            "honest way to settle this is to make that testbed serve a post-quantum chain and "
+            "capture the flight directly."
+        ),
+    }
+
 def openssl_version() -> str | None:
     try:
         out = subprocess.run(
@@ -230,10 +335,16 @@ def build(certs_dir: Path, baseline: str) -> dict:
                 "Chain validation cost in situ, issuance and rotation cost (CFDIR 3.3), and "
                 "anything about how often a chain is re-sent versus resumed."
             ),
+            "congestion_is_composed": (
+                "The congestion block is a composition over measured components, not a captured "
+                "flight. Layer B's own captured flight serves a classical certificate by design, "
+                "so it cannot see this."
+            ),
         },
         "chains": chains,
         "comparison": compare(chains, baseline),
         "components": component_arithmetic(chains),
+        "congestion": congestion_interaction(chains),
     }
 
 

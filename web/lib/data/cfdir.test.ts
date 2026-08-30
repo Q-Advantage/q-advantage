@@ -339,3 +339,41 @@ describe("MIA — the two numbers that must not share a label", () => {
     expect(onlyConcurrency.find((li) => li.code === "T")!.blocker).toContain("not yet appeared");
   });
 });
+
+describe("CFDIR 3.5 and the chain measurement", () => {
+  // 3.5 is the only row whose ceiling moves on data that is not in the daily
+  // record, so it is the only row where the derivation could go wrong quietly.
+  const withTls = data({ tls: true });
+
+  it("stays partial while no chain has been measured", () => {
+    const row = coverageByUseCase(withTls).find((r) => r.id === "3.5")!;
+    expect(row.coverage).toBe("partial");
+    expect(row.gap).toContain("certificate-chain bytes");
+  });
+
+  it("becomes covered once chain sizing exists, and drops the gap text with it", () => {
+    const row = coverageByUseCase(withTls, { chainSizing: true }).find((r) => r.id === "3.5")!;
+    expect(row.coverage).toBe("covered");
+    expect(row.gap).toBe("");
+  });
+
+  it("falls back to partial on its own if the chain job stops producing data", () => {
+    // The point of deriving it: nobody has to remember to retype the row.
+    const row = coverageByUseCase(withTls, { chainSizing: false }).find((r) => r.id === "3.5")!;
+    expect(row.coverage).toBe("partial");
+  });
+
+  it("does not claim coverage when the TLS track itself produced nothing", () => {
+    // Chain bytes without timings is not coverage of "TLS certificates" -- the
+    // use case needs both, and a missing track must still read as missing.
+    const row = coverageByUseCase(data({}), { chainSizing: true }).find((r) => r.id === "3.5")!;
+    expect(row.coverage).toBe("none");
+    expect(row.trackMissing).toBe(true);
+  });
+
+  it("leaves every other use case untouched by the chain flag", () => {
+    const before = coverageByUseCase(withTls).filter((r) => r.id !== "3.5");
+    const after = coverageByUseCase(withTls, { chainSizing: true }).filter((r) => r.id !== "3.5");
+    expect(after).toEqual(before);
+  });
+});
