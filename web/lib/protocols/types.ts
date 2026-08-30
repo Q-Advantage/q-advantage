@@ -270,10 +270,77 @@ export interface ConcurrencyFile {
   operations: Record<string, ConcurrencyOperation>;
 }
 
+export interface JoseArm {
+  scheme: string;
+  kind: "classical" | "post-quantum";
+  status: "ok" | "unavailable" | "failed";
+  reason?: string;
+  error?: string;
+  alg?: string;
+  /**
+   * False for every post-quantum arm, and load-bearing.
+   *
+   * No registered JOSE algorithm identifier is asserted for a post-quantum
+   * scheme -- the `alg` header carries the scheme's own name as a non-standard
+   * value. Any surface rendering `alg` must render this alongside it.
+   */
+  alg_is_registered?: boolean;
+  alg_note?: string | null;
+  sign?: { mean_us: number; median_us: number; stdev_us: number };
+  verify?: { mean_us: number; median_us: number; stdev_us: number };
+  size?: {
+    token_bytes: number;
+    header_bytes: number;
+    payload_bytes: number;
+    signature_raw_bytes: number;
+    signature_encoded_bytes: number;
+    encoding_overhead_bytes: number;
+    signature_share_pct: number;
+    note: string;
+  };
+  limits?: {
+    limit: string;
+    limit_bytes: number;
+    token_bytes: number;
+    headroom_bytes: number;
+    within_default: boolean;
+    source: string;
+  }[];
+}
+
+export interface JoseComposedFile {
+  schema: string;
+  track: "jose-composed";
+  label: string;
+  environment: ComposedEnvironment & { cpu_model?: string; arch?: string; steal_time_pct?: number };
+  claims: Record<string, string | number>;
+  claims_note: string;
+  alg_note: string;
+  size_limits: { name: string; bytes: number; source: string }[];
+  limits_note: string;
+  arms: Record<string, JoseArm>;
+  comparison: {
+    measurable: boolean;
+    reason?: string;
+    baseline?: string;
+    baseline_token_bytes?: number;
+    rows?: {
+      scheme: string;
+      kind: "classical" | "post-quantum";
+      token_bytes: number;
+      token_delta_bytes: number;
+      token_multiple_of_baseline: number;
+      sign_delta_pct: number;
+    }[];
+    note?: string;
+  };
+}
+
 export interface ArchBucket {
   tls: TLSComposedFile | null;
   ipsec: IPsecComposedFile | null;
   concurrency: ConcurrencyFile | null;
+  jose: JoseComposedFile | null;
   sig: SigTrackFile | null;
   ssh: SSHComposedFile | null;
   aes: AesBaselineFile | null;

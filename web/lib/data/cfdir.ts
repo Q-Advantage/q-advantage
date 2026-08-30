@@ -91,7 +91,7 @@ export const USE_CASES: UseCase[] = [
     id: "3.5",
     name: "TLS certificates",
     track: "tls-composed",
-    gap: "Timings yes, but certificate-chain bytes are explicitly out of scope — and the chain is the cost here.",
+    gap: "Timings yes, but certificate-chain bytes are out of scope for the daily run — and the chain is the cost here.",
     coverageWhenPresent: "partial",
   },
   {
@@ -118,9 +118,14 @@ export const USE_CASES: UseCase[] = [
   {
     id: "3.9",
     name: "SSO / SAML",
-    track: null,
-    gap: "Two gaps stacked: RSA-PSS is not benchmarked at all, and nothing composes a sign/verify timing into a JWT-shaped budget.",
-    coverageWhenPresent: "none",
+    track: "jose-composed",
+    // Both blockers named here are closed — RSA-PSS by the classical signature
+    // baselines, the composition by the JOSE track. What keeps this at partial
+    // is the other half of the use case's own name: SAML assertions are signed
+    // with XML-DSig, a different envelope with a different size profile, and
+    // nothing here measures it.
+    gap: "JWT-shaped tokens are measured end to end. SAML's own XML-DSig envelope is not — a different serialization with a different size profile.",
+    coverageWhenPresent: "partial",
   },
   {
     id: "3.10",
@@ -267,6 +272,12 @@ export function tracksPresent(data: ProtocolsData): Set<string> {
     if (bucket?.ssh?.suites && Object.keys(bucket.ssh.suites).length) present.add("ssh-composed");
     if (bucket?.sig) present.add("sig-track");
     if (bucket?.aes) present.add("aes-baseline");
+    // A JOSE run where every arm was unavailable still writes a file, and that
+    // must not read as coverage. The track counts as present only once an arm
+    // actually produced a token.
+    if (bucket?.jose?.arms && Object.values(bucket.jose.arms).some((a) => a.status === "ok")) {
+      present.add("jose-composed");
+    }
   }
   return present;
 }
@@ -278,11 +289,27 @@ export function tracksPresent(data: ProtocolsData): Set<string> {
  * React codebase a `use`-prefixed function reads as a Hook, and the lint rules
  * enforce that reading. This is a plain projection over loaded data.
  */
-export function coverageByUseCase(data: ProtocolsData): UseCaseCoverage[] {
+export function coverageByUseCase(
+  data: ProtocolsData,
+  opts: { chainSizing?: boolean } = {},
+): UseCaseCoverage[] {
   const present = tracksPresent(data);
   return USE_CASES.map((uc) => {
     if (uc.coverageWhenPresent === "not-applicable") {
       return { ...uc, coverage: "not-applicable", trackMissing: false };
+    }
+    // 3.5 is the one row whose ceiling moves on data outside the daily record.
+    // Its `partial` was never a judgement about the TLS track -- it was the
+    // missing chain bytes, and once those are measured the row is covered.
+    // Derived rather than retyped, so the day the chain job stops producing
+    // data the page drops back to `partial` on its own.
+    if (uc.id === "3.5" && opts.chainSizing) {
+      return {
+        ...uc,
+        gap: "",
+        coverage: present.has(uc.track ?? "") ? "covered" : "none",
+        trackMissing: !present.has(uc.track ?? ""),
+      };
     }
     if (!uc.track) return { ...uc, coverage: "none", trackMissing: false };
     const has = present.has(uc.track);
