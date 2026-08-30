@@ -1,19 +1,20 @@
 name: Layer B
 
-# Layer B's parsers are pure and are tested on every PR by the harness job in
-# ci.yml. THIS workflow does the expensive half: it builds the reference stack
-# and runs a real handshake between two containers.
+# Layer B's parsers are pure and run in seconds. THIS workflow does the
+# expensive half: it builds the reference stack and runs real handshakes
+# between real containers, one job per scenario.
 #
-# It is deliberately NOT on every pull request. Building liboqs and
-# oqs-provider from source takes many minutes, and nothing in web/ depends on
-# it. It runs when Layer B itself changes, and on demand.
+# Deliberately NOT on every pull request -- building liboqs and oqs-provider
+# from source takes minutes and nothing in web/ depends on it. It runs when
+# Layer B itself changes, and on demand.
 #
-# What this workflow proves, and what it does not. It proves the image builds,
-# the stack negotiates a post-quantum group, and the capture pipeline reads
-# that group back out of the wire. It does NOT produce a published figure:
-# a handshake timed on a shared GitHub runner is not a Q-Shield measurement,
-# the emitted result says so in its own timing block, and nothing here is
-# committed to the record.
+# What these jobs prove, and what they do not. They prove the stack negotiates,
+# that a deliberately mismatched pair fails the way we claim, that N live
+# connections behave, that injected latency costs what it costs, and that a
+# passthrough proxy does not damage the handshake. They do NOT produce
+# published figures: a handshake timed on a shared GitHub runner is not a
+# Q-Shield measurement, every result says so in its own timing block, and
+# assert-scenario.py fails the job if one ever claims otherwise.
 
 on:
   push:
@@ -30,7 +31,7 @@ on:
 
 jobs:
   parsers:
-    name: wire and capture parsers
+    name: wire, capture and analysis parsers
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,11 +42,15 @@ jobs:
       - name: Parser tests
         run: python -m pytest layer-b/tests -q
 
-  live-handshake:
-    name: build the stack and negotiate for real
+  scenarios:
+    name: "live: ${{ matrix.scenario }}"
     runs-on: ubuntu-latest
-    # Building liboqs + oqs-provider from source is slow but bounded.
     timeout-minutes: 45
+    strategy:
+      # One scenario failing should not hide the others' findings.
+      fail-fast: false
+      matrix:
+        scenario: [pairwise, mismatch, concurrency, rtt, middlebox]
     steps:
       - uses: actions/checkout@v4
 
@@ -58,76 +63,36 @@ jobs:
         run: docker build -t q-advantage/layer-b:dev .
 
       - name: Record what actually got built
+        if: matrix.scenario == 'pairwise'
         run: |
           docker run --rm q-advantage/layer-b:dev cat /layer-b/openssl-version.txt
           docker run --rm q-advantage/layer-b:dev cat /layer-b/providers.txt
 
       - name: Confirm the stateful signature flags took
+        if: matrix.scenario == 'pairwise'
         # Layer A's LMS/XMSS harness has reported unavailable since 2026-08-14
         # because the measurement host's liboqs lacks these. Proving them here
-        # first is the whole point of pinning them in this image: it de-risks
-        # the rebuild on the box that produces the product's data.
+        # de-risks the rebuild on the box that produces the product's data.
         run: |
           docker run --rm q-advantage/layer-b:dev bash -lc \
             'ls /usr/local/include/oqs/sig_stfl.h && echo "stateful signature headers present"'
 
-      - name: Pairwise handshake, captured
+      - name: Run the scenario
         working-directory: layer-b
-        run: |
-          mkdir -p out
-          export GROUPS_CLIENT=X25519MLKEM768:x25519
-          export GROUPS_SERVER=X25519MLKEM768:x25519
-          docker compose up -d
-          # Wait for the client to finish, then let the capture stop on its own
-          # timeout. Tearing the stack down the instant the client exits races
-          # tcpdump's flush, and a truncated capture parses as "no traffic" --
-          # which is also a real outcome, so the two must not be confusable.
-          timeout 120 bash -c 'until [ -n "$(docker compose ps -a --status exited -q client)" ]; do sleep 2; done' || true
-          sleep 8
-          docker compose logs --no-color > out/compose.log 2>&1 || true
-          docker compose down -v --timeout 30 || true
-          echo '--- container logs ---'
-          cat out/compose.log || true
-          ls -la out/
+        run: ./run-scenario.sh ${{ matrix.scenario }}
 
-      - name: Read the negotiated group back out of the wire
+      - name: Assert it established what it claims to
         working-directory: layer-b
-        run: |
-          python capture/parse_capture.py out/handshake.pcap \
-            --label pairwise \
-            --client-groups X25519MLKEM768:x25519 \
-            --server-groups X25519MLKEM768:x25519 \
-            --output-dir out/results
-          cat out/results/*.json
+        run: python assert-scenario.py ${{ matrix.scenario }}
 
-      - name: Assert the pipeline read a real negotiation
-        working-directory: layer-b
-        run: |
-          python - <<'PY'
-          import glob, json, sys
-          paths = glob.glob("out/results/*.json")
-          if not paths:
-              sys.exit("no result file was produced")
-          r = json.load(open(paths[0]))
-          print(json.dumps(r["outcome"], indent=2))
-          if r["outcome"]["outcome"] not in ("negotiated", "negotiated_after_retry"):
-              sys.exit("expected a successful negotiation, got %r" % r["outcome"])
-          if not r["wire"]["negotiated_group"]:
-              sys.exit("no negotiated group was read from the wire")
-          # The one non-negotiable property: this came from the bytes, not from
-          # s_client's own report.
-          assert r["wire"]["negotiated_group"]["source"].startswith("wire bytes")
-          # And a CI timing must never be marked publishable.
-          assert r["timing"]["publishable"] is False, "CI timings are not Q-Shield figures"
-          print("OK:", r["wire"]["negotiated_group"]["name"])
-          PY
-
-      - name: Upload the capture and result for inspection
+      - name: Upload capture and result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: layer-b-capture
+          name: layer-b-${{ matrix.scenario }}
           path: |
-            layer-b/out/handshake.pcap
+            layer-b/out/*.pcap
+            layer-b/out/*.csv
+            layer-b/out/*.log
             layer-b/out/results/*.json
           if-no-files-found: warn

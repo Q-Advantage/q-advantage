@@ -145,3 +145,91 @@ class TestResultFileShape:
         assert "client_to_server" not in r["wire"]
         assert "server_to_client" not in r["wire"]
         assert len(serialised) < 20000, "a result should be facts, not a payload dump"
+
+
+class TestCongestionAndRoundTripsReachTheResult:
+    """The initcwnd cliff, which Layer A carries as a qualitative callout."""
+
+    def test_a_pairwise_result_carries_a_congestion_block(self):
+        r = result_for([X25519MLKEM768], X25519MLKEM768)
+        assert "congestion" in r
+        assert "assumed_initcwnd_bytes" in r["congestion"]
+
+    def test_round_trips_and_rtt_are_reported_or_explained(self):
+        r = result_for([X25519MLKEM768], X25519MLKEM768)
+        assert "approx_round_trips" in r["round_trips"]
+        # The fixture capture has no SYN, so RTT must say so rather than guess.
+        assert r["rtt"]["measurable"] is False
+        assert "rtt_seconds" not in r["rtt"]
+
+
+class TestConcurrencyResultsAreADifferentShape:
+    def test_a_swarm_is_aggregated_not_reported_as_one_handshake(self):
+        from parse_capture import build_concurrency_result
+
+        frames = []
+        for i in range(4):
+            port = 51000 + i
+            ch = client_hello([X25519MLKEM768], [(X25519MLKEM768, 1216)])
+            sh = server_hello(X25519MLKEM768)
+            frames.append(to_server(ch, seq=1))
+            frames.append(to_client(sh, seq=1))
+            # Re-key the conversation by rewriting the client port.
+            frames[-2] = frames[-2][:34] + bytes([port >> 8, port & 0xFF]) + frames[-2][36:]
+            frames[-1] = frames[-1][:36] + bytes([port >> 8, port & 0xFF]) + frames[-1][38:]
+        convs = reassemble(pcap(frames), SERVER_PORT)
+        r = build_concurrency_result(
+            convs, label="concurrency", client_groups="", server_groups=""
+        )
+        assert r["identity"]["label"] == "concurrency"
+        assert "concurrency" in r
+        assert r["concurrency"]["connections"] == len(convs)
+        # Reporting a swarm as one handshake is the conflation spec 7 forbids.
+        assert "wire" not in r
+        assert "structure" not in r
+
+    def test_the_concurrency_label_is_carried_into_the_payload(self):
+        from analysis import concurrency_summary
+        from parse_capture import build_concurrency_result
+
+        convs = reassemble(pcap([to_server(b"a", seq=1), to_client(b"b", seq=1)]), SERVER_PORT)
+        r = build_concurrency_result(convs, label="concurrency", client_groups="", server_groups="")
+        assert r["concurrency"]["label"] == "connections per core (live sockets)"
+
+
+class TestEnvironmentProvenance:
+    def test_a_path_note_records_what_was_in_the_way(self, tmp_path):
+        # An injected delay or a proxy must be recorded, or the result is not
+        # interpretable -- and worse, an injected latency could be read as real.
+        blob = capture_of(
+            client_hello([X25519MLKEM768], [(X25519MLKEM768, 1216)]),
+            server_hello(X25519MLKEM768),
+        )
+        cap = tmp_path / "h.pcap"
+        cap.write_bytes(blob)
+        out = tmp_path / "r"
+        main([str(cap), "--server-port", str(SERVER_PORT), "--label", "rtt",
+              "--env-note", "netem 50ms injected on the client egress",
+              "--output-dir", str(out)])
+        payload = json.loads(next(out.glob("*.json")).read_text())
+        assert "netem" in payload["environment"]["path_note"]
+
+    def test_sockstat_samples_are_folded_in_when_supplied(self, tmp_path):
+        blob = capture_of(
+            client_hello([X25519MLKEM768], [(X25519MLKEM768, 1216)]),
+            server_hello(X25519MLKEM768),
+        )
+        cap = tmp_path / "h.pcap"
+        cap.write_bytes(blob)
+        sock = tmp_path / "s.csv"
+        sock.write_text(
+            "ts,tcp_inuse,tcp_orphan,tcp_tw,tcp_alloc,tcp_mem_pages,syn_recv,established\n"
+            "1700000000.0,10,0,0,10,100,0,0\n"
+            "1700000001.0,10,0,0,10,200,0,10\n"
+        )
+        out = tmp_path / "r"
+        main([str(cap), "--server-port", str(SERVER_PORT), "--label", "pairwise",
+              "--sockstat", str(sock), "--output-dir", str(out)])
+        payload = json.loads(next(out.glob("*.json")).read_text())
+        assert payload["environment"]["sockets"]["measurable"] is True
+        assert payload["environment"]["sockets"]["peak_established"] == 10

@@ -54,6 +54,27 @@ class Packet:
     #: Total captured length on the wire, for packets-per-handshake accounting.
     wire_bytes: int
     ip_fragmented: bool
+    #: Acknowledgement number and TCP flags. Needed to see where the sender
+    #: stopped and waited: the initial-congestion-window "cliff" is measured as
+    #: the largest burst one side sends before the other side acknowledges.
+    ack: int = 0
+    flags: int = 0
+
+    @property
+    def is_ack(self) -> bool:
+        return bool(self.flags & 0x10)
+
+    @property
+    def is_syn(self) -> bool:
+        return bool(self.flags & 0x02)
+
+    @property
+    def is_fin(self) -> bool:
+        return bool(self.flags & 0x01)
+
+    @property
+    def is_rst(self) -> bool:
+        return bool(self.flags & 0x04)
 
 
 @dataclass
@@ -73,6 +94,9 @@ class Conversation:
     last_timestamp: float | None = None
     #: Payload lengths in capture order, so a caller can see MTU-sized bursts.
     segment_sizes: list[int] = field(default_factory=list)
+    #: Every packet in capture order, kept so flight analysis can see where a
+    #: sender stopped and waited. Not serialised into a result.
+    packets: list = field(default_factory=list)
 
     @property
     def packets_total(self) -> int:
@@ -186,6 +210,8 @@ def iter_packets(blob: bytes):
         tcp = ip[ihl:]
         sport, dport = struct.unpack("!HH", tcp[0:4])
         seq = struct.unpack("!I", tcp[4:8])[0]
+        ack = struct.unpack("!I", tcp[8:12])[0]
+        flags = tcp[13]
         data_offset = (tcp[12] >> 4) * 4
         if data_offset < 20 or len(tcp) < data_offset:
             continue
@@ -201,6 +227,8 @@ def iter_packets(blob: bytes):
             seq=seq,
             wire_bytes=orig_len,
             ip_fragmented=ip_fragmented,
+            ack=ack,
+            flags=flags,
         )
 
 
@@ -246,6 +274,7 @@ def reassemble(blob: bytes, server_port: int) -> list[Conversation]:
             conv.packets_server_to_client += 1
             conv.bytes_server_to_client += pkt.wire_bytes
 
+        conv.packets.append((to_server, pkt))
         if pkt.payload:
             conv.segment_sizes.append(len(pkt.payload))
             segments[(key, to_server)].setdefault(pkt.seq, pkt.payload)

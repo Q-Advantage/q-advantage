@@ -12,6 +12,8 @@ GROUPS="${GROUPS:-X25519MLKEM768:x25519}"
 HOST="${HOST:-server}"
 PORT="${PORT:-4433}"
 
+sleep "${START_DELAY:-6}"
+
 echo "client: connecting to ${HOST}:${PORT} groups=${GROUPS}"
 # An exit code of non-zero is a legitimate outcome (the ends may share no
 # group), so it is captured rather than allowed to abort the run.
