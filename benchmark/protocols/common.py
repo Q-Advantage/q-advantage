@@ -379,10 +379,25 @@ class SizeAccounting:
     bytes_client_to_server: int
     bytes_server_to_client: int
     bytes_total: int = 0
+    #: Secret key length, where the exchange has one. Optional because the
+    #: classical-only suites have no KEM secret key to report, and a zero there
+    #: would read as a measurement rather than as absence.
+    secret_key_bytes: int | None = None
 
     def __post_init__(self) -> None:
         if not self.bytes_total:
             self.bytes_total = self.bytes_client_to_server + self.bytes_server_to_client
+
+    def as_record(self) -> dict:
+        """The `size` block, omitting the optional field when it is absent."""
+        out = {
+            "bytes_client_to_server": self.bytes_client_to_server,
+            "bytes_server_to_client": self.bytes_server_to_client,
+            "bytes_total": self.bytes_total,
+        }
+        if self.secret_key_bytes is not None:
+            out["secret_key_bytes"] = self.secret_key_bytes
+        return out
 
 
 def keyshare_size(table: dict[str, tuple[int, int]], suite: str) -> SizeAccounting:
@@ -470,9 +485,47 @@ class HostInfo:
     cpu_flags: list[str] = field(default_factory=list)
     cpu_hz_nominal: float | None = None
     steal_time_pct: float | None = None
+    #: Which machine produced this record. Two hosts can share an architecture,
+    #: and without this they collapse into one bucket and a hardware change
+    #: becomes invisible -- see web/lib/data/hosts.ts. None off EC2.
+    ec2_instance_type: str | None = None
 
 
 _SIMD = ("avx512vl", "avx512f", "avx2", "sse4_2", "neon", "asimd")
+
+
+def _ec2_instance_type() -> str | None:
+    """
+    The instance type from IMDSv2, or None anywhere that is not EC2.
+
+    Mirrors benchmark.py's own lookup rather than importing it: that module
+    imports oqs, psutil and tabulate at module level, so importing it from here
+    would make the composed tracks fail wherever those are absent. A short,
+    duplicated function is the cheaper of the two costs.
+
+    None rather than "unknown" on failure: the schema treats the field as
+    optional and absent is the honest answer, where a string would look like a
+    machine we had identified.
+    """
+    import urllib.error
+    import urllib.request
+
+    try:
+        token_req = urllib.request.Request(
+            "http://169.254.169.254/latest/api/token",
+            method="PUT",
+            headers={"X-aws-ec2-metadata-token-ttl-seconds": "60"},
+        )
+        with urllib.request.urlopen(token_req, timeout=1.0) as resp:
+            token = resp.read().decode()
+        info_req = urllib.request.Request(
+            "http://169.254.169.254/latest/meta-data/instance-type",
+            headers={"X-aws-ec2-metadata-token": token},
+        )
+        with urllib.request.urlopen(info_req, timeout=1.0) as resp:
+            return resp.read().decode().strip() or None
+    except Exception:  # noqa: BLE001 - not on EC2, or metadata unreachable
+        return None
 
 
 def _cpuinfo() -> dict[str, str]:
@@ -515,6 +568,10 @@ def capture_host() -> HostInfo:
             h.cpu_hz_nominal = float(mhz) * 1e6
         except ValueError:
             pass
+    # Which machine this is. Two hosts can share an architecture and a CPU
+    # model string, so without this a hardware change is invisible in the
+    # composed record even though the primitives file has carried it all along.
+    h.ec2_instance_type = _ec2_instance_type()
     return h
 
 
@@ -616,6 +673,8 @@ def build_result(
     toolchain: ToolchainVersions | None = None,
     host: HostInfo | None = None,
     tls_version: str | None = None,
+    resources: dict | None = None,
+    secret_key_bytes: int | None = None,
 ) -> dict:
     identity: dict[str, Any] = {"protocol": protocol, "mode": mode, "suite": suite}
 
@@ -637,7 +696,7 @@ def build_result(
     rec = {
         "identity": identity,
         "timing": timing,
-        "size": asdict(size),
+        "size": _size_record(size, secret_key_bytes),
         "baseline": {"baseline_suite": baseline_suite, "pct_over_classical": pct_over_classical},
         "cross_validation": asdict(cross_validation) if cross_validation else asdict(CrossValidation()),
         "auth": auth,
@@ -647,7 +706,27 @@ def build_result(
     }
     if phases:
         rec["phases"] = phases
+    # Per-operation resource accounting, when the caller measured it. Omitted
+    # rather than emitted empty: an absent block reads as "not measured", which
+    # is true, where a block of nulls reads as "measured as nothing".
+    if resources:
+        rec["resources"] = resources
     return rec
+
+
+def _size_record(size: SizeAccounting, secret_key_bytes: int | None) -> dict:
+    """
+    The `size` block, with the secret key size folded in where one exists.
+
+    Exists because `keyshare_size()` builds a SizeAccounting from a wire-size
+    table that cannot know a KEM's secret key length -- that comes from the
+    liboqs binding at measurement time. Passing it separately keeps the table a
+    table.
+    """
+    out = size.as_record()
+    if secret_key_bytes is not None:
+        out["secret_key_bytes"] = secret_key_bytes
+    return out
 
 
 def validate_result(record: dict, schema_path: str) -> None:
