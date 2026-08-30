@@ -201,9 +201,11 @@ export const LINE_ITEMS: LineItem[] = [
     name: "Monitoring & incidents",
     cfdirUse: "Hand-waved incident rates.",
     requirement: "Whether degradation actually occurs under load.",
+    // Refined at render time by `lineItemsFor()` once a concurrency run lands.
+    // Declared pessimistically so a build with no data never over-claims.
     status: "partial",
     blocker:
-      "Layer B now measures connections-per-core over live sockets. What is still missing is the same question for cryptographic throughput under CPU contention — a different number that must not share the same label.",
+      "Layer B measures connections-per-core over live sockets. The other half — cryptographic throughput under CPU contention — is instrumented but has not yet appeared in a committed run.",
   },
   {
     code: "PO",
@@ -362,17 +364,51 @@ export function hasClassicalSignatureArm(data: ProtocolsData): boolean {
  * Only T is data-dependent today. The others rest on facts about what the
  * harness can do at all, which no amount of data changes.
  */
+/**
+ * Whether a cryptographic-throughput-under-load run has landed.
+ *
+ * CFDIR's **MIA** line item asks whether degradation actually occurs under
+ * load, and that needs two different numbers: Layer B's connections per core
+ * over live sockets, and Layer A's cryptographic throughput under CPU
+ * contention. `layer-b-spec.md` §7 insists they never share a label, so this
+ * checks for the second specifically rather than for "concurrency data".
+ */
+export function hasCryptoThroughputUnderLoad(data: ProtocolsData): boolean {
+  for (const arch of Object.keys(data.byArch ?? {})) {
+    const file = data.byArch[arch]?.concurrency;
+    if (!file?.operations) continue;
+    for (const op of Object.values(file.operations)) {
+      if (op.points?.some((p) => p.measured)) return true;
+    }
+  }
+  return false;
+}
+
 export function lineItemsFor(data: ProtocolsData): LineItem[] {
   const classicalArm = hasClassicalSignatureArm(data);
+  const cryptoThroughput = hasCryptoThroughputUnderLoad(data);
   return LINE_ITEMS.map((li) => {
-    if (li.code !== "T" || !classicalArm) return li;
-    return {
-      ...li,
-      blocker:
-        "Both arms are now measured. TLS compares against X25519 and the signature track " +
-        "against RSA-PSS and ECDSA, all within a single run — a cross-run comparison is what " +
-        "flipped a published sign on 2026-08-16, so the same-run constraint is load-bearing. " +
-        "What remains is per-use-case breadth rather than a missing baseline.",
-    };
+    if (li.code === "T" && classicalArm) {
+      return {
+        ...li,
+        blocker:
+          "Both arms are now measured. TLS compares against X25519 and the signature track " +
+          "against RSA-PSS and ECDSA, all within a single run — a cross-run comparison is what " +
+          "flipped a published sign on 2026-08-16, so the same-run constraint is load-bearing. " +
+          "What remains is per-use-case breadth rather than a missing baseline.",
+      };
+    }
+    if (li.code === "MIA" && cryptoThroughput) {
+      return {
+        ...li,
+        blocker:
+          "Both halves are now measured, and they are deliberately separate numbers: Layer B's " +
+          "connections per core over live sockets, and Layer A's cryptographic throughput under " +
+          "CPU contention. What limits the second is the measurement host's core count — beyond " +
+          "it, the figures describe the scheduler under oversubscription rather than parallel " +
+          "scaling, and every point says which it is.",
+      };
+    }
+    return li;
   });
 }
