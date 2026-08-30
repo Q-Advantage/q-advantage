@@ -200,7 +200,7 @@ export default function QDayIndexPage() {
           ]}
         />
 
-        <Caveat label="Why the number is this low, and why that is the honest answer">
+        <Caveat label="Why every threat score reads near zero">
           The score is a <strong className="font-bold text-fg">multiplicative gate</strong>: logical
           capacity × fidelity gate × error-correction signal. Any component at zero takes the whole
           score to zero, because breaking RSA requires all of them — there is no
@@ -215,7 +215,7 @@ export default function QDayIndexPage() {
           yet defensible enough to publish.
         </Caveat>
 
-        <Caveat label="The anchor is a moving target, and that cuts both ways">
+        <Caveat label="What would move these scores">
           This score measures distance to {anchor.label} — {anchor.physical_qubits.toLocaleString()}{" "}
           physical qubits, {anchor.runtime}. The previous published estimate,{" "}
           {q.anchor_prior.label}, put it at {q.anchor_prior.physical_qubits.toLocaleString()} physical

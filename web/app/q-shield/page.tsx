@@ -333,7 +333,7 @@ export default function QShieldPage() {
                 }))}
               />
 
-              <Caveat label="Read this before quoting a timing delta">
+              <Caveat label="How to read a timing delta from this host">
                 {m.run.stealPct != null && (
                   <>
                     This run carried{" "}

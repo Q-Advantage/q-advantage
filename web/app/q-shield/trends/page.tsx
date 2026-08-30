@@ -188,7 +188,7 @@ export default function TrendsPage() {
           <TrendsSummary data={initial} metricId="mean" />
         </Section>
 
-        <Caveat label="Why there is no line between two runs">
+        <Caveat label="Why the line breaks">
           Other benchmark publishers interpolate: they fit a curve through measured points and read
           a value off it at whatever operating point you ask for. We do not, and the gaps in these
           lines are the visible consequence. A run that did not happen produces no point, and the
@@ -203,7 +203,7 @@ export default function TrendsPage() {
           says the same thing in its own payload.
         </Caveat>
 
-        <Caveat label="The spread is larger than the trend, and that is the finding">
+        <Caveat label="Why none of this is called a trend">
           Across these {runs.length} runs the observed range on a single algorithm&rsquo;s keygen
           mean is {Math.round(minSpread)}–{Math.round(maxSpread)}% of its own minimum. Every
           first-to-last change in the table above sits inside that band. So does the largest of

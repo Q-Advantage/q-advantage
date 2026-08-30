@@ -488,7 +488,7 @@ export default function ProtocolsPage() {
         </Section>
 
         {anomalies.length > 0 && (
-          <Caveat label="One comparison is withheld from this run">
+          <Caveat label="One comparison is missing, on purpose">
             {anomalies.map((a) => (
               <p key={`${a.arch}-${a.suite}`} className="mb-2 last:mb-0">
                 <strong className="font-bold text-fg">
@@ -506,7 +506,7 @@ export default function ProtocolsPage() {
         )}
 
         {ipsecScope && (
-          <Caveat label="What the IPsec track measures, and what it leaves out">
+          <Caveat label="What the IPsec figures cover">
             {ipsecScope.measures} {ipsecScope.excludes}
             <br />
             <br />
