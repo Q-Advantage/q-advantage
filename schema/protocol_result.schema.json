@@ -27,8 +27,10 @@
           "type": "string",
           "enum": [
             "tls",
-            "ssh"
-          ]
+            "ssh",
+            "ipsec"
+          ],
+          "description": "Protocol whose key establishment this record measures. Constrained to a closed set so a typo becomes a validation failure rather than a silently orphaned track."
         },
         "mode": {
           "type": "string",
