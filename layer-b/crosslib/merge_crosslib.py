@@ -37,7 +37,11 @@ def cross_validate(rows: list[dict]) -> dict:
     is the only signal this repo has ever had that liboqs might be the odd one
     out.
     """
+    # `inconclusive` rows are deliberately NOT counted as having reported: a
+    # probe that could not ask the question contributes no opinion, and letting
+    # one through would turn a broken invocation into corroborating silence.
     probed = [r for r in rows if r.get("status") == "probed"]
+    inconclusive = [r["library"] for r in rows if r.get("status") == "inconclusive"]
     if not probed:
         return {
             "measurable": False,
@@ -61,6 +65,7 @@ def cross_validate(rows: list[dict]) -> dict:
         "libraries_that_did_not": sorted(
             set(LIBRARIES) - {r["library"] for r in probed}
         ),
+        "libraries_whose_probe_was_inconclusive": inconclusive,
         "corroborated": corroborated,
         "not_corroborated_here": uncorroborated,
         "note": (

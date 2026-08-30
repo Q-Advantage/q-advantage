@@ -91,10 +91,74 @@ class TestTheImageMustSayWhichLibraryItCarries:
         with pytest.raises(KeyError):
             probe.probe_library("OpenSSL")
 
-    def test_every_declared_library_has_a_probe_and_a_version_command(self):
+    def test_every_declared_library_has_a_probe_command_and_a_source(self):
+        # A version command is optional: `bssl` has no version subcommand, and
+        # asking for one prints usage text -- which the first CI run published
+        # as a version string. Where there is no reliable version to read, the
+        # pinned source tag in build_flags is the honest identifier.
         for name, lib in probe.LIBRARIES.items():
-            assert lib["probe_cmd"] and lib["version_cmd"], name
+            assert lib["probe_cmd"], name
             assert lib["source"].startswith("https://"), name
+            assert lib["build_flags"], name
+
+
+class TestABrokenProbeCannotPublishNegatives:
+    """
+    The rule the first CI run was missing.
+
+    That run reported BoringSSL and AWS-LC as exposing nothing at all. That is
+    false -- BoringSSL ships X25519MLKEM768 in production Chrome. The probe
+    command had produced no output, and the probe turned that silence into
+    seven negative claims about somebody else's software.
+    """
+
+    def test_output_naming_no_known_primitive_is_inconclusive(self, monkeypatch):
+        monkeypatch.setattr(probe, "run", lambda cmd: (0, "Usage: bssl COMMAND"))
+        rec = probe.probe_library("BoringSSL")
+        assert rec["status"] == "inconclusive"
+
+    def test_an_inconclusive_probe_publishes_no_negative_at_all(self, monkeypatch):
+        # Not "an empty list of negatives" -- no key. A consumer must not be
+        # able to read absence out of it.
+        monkeypatch.setattr(probe, "run", lambda cmd: (0, ""))
+        rec = probe.probe_library("AWS-LC")
+        assert "not_exposed" not in rec
+        assert "exposed" not in rec
+        assert "false claim" in rec["reason"]
+
+    def test_it_keeps_what_the_command_actually_printed(self, monkeypatch):
+        # Otherwise the next person debugging it has nothing to go on.
+        monkeypatch.setattr(probe, "run", lambda cmd: (0, "Usage: bssl COMMAND"))
+        assert probe.probe_library("BoringSSL")["raw_output_head"]
+
+    def test_a_real_inventory_passes_the_control_and_publishes_negatives(self, monkeypatch):
+        out = "RSA 2048 signing 100 ops\nDid 1000 Kyber768 operations"
+        monkeypatch.setattr(probe, "run", lambda cmd: (0, out))
+        rec = probe.probe_library("wolfSSL")
+        assert rec["status"] == "probed"
+        assert rec["exposed"] == ["ML-KEM-768"]
+        assert "ML-DSA-65" in rec["not_exposed"]
+        assert rec["control_markers_seen"]
+
+    def test_usage_text_is_not_published_as_a_version(self, monkeypatch):
+        monkeypatch.setattr(probe, "run", lambda cmd: (0, "Usage: bssl COMMAND\nrsa"))
+        assert probe.probe_library("AWS-LC")["version"] is None
+
+    def test_an_inconclusive_library_is_not_counted_as_having_reported(self):
+        # A probe that could not ask the question contributes no opinion.
+        # Counting it would turn a broken invocation into corroborating silence.
+        cv = merge_crosslib.cross_validate(
+            [{"library": "BoringSSL", "status": "inconclusive", "reason": "no output"}]
+        )
+        assert cv["measurable"] is False
+
+    def test_the_merged_view_names_which_probes_were_inconclusive(self):
+        cv = merge_crosslib.cross_validate([
+            {"library": "wolfSSL", "status": "probed", "exposed": ["ML-KEM-768"]},
+            {"library": "BoringSSL", "status": "inconclusive", "reason": "no output"},
+        ])
+        assert cv["libraries_whose_probe_was_inconclusive"] == ["BoringSSL"]
+        assert "BoringSSL" not in cv["libraries_that_reported"]
 
 
 class TestEvidenceIsCarried:

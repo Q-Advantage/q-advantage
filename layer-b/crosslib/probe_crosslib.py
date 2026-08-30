@@ -60,6 +60,21 @@ ALIASES = {
     "X25519MLKEM768": ["x25519mlkem768", "x25519kyber768", "x25519_kyber768"],
 }
 
+#: Primitives every one of these libraries certainly implements.
+#:
+#: THE CONTROL, and the reason it exists. The first CI run reported BoringSSL
+#: and AWS-LC as exposing nothing at all -- which is false: BoringSSL ships
+#: X25519MLKEM768 in production Chrome. The probe command had simply produced no
+#: output, and the probe turned that silence into a list of seven negatives
+#: about somebody else's software.
+#:
+#: So: if none of these appear in a build's output, the probe did not
+#: successfully ask the question, and it publishes `inconclusive` instead of any
+#: negative at all. This is the same rule the header probe has (a rejected
+#: classical baseline points at the instrument) and the parser probe has (a
+#: classical certificate must parse fully). It should have been here first.
+CONTROL_MARKERS = ["rsa", "aes", "sha", "ecdsa", "p-256", "x25519", "curve25519"]
+
 #: How to ask each library what it can do.
 #:
 #: Each entry names the binary, the command that produces an inventory, and the
@@ -68,22 +83,28 @@ ALIASES = {
 LIBRARIES = {
     "BoringSSL": {
         "binary": "bssl",
-        "probe_cmd": ["bssl", "speed", "-filter", "."],
-        "version_cmd": ["bssl", "version"],
-        "build_flags": "default cmake Release build; BoringSSL has no post-quantum opt-in flag",
+        "probe_cmd": ["bssl", "speed"],
+        # `bssl` has no version subcommand -- asking for one prints usage text,
+        # which the first run published as a version string. The pinned source
+        # tag is the honest identifier and it travels in build_flags.
+        "version_cmd": None,
+        "build_flags": "cmake Release build at pinned tag; BoringSSL has no post-quantum opt-in flag",
         "source": "https://github.com/google/boringssl",
     },
     "AWS-LC": {
         "binary": "bssl",
-        "probe_cmd": ["bssl", "speed", "-filter", "."],
+        "probe_cmd": ["bssl", "speed"],
         "version_cmd": ["bssl", "version"],
-        "build_flags": "default cmake Release build, BUILD_TESTING=OFF",
+        "build_flags": "cmake Release build at pinned tag, BUILD_TESTING=OFF",
         "source": "https://github.com/aws/aws-lc",
     },
     "wolfSSL": {
         "binary": "wolfssl-benchmark",
-        "probe_cmd": ["wolfssl-benchmark", "-pq"],
-        "version_cmd": ["wolfssl-benchmark", "-?"],
+        # `-pq` restricts the run to post-quantum algorithms, which means the
+        # control markers never appear. The full run is slower and is what makes
+        # the control possible at all.
+        "probe_cmd": ["wolfssl-benchmark"],
+        "version_cmd": None,
         "build_flags": "--enable-kyber --enable-dilithium",
         "source": "https://github.com/wolfSSL/wolfssl",
     },
@@ -147,8 +168,14 @@ def excerpt(output: str, found: dict[str, list[str]], limit: int = 12) -> list[s
 def probe_library(name: str) -> dict:
     """One library's inventory, with its evidence attached."""
     lib = dict(LIBRARIES[name], name=name)
-    rc_v, version_out = run(lib["version_cmd"])
-    version = version_out.strip().splitlines()[0] if version_out.strip() else None
+    version = None
+    if lib["version_cmd"]:
+        rc_v, version_out = run(lib["version_cmd"])
+        # A tool that prints usage text on an unknown subcommand would otherwise
+        # have that usage text published as its version.
+        if rc_v == 0 and version_out.strip():
+            first = version_out.strip().splitlines()[0]
+            version = first if "usage" not in first.lower() else None
 
     rc, output = run(lib["probe_cmd"])
 
@@ -166,6 +193,28 @@ def probe_library(name: str) -> dict:
             "build_flags": lib["build_flags"],
         }
 
+    # The control, checked BEFORE any negative is assembled.
+    controls = [m for m in CONTROL_MARKERS if m in output.lower()]
+    if not controls:
+        return {
+            "library": lib["name"],
+            "source": lib["source"],
+            "version": version,
+            "status": "inconclusive",
+            "build_flags": lib["build_flags"],
+            "probe_command": " ".join(lib["probe_cmd"]),
+            "probe_exit_code": rc,
+            "reason": (
+                "the probe command produced no output naming any primitive this library "
+                "certainly implements, so it did not successfully ask the question. NO negative "
+                "result is published from this run: reporting seven absences on the strength of "
+                "a command that returned nothing would be a false claim about somebody else's "
+                "software, not a measurement."
+            ),
+            # Kept so the next person can see what the command actually did.
+            "raw_output_head": [ln for ln in output.splitlines() if ln.strip()][:12],
+        }
+
     found = find_algorithms(output)
     return {
         "library": lib["name"],
@@ -177,6 +226,8 @@ def probe_library(name: str) -> dict:
         "probe_exit_code": rc,
         "exposed": sorted(found),
         "spellings": found,
+        # Published so a reader can see the probe reached the library at all.
+        "control_markers_seen": controls,
         "not_exposed": sorted(set(ALIASES) - set(found)),
         "evidence": excerpt(output, found),
         "claim": (
