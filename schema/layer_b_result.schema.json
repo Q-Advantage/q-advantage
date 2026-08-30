@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qadvantage.io/schema/layer_b_result.schema.json",
+  "title": "Q-Shield Layer B result",
+  "description": "One live TLS handshake, observed on the wire. Layer A composes a handshake in-process and cannot produce any of the structural fields here. The key design property: structural facts are portable across machines while timings are not, so they are separated and the timing block carries its own publishable flag.",
+  "type": "object",
+  "required": ["schema", "identity", "outcome"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "description": "Result schema version, e.g. layer-b/0.1.0."
+    },
+    "identity": {
+      "type": "object",
+      "required": ["layer", "protocol", "mode", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "layer": { "const": "B" },
+        "protocol": { "type": "string", "enum": ["tls", "ssh", "ipsec"] },
+        "mode": { "const": "live_handshake" },
+        "label": {
+          "type": "string",
+          "description": "Which configuration this run exercised, e.g. pairwise or mismatch."
+        },
+        "client_groups_offered": { "type": "string" },
+        "server_groups_accepted": {
+          "type": "string",
+          "description": "Recorded so a deliberately-mismatched run is self-describing rather than looking like a failure."
+        }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "required": ["outcome", "detail"],
+      "additionalProperties": false,
+      "description": "A labelled result. Downgrade and rejection are outcomes, never errors: a silent downgrade inferred from the absence of a signal is exactly the reporting gap Layer B exists to close.",
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "negotiated",
+            "negotiated_after_retry",
+            "downgraded_to_classical",
+            "no_client_hello",
+            "no_server_hello",
+            "server_hello_without_key_share",
+            "no_traffic_captured"
+          ]
+        },
+        "detail": { "type": "string" }
+      }
+    },
+    "wire": {
+      "type": "object",
+      "description": "Facts parsed from captured bytes. Never from a stack's own report string -- see layer-b-spec.md section 4.",
+      "additionalProperties": true,
+      "properties": {
+        "client_hello_seen": { "type": "boolean" },
+        "server_hello_seen": { "type": "boolean" },
+        "client_supported_groups": { "type": "array", "items": { "$ref": "#/$defs/group" } },
+        "client_key_share_groups": { "type": "array", "items": { "$ref": "#/$defs/group" } },
+        "negotiated_group": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/group" }]
+        },
+        "hello_retry_request": { "type": "boolean" },
+        "client_hello_bytes": { "type": "integer", "minimum": 0 },
+        "server_hello_bytes": { "type": "integer", "minimum": 0 },
+        "fragmented_messages": { "type": "array", "items": { "type": "string" } },
+        "unparsed_after_serverhello": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Records after the ServerHello are encrypted. Counted, never claimed to be read."
+        }
+      }
+    },
+    "structure": {
+      "type": "object",
+      "description": "Properties of the protocol exchange. Portable across machines, so publishable from wherever the capture was taken.",
+      "additionalProperties": true,
+      "properties": {
+        "packets_total": { "type": "integer", "minimum": 0 },
+        "packets_client_to_server": { "type": "integer", "minimum": 0 },
+        "packets_server_to_client": { "type": "integer", "minimum": 0 },
+        "wire_bytes_total": { "type": "integer", "minimum": 0 },
+        "wire_bytes_client_to_server": { "type": "integer", "minimum": 0 },
+        "wire_bytes_server_to_client": { "type": "integer", "minimum": 0 },
+        "ip_fragments": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Counted, never silently reassembled -- whether a PQC handshake fragments is one of Layer B's own findings."
+        },
+        "segment_sizes": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "largest_segment_bytes": { "type": "integer", "minimum": 0 },
+        "note": { "type": "string" }
+      }
+    },
+    "timing": {
+      "type": "object",
+      "required": ["publishable"],
+      "additionalProperties": true,
+      "description": "A property of the machine, not the protocol. Never publishable unless the run states it happened on the measurement host.",
+      "properties": {
+        "duration_seconds": { "type": ["number", "null"] },
+        "publishable": {
+          "type": "boolean",
+          "description": "False for any run on a laptop or a shared CI runner. A false value here means this figure must not reach a published surface."
+        },
+        "note": { "type": "string" }
+      }
+    },
+    "toolchain": { "type": "object", "additionalProperties": true },
+    "host": { "type": "object", "additionalProperties": true },
+    "audit": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "git_commit": { "type": ["string", "null"] },
+        "timestamp_utc": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "group": {
+      "type": "object",
+      "required": ["code", "name", "identity_verified"],
+      "additionalProperties": true,
+      "properties": {
+        "code": { "type": "integer", "description": "IANA TLS supported-group code point." },
+        "name": {
+          "type": "string",
+          "description": "Name for the code point, or its hex value when we cannot name it. Never guessed."
+        },
+        "identity_verified": {
+          "type": "boolean",
+          "description": "Whether this code point's identity is confirmed against a primary source. False means the name is #unverified, per CLAUDE.md's sourcing standard."
+        },
+        "source": { "type": "string" }
+      }
+    }
+  }
+}

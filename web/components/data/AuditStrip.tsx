@@ -65,8 +65,16 @@ export function AuditStrip({ run }: AuditStripProps) {
       {/* Detail grid */}
       <dl className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-3 px-4 py-4 text-xs">
         <Field label="CPU" value={shortCpuModel(env.cpu_model)} mono />
+        {/*
+          The "burstable" tag is derived from the instance family and clears
+          itself on a non-burstable host -- which would mean that at the exact
+          moment the measurement hardware changed, the only visual cue that
+          anything had changed would disappear. So the instance type is always
+          labelled as the hardware this number was measured on, burstable or
+          not, and the tag is additional detail rather than the whole signal.
+        */}
         <Field
-          label="Instance"
+          label="Measured on"
           value={env.ec2_instance_type}
           suffix={
             rm?.burstable ? (

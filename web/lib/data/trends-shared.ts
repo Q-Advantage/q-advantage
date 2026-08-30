@@ -35,6 +35,12 @@ export interface TrendPoint {
   commit: string;
   run_url: string;
   value: number;
+  /**
+   * Hardware era this point was measured on (lib/data/hosts.ts). Points in
+   * different eras came off different machines: a chart must break the line
+   * between them rather than draw a step change as though it were a trend.
+   */
+  era_id: string;
 }
 
 export interface TrendSeries {
@@ -49,6 +55,15 @@ export interface TrendSeries {
   max: number;
 }
 
+/** A hardware change falling inside the rendered range. */
+export interface TrendBreak {
+  /** First date measured on the new hardware — where the line stops. */
+  date: string;
+  fromLabel: string;
+  toLabel: string;
+  note: string;
+}
+
 export interface TrendsResult {
   series: TrendSeries[];
   metricLabel: string;
@@ -58,6 +73,11 @@ export interface TrendsResult {
   runsInRange: number;
   /** Ids requested that had no data at all, so the UI can name them. */
   empty: string[];
+  /**
+   * Hardware changes inside the range. Non-empty means no single line spans
+   * the whole chart, and every change figure must be read per era.
+   */
+  breaks: TrendBreak[];
 }
 
 export function rangeDays(id: string): number | null {

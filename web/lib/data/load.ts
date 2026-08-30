@@ -21,6 +21,7 @@ import type {
   NormalizedRun,
 } from "./types";
 import { normalizeAlgorithm } from "./normalize";
+import { currentEra, deriveHostEras, eraIdByRun } from "./hosts";
 
 const FILENAME_RE = /^results-(\d{4}-\d{2}-\d{2})(?:-([0-9a-f]{7,40}))?\.json$/;
 
@@ -75,6 +76,9 @@ function loadOne(file_name: string): NormalizedRun | null {
     environment: data.environment,
     runtime_metrics: data.runtime_metrics ?? null,
     is_legacy_schema: !data.runtime_metrics,
+    // Assigned in loadAllRuns once the whole record is visible -- an era is a
+    // property of the sequence, not of a file read in isolation.
+    host_era_id: "",
     algorithms,
     algorithms_by_id,
   };
@@ -117,12 +121,29 @@ export function loadAllRuns(): NormalizedRun[] {
     );
   }
 
+  // Tag each run with its hardware era before caching. Derived from the files
+  // themselves; see lib/data/hosts.ts for why this is not a date constant.
+  const eraIds = eraIdByRun(runs);
+  for (const run of runs) run.host_era_id = eraIds.get(run.file_id) ?? "";
+
   _cache = runs;
   return runs;
 }
 
+/**
+ * The newest run of the CURRENT hardware era -- not simply the newest file.
+ *
+ * These differ during a hardware transition. The c7i overlap runs started at
+ * 05:51Z against the t3 workflow's 06:00Z, so a plain newest-by-timestamp read
+ * would have made an older-era run the site's headline figure on any day the
+ * clocks landed that way. The run that labels the site must belong to the
+ * hardware the site is currently measuring on.
+ */
 export function getLatestRun(): NormalizedRun {
-  return loadAllRuns()[0];
+  const runs = loadAllRuns();
+  const era = currentEra(deriveHostEras(runs));
+  if (!era) return runs[0];
+  return runs.find((r) => r.host_era_id === era.id) ?? runs[0];
 }
 
 export function getRunBySha(short_or_full_sha: string): NormalizedRun | null {

@@ -3,3 +3,14 @@
 # kats.json. Line-ending translation would change those bytes and make the
 # integrity claim false on checkout, so keep them exactly as fetched.
 benchmark/protocols/vectors/*.rsp -text
+
+# Files executed inside a Linux container or on the Linux runner must keep LF.
+# A CRLF shell script fails with "bad interpreter", and this repo is developed
+# on Windows, so leaving it to core.autocrlf is a latent break waiting for the
+# first person who runs Layer B.
+*.sh text eol=lf
+*.py text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.cnf text eol=lf

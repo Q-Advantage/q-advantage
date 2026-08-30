@@ -13,6 +13,7 @@ import {
 } from "@/components/product/kit";
 import { TrendsChart } from "@/components/data/TrendsChart";
 import { getLatestRun, loadAllRuns } from "@/lib/data/load";
+import { currentEra, deriveHostEras } from "@/lib/data/hosts";
 import { availableOperations, getMetric } from "@/lib/data/board-metrics";
 import {
   buildTrends,
@@ -21,7 +22,7 @@ import {
   spreadPct,
   type TrendsResult,
 } from "@/lib/data/trends";
-import { shortCpuModel } from "@/lib/format";
+import { computeStealPercent, formatStealPercent, shortCpuModel } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Trends — Q-Shield",
@@ -85,6 +86,28 @@ export default function TrendsPage() {
   const initial = buildTrends(selection, "mean", op, "all");
 
   const totalGaps = initial.series.reduce((a, s) => a + s.gaps, 0);
+
+  // Hardware eras, derived from the runs themselves (lib/data/hosts.ts).
+  const eras = deriveHostEras(runs);
+  const era = currentEra(eras);
+
+  // CPU steal observed across the CURRENT era only. This paragraph used to
+  // carry the literal string "0.13% to 10.51%", written by hand against the
+  // t3.medium record; on a host change it would have gone quietly stale while
+  // still reading as a live figure. Computed now, per era, so it cannot.
+  const eraSteal = runs
+    .filter((r) => r.host_era_id === era?.id)
+    .map((r) =>
+      r.runtime_metrics
+        ? computeStealPercent(
+            r.runtime_metrics.cpu_steal_seconds,
+            r.runtime_metrics.wall_clock_seconds,
+          )
+        : null,
+    )
+    .filter((v): v is number => v != null);
+  const minSteal = eraSteal.length ? Math.min(...eraSteal) : null;
+  const maxSteal = eraSteal.length ? Math.max(...eraSteal) : null;
 
   // Everything the noise caveat states is computed from the same series the
   // chart draws — no figure in that paragraph is written by hand.
@@ -189,10 +212,27 @@ export default function TrendsPage() {
           endpoints only say which mode each happened to land in.
           <br />
           <br />
-          The cause is the host, not the algorithms: {run.environment.ec2_instance_type} is a
-          burstable instance and CPU steal has ranged from 0.13% to 10.51% across the record. We
-          publish this rather than smooth it, and it is the honest reason not to read a trend line
-          here as a performance change. Comparisons between algorithms measured in the{" "}
+          The cause is the host, not the algorithms.{" "}
+          {era?.burstable ? (
+            <>
+              {era.label} is a burstable instance class, so sustained load can change the clock
+              underneath a measurement.
+            </>
+          ) : (
+            <>
+              {era?.label ?? run.environment.ec2_instance_type} is a fixed-performance instance
+              class, which removes burst-credit throttling as a cause but does not by itself make
+              a day-to-day trend readable.
+            </>
+          )}{" "}
+          {minSteal != null && maxSteal != null && (
+            <>
+              CPU steal across this hardware era has ranged from {formatStealPercent(minSteal)} to{" "}
+              {formatStealPercent(maxSteal)}.{" "}
+            </>
+          )}
+          We publish this rather than smooth it, and it is the honest reason not to read a trend
+          line here as a performance change. Comparisons between algorithms measured in the{" "}
           <strong className="font-bold text-fg">same run</strong> are sound — that is what{" "}
           <a
             href="/q-shield/compare"

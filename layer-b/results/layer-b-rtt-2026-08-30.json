@@ -1,0 +1,130 @@
+{
+  "schema": "layer-b/0.2.0",
+  "identity": {
+    "layer": "B",
+    "protocol": "tls",
+    "mode": "live_handshake",
+    "label": "rtt",
+    "client_groups_offered": "X25519MLKEM768:x25519",
+    "server_groups_accepted": "X25519MLKEM768:x25519"
+  },
+  "outcome": {
+    "outcome": "negotiated",
+    "detail": "Negotiated X25519MLKEM768."
+  },
+  "wire": {
+    "client_hello_seen": true,
+    "server_hello_seen": true,
+    "client_supported_groups": [
+      {
+        "code": 4588,
+        "name": "X25519MLKEM768",
+        "identity_verified": false
+      },
+      {
+        "code": 29,
+        "name": "x25519",
+        "identity_verified": true
+      }
+    ],
+    "client_key_share_groups": [
+      {
+        "code": 4588,
+        "name": "X25519MLKEM768",
+        "identity_verified": false
+      }
+    ],
+    "negotiated_group": {
+      "code": 4588,
+      "name": "X25519MLKEM768",
+      "identity_verified": false,
+      "source": "wire bytes (ServerHello key_share extension)"
+    },
+    "hello_retry_request": false,
+    "client_hello_bytes": 1388,
+    "server_hello_bytes": 1210,
+    "fragmented_messages": [],
+    "unparsed_after_serverhello": 0
+  },
+  "structure": {
+    "packets_total": 28,
+    "packets_client_to_server": 11,
+    "packets_server_to_client": 17,
+    "wire_bytes_total": 10136,
+    "wire_bytes_client_to_server": 2338,
+    "wire_bytes_server_to_client": 7798,
+    "ip_fragments": 0,
+    "segment_sizes": [
+      1393,
+      1762,
+      80,
+      41,
+      255,
+      255,
+      2896,
+      1374,
+      24,
+      24
+    ],
+    "largest_segment_bytes": 2896,
+    "note": "Counted from the capture. Properties of the protocol exchange, not of the machine that ran it."
+  },
+  "congestion": {
+    "measurable": true,
+    "assumed_initcwnd_bytes": 14600,
+    "assumed_initcwnd_note": "10 segments x 1460-byte MSS (RFC 6928 default). Tunable per route; stated so a reader on a different setting can re-judge.",
+    "first_flight_bytes": 1762,
+    "first_flight_packets": 1,
+    "first_flight_ack_delay_seconds": 0.0500490665435791,
+    "exceeded_initcwnd": false,
+    "headroom_bytes": 12838,
+    "flights": 2,
+    "flight_sizes": [
+      1762,
+      4804
+    ]
+  },
+  "round_trips": {
+    "direction_changes": 4,
+    "approx_round_trips": 2,
+    "note": "Counted from observed direction changes in payload-bearing packets, not from a protocol model. A retry or a congestion stall therefore appears as a real extra trip."
+  },
+  "rtt": {
+    "measurable": true,
+    "syn_to_synack_seconds": 0.05006003379821777,
+    "observed_at": "server (capture shares the server network namespace)",
+    "source": "TCP SYN to SYN/ACK",
+    "is_full_round_trip": false,
+    "note": "Interval between the SYN arriving and the SYN/ACK leaving, as seen at the server. This is a full round trip only when latency is symmetric: a delay injected on the client's egress happens before the SYN arrives and is invisible from this end."
+  },
+  "timing": {
+    "duration_seconds": 20.005768060684204,
+    "publishable": false,
+    "note": "NOT a published figure. This ran on whatever machine took the capture -- a developer laptop or a shared CI runner -- which is not publication-grade. Only the structural fields are portable."
+  },
+  "environment": {
+    "path_note": "netem 50ms injected on BOTH egress paths, ~100ms round trip (synthetic, not real distance)",
+    "sockets": {
+      "measurable": true,
+      "samples": 172,
+      "sample_interval_note": "Sampled every ~200 ms for the duration of the capture.",
+      "peak_syn_recv": 0,
+      "peak_established": 1,
+      "peak_tcp_mem_pages": 0,
+      "peak_tcp_mem_bytes": 0,
+      "idle_baseline_tcp_mem_pages": 0,
+      "method_note": "Read from /proc/net/sockstat and ss while the run was in progress. Connections reach SYN_RECV by handshaking normally -- no synthetic half-open connections are manufactured, so these are the depths a server actually sees under load.",
+      "bytes_per_established_connection": null,
+      "bytes_per_established_reason": "No idle baseline was observed, or fewer than 5 loaded samples. Refused rather than published from a thin sample.",
+      "syn_recv_observations": 0,
+      "bytes_per_half_open_connection": null,
+      "bytes_per_half_open_reason": "Only 0 sample(s) caught a connection in SYN_RECV -- too few to divide memory by. Connections here reach that state by handshaking normally rather than being held half-open synthetically, so the state is genuinely brief. Deliberately manufacturing half-open connections would mean building a SYN flood tool, which is out of scope."
+    }
+  },
+  "toolchain": {},
+  "host": {},
+  "audit": {
+    "git_commit": "762cec064adf4a36c0b550dc4bb99f58a8c0b1a6",
+    "timestamp_utc": "2026-08-30T04:47:06.651731Z"
+  }
+}

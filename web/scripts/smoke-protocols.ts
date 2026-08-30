@@ -16,6 +16,7 @@ import {
 } from "../lib/protocols/derive";
 import { decomposePhases, PHASE_ORDER } from "../lib/protocols/phases";
 import { aesBaselinesByArch, formatTailRatio, tailRatio, vsBaselinePct } from "../lib/protocols/metrics";
+import { detectSuiteAnomaly, publishableVsBaselinePct } from "../lib/protocols/anomaly";
 import type { ComposedSuite, LmsXmssFile, TimingBlock } from "../lib/protocols/types";
 
 /** Sentinel timing block — the values could never pass as a measurement. */
@@ -293,6 +294,7 @@ if (Object.keys(aes).length === 0) {
 
 
 console.log("\n=== baseline delta is recomputed same-run, never read from the file ===");
+const anomalousSuites: string[] = [];
 // The regression this guards, found 2026-08-16: tls_composed.py measured the
 // baseline in one pass and every suite in a second pass, then compared across
 // them. On this host the two passes land in different modes, so the stored
@@ -320,26 +322,56 @@ for (const arch of arches) {
       throw new Error(`vsBaselinePct(${name}) disagrees with a direct same-run computation.`);
     }
     // A *hybrid* suite does a KEM exchange AND a classical one, so it cannot be
-    // faster than the classical baseline alone. Detected from the phase block
-    // rather than the name: hybrid carries both kem_* and classical_* phases.
-    // Pure-PQC suites legitimately can be faster — ML-KEM-768 beats X25519 by
-    // roughly 50%, which is one of the product's own published findings — so
-    // this must not fire on them.
-    const phases = suite.phases ?? {};
-    const isHybrid =
-      Object.keys(phases).some((k) => k.startsWith("kem_")) &&
-      Object.keys(phases).some((k) => k.startsWith("classical_"));
-
-    if (isHybrid && suite.timing.median_us <= baselineMedian) {
+    // faster than the classical baseline alone. Pure-PQC suites legitimately
+    // can be — ML-KEM-768 beats X25519 by roughly 60%, one of the product's own
+    // published findings — so the check keys off the measured phase block, not
+    // the suite name. See lib/protocols/anomaly.ts.
+    //
+    // This used to throw and fail the build. It no longer does, and the reason
+    // matters: from 2026-08-17 the x86 host's X25519 floor went bimodal, so
+    // roughly one committed run in ten carries an inflated baseline that makes
+    // a hybrid read as negative. That is a measurement-host problem the harness
+    // cannot promise away, and halting the site build on it does not protect
+    // any reader. What protects the reader is that the impossible figure can
+    // never RENDER. So the invariant asserted here is that one, and it is a
+    // hard failure — a violating suite that still yields a publishable number
+    // is a real regression.
+    const anomaly = detectSuiteAnomaly(suite, suites);
+    if (anomaly) {
+      anomalousSuites.push(`${arch}/${name}`);
+      console.log(
+        `  [${arch}] ${name.padEnd(20)} WITHHELD — hybrid at ${anomaly.suiteMedianUs.toFixed(1)}µs ` +
+          `vs ${anomaly.baselineSuite} at ${anomaly.baselineMedianUs.toFixed(1)}µs (inflated baseline)`,
+      );
+      if (publishableVsBaselinePct(suite, suites) !== null) {
+        throw new Error(
+          `${arch}/${name} is a structurally impossible comparison (hybrid at ` +
+            `${anomaly.suiteMedianUs} µs against ${anomaly.baselineSuite} at ` +
+            `${anomaly.baselineMedianUs} µs) yet publishableVsBaselinePct still returned a ` +
+            `number. The anomaly gate is the only thing stopping the site publishing "hybrid ` +
+            `post-quantum TLS is faster than classical". It must return null here.`,
+        );
+      }
+    } else if (publishableVsBaselinePct(suite, suites) !== recomputed) {
       throw new Error(
-        `${arch}/${name} is hybrid (KEM + classical) yet its median ${suite.timing.median_us} µs ` +
-          `is not above the classical baseline ${baselineName} at ${baselineMedian} µs. A hybrid ` +
-          `handshake cannot be faster than doing only its classical half — this is the shape of ` +
-          `the 2026-08-16 cross-pass bug. Do not publish a negative delta for a hybrid suite ` +
-          `without establishing why.`,
+        `${arch}/${name} is a sound comparison but the anomaly gate suppressed it. The gate must ` +
+          `withhold only impossible figures — suppressing real ones hides the product's findings.`,
       );
     }
   }
+}
+
+if (anomalousSuites.length > 0) {
+  console.log(
+    `
+  ${anomalousSuites.length} suite(s) withheld this run: ${anomalousSuites.join(", ")}.` +
+      `
+  Not a build failure — the gate held and /q-shield/protocols states the reason.` +
+      `
+  Root cause is the x86 host's bimodal X25519 floor since 2026-08-17; the c7i` +
+      `
+  overlap data does not show it. Tracked in work-order 013.`,
+  );
 }
 
 

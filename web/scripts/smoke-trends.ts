@@ -90,7 +90,7 @@ if (capped.series.length > MAX_SERIES) {
 console.log("\n=== change is null for a single point, not 0% ===");
 const single = {
   id: "x", label: "X", family: "ML-KEM" as const, gaps: 0,
-  points: [{ date: "2026-01-01", commit: "a", run_url: "u", value: 9999 }],
+  points: [{ date: "2026-01-01", commit: "a", run_url: "u", value: 9999, era_id: "fixture" }],
   min: 9999, max: 9999,
 };
 if (seriesChangePct(single) !== null) {

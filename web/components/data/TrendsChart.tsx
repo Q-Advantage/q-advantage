@@ -19,6 +19,7 @@ import {
   CartesianGrid,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -141,6 +142,7 @@ export function TrendsChart({
                     commit: String(r.commit),
                     run_url: String(r.run_url),
                     value: v,
+                    era_id: String(r.era_id ?? ""),
                   };
             })
             .filter(Boolean) as TrendsResult["series"][number]["points"];
@@ -165,6 +167,27 @@ export function TrendsChart({
         points: days == null ? s.points : s.points.slice(Math.max(0, s.points.length - days)),
       }));
       const dates = [...new Set(trimmed.flatMap((s) => s.points.map((p) => p.date)))].sort();
+      // Rebuild the hardware breaks from the points actually in view. The
+      // server computes these from the run record; the client can only see the
+      // points it fetched, so it derives the same thing from their era tags.
+      const seen: { date: string; era: string }[] = [];
+      for (const d of dates) {
+        const era = trimmed
+          .flatMap((s) => s.points)
+          .find((pt) => pt.date === d)?.era_id;
+        if (era) seen.push({ date: d, era });
+      }
+      const breaks = seen
+        .filter((s, i) => i > 0 && s.era !== seen[i - 1].era)
+        .map((s) => ({
+          date: s.date,
+          fromLabel: "previous host",
+          toLabel: "current host",
+          note:
+            `Measurement hardware changed on ${s.date}. Runs either side of this point ` +
+            `were measured on different machines and are not one series.`,
+        }));
+
       setData({
         series: trimmed,
         metricLabel: metric.label,
@@ -172,6 +195,7 @@ export function TrendsChart({
         dates,
         runsInRange: dates.length,
         empty: [],
+        breaks,
       });
       setLoading(false);
     })();
@@ -207,10 +231,30 @@ export function TrendsChart({
 
   // One row per date; a series with no point that day contributes null, and
   // Recharts leaves the line broken there.
+  //
+  // Each series is split into one data key PER HARDWARE ERA
+  // (`${id}::${era_id}`), so a run measured on t3.medium and a run measured on
+  // c7i.large never share a key and Recharts cannot draw a segment between
+  // them. This is the same "a hole stays a hole" rule the missing-run case
+  // already follows, applied to a change of machine: the ~2x step at a
+  // hardware transition is not a performance trend and must not read as one.
+  const seriesEras = useMemo(
+    () =>
+      data.series.map((s) => ({
+        id: s.id,
+        eras: [...new Set(s.points.map((p) => p.era_id || "unknown"))],
+      })),
+    [data.series],
+  );
+
   const rows: ChartRow[] = data.dates.map((date) => {
     const row: ChartRow = { date };
     for (const s of data.series) {
-      row[s.id] = s.points.find((p) => p.date === date)?.value ?? null;
+      const point = s.points.find((p) => p.date === date);
+      for (const era of seriesEras.find((x) => x.id === s.id)?.eras ?? []) {
+        row[`${s.id}::${era}`] = null;
+      }
+      if (point) row[`${s.id}::${point.era_id || "unknown"}`] = point.value;
     }
     return row;
   });
@@ -393,24 +437,41 @@ export function TrendsChart({
                 }}
                 labelStyle={{ color: "rgb(var(--color-fg))", fontWeight: 700 }}
                 formatter={(value: number, name: string) => {
-                  const s = data.series.find((x) => x.id === name);
-                  return [getMetric(metricId).format(value), s?.label ?? name];
+                  const id = name.split("::")[0];
+                  const s = data.series.find((x) => x.id === id);
+                  return [getMetric(metricId).format(value), s?.label ?? id];
                 }}
               />
-              {data.series.map((s, i) => (
-                <Line
-                  key={s.id}
-                  type="monotone"
-                  dataKey={s.id}
-                  stroke={slotColor(i)}
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 4 }}
-                  // A missing run is a hole, not a bridge. Never true.
-                  connectNulls={false}
-                  isAnimationActive={false}
+              {data.breaks.map((b) => (
+                <ReferenceLine
+                  key={b.date}
+                  x={b.date}
+                  stroke="rgb(var(--color-fg-subtle))"
+                  strokeDasharray="3 3"
+                  label={{
+                    value: `${b.fromLabel} → ${b.toLabel}`,
+                    position: "insideTopRight",
+                    fontSize: 10,
+                    fill: "rgb(var(--color-fg-subtle))",
+                  }}
                 />
               ))}
+              {data.series.flatMap((s, i) =>
+                (seriesEras.find((x) => x.id === s.id)?.eras ?? []).map((era) => (
+                  <Line
+                    key={`${s.id}::${era}`}
+                    type="monotone"
+                    dataKey={`${s.id}::${era}`}
+                    stroke={slotColor(i)}
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 4 }}
+                    // A missing run is a hole, not a bridge. Never true.
+                    connectNulls={false}
+                    isAnimationActive={false}
+                  />
+                )),
+              )}
             </LineChart>
           </ResponsiveContainer>
 

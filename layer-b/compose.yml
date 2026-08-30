@@ -1,0 +1,127 @@
+# Layer B testbed, one compose file, several scenarios selected by profile.
+#
+# Every scenario shares the same server + capture pair so that results are
+# comparable: the only thing that changes between them is the client side and
+# what sits in the network path. A scenario that quietly used a different
+# server would not be measuring what it claims to.
+#
+# The capture sidecar shares the SERVER's network namespace, so tcpdump sees
+# what the server's own stack sees. Capturing from the host would put the
+# host's networking config between us and the wire.
+#
+#   pairwise     one hybrid handshake, the baseline case
+#   mismatch     client and server share NO group -- the deliberate
+#                misconfiguration mode (spec 3a), where a rejection is the result
+#   concurrency  N simultaneous live connections (spec 7's "connections per core")
+#   rtt          netem-injected latency, to price the extra round trips
+#   middlebox    nginx / HAProxy / Envoy in the path (spec 3a middlebox stack)
+services:
+  server:
+    build: .
+    image: q-advantage/layer-b:dev
+    environment:
+      GROUPS: ${GROUPS_SERVER:-X25519MLKEM768:x25519}
+      PORT: "4433"
+    command: ["/layer-b/scripts/server.sh"]
+    networks: [testbed]
+    profiles: [pairwise, mismatch, concurrency, rtt, middlebox]
+
+  capture:
+    image: q-advantage/layer-b:dev
+    depends_on: [server]
+    network_mode: "service:server"
+    cap_add: [NET_ADMIN, NET_RAW]
+    volumes:
+      - ./out:/out
+    environment:
+      CAPTURE_SECONDS: ${CAPTURE_SECONDS:-40}
+      SCENARIO: ${SCENARIO:-pairwise}
+      # Set only by the rtt scenario, to make the injected latency symmetric.
+      EGRESS_DELAY_MS: ${EGRESS_DELAY_MS:-}
+    command: ["/layer-b/scripts/capture.sh"]
+    profiles: [pairwise, mismatch, concurrency, rtt, middlebox]
+
+  # --- pairwise -----------------------------------------------------------
+  client:
+    image: q-advantage/layer-b:dev
+    depends_on: [capture]
+    environment:
+      GROUPS: ${GROUPS_CLIENT:-X25519MLKEM768:x25519}
+      HOST: server
+      PORT: "4433"
+      START_DELAY: "6"
+    command: ["/layer-b/scripts/client.sh"]
+    networks: [testbed]
+    profiles: [pairwise, mismatch]
+
+  # --- concurrency --------------------------------------------------------
+  # N live TCP+TLS connections at once. Note this is NOT Layer A's concurrency
+  # number: that one is cryptographic throughput under CPU contention, this one
+  # includes socket setup, accept queue and handshake state. spec 7 is explicit
+  # that the two must never share a label.
+  swarm:
+    image: q-advantage/layer-b:dev
+    depends_on: [capture]
+    environment:
+      GROUPS: ${GROUPS_CLIENT:-X25519MLKEM768:x25519}
+      HOST: server
+      PORT: "4433"
+      CONNECTIONS: ${CONNECTIONS:-50}
+      START_DELAY: "6"
+    volumes:
+      - ./out:/out
+    command: ["/layer-b/scripts/swarm.sh"]
+    networks: [testbed]
+    profiles: [concurrency]
+
+  # --- rtt ----------------------------------------------------------------
+  # Latency injected with netem rather than a second AWS region. The spec names
+  # this as the cheaper fallback and it is labelled as injected in the result,
+  # never presented as real geography.
+  delayed-client:
+    image: q-advantage/layer-b:dev
+    depends_on: [capture]
+    cap_add: [NET_ADMIN]
+    environment:
+      GROUPS: ${GROUPS_CLIENT:-X25519MLKEM768:x25519}
+      HOST: server
+      PORT: "4433"
+      DELAY_MS: ${DELAY_MS:-50}
+      START_DELAY: "6"
+    command: ["/layer-b/scripts/delayed-client.sh"]
+    networks: [testbed]
+    profiles: [rtt]
+
+  # --- middlebox ----------------------------------------------------------
+  # A TCP-passthrough proxy in front of the server. Passthrough rather than
+  # TLS-terminating is the honest first case: it asks whether a middlebox
+  # damages a PQC handshake it is not even trying to inspect.
+  proxy:
+    # Image and command are both injected, because "middlebox compatibility"
+    # is a property of each product rather than of the category -- and because
+    # each product disagrees about where its config lives. Mounting the whole
+    # directory read-only and passing an explicit command avoids encoding one
+    # product's filesystem layout into the testbed.
+    image: ${PROXY_IMAGE:-haproxy:3.0-alpine}
+    depends_on: [server]
+    volumes:
+      - ./middlebox:/mb:ro
+    command: ${PROXY_CMD:-haproxy -f /mb/haproxy.cfg}
+    networks: [testbed]
+    profiles: [middlebox]
+
+  proxy-client:
+    image: q-advantage/layer-b:dev
+    depends_on: [proxy, capture]
+    environment:
+      GROUPS: ${GROUPS_CLIENT:-X25519MLKEM768:x25519}
+      HOST: proxy
+      PORT: "4433"
+      START_DELAY: "8"
+    command: ["/layer-b/scripts/client.sh"]
+    networks: [testbed]
+    profiles: [middlebox]
+
+networks:
+  testbed:
+    driver: bridge
