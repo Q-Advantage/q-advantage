@@ -17,6 +17,8 @@ import {
 } from "@/components/product/kit";
 import { SortableTable } from "@/components/product/interactive";
 import { getLatestRun } from "@/lib/data/load";
+import { loadProtocolsData } from "@/lib/protocols/load";
+import { hasLiveStatefulSigs } from "@/lib/protocols/derive";
 import { getHomeMetrics } from "@/lib/data/home-metrics";
 import {
   formatBytes,
@@ -53,6 +55,12 @@ export const metadata: Metadata = {
  */
 export default function QShieldPage() {
   const run = getLatestRun();
+  // Derived, never declared: the day the measurement host's liboqs carries the
+  // stateful schemes, this page starts saying so without an edit.
+  const protocols = loadProtocolsData();
+  const statefulLive = hasLiveStatefulSigs(
+    (protocols.byArch["x86_64"] ?? protocols.byArch[Object.keys(protocols.byArch)[0]])?.lmsXmss,
+  );
   const m = getHomeMetrics();
   const env = run.environment;
 
@@ -244,6 +252,54 @@ export default function QShieldPage() {
                 ],
               }))}
             />
+        </Section>
+
+        {/* Hash-based signatures.
+            Named for the job they do rather than for their acronyms, and shown
+            even though there is no number yet: a reader evaluating whether this
+            estate is covered needs to know the scheme is tracked and why it has
+            no data, and silence reads as "never considered it". The status is
+            derived, so this becomes a real table the day the measurement host's
+            liboqs is rebuilt — nobody has to remember to change it. */}
+        <Section
+          eyebrow="RFC 8554 · RFC 8391 · NIST SP 800-208"
+          title="Hash-based signatures — for things that must still verify in 2045."
+          hint="Firmware and boot chains are signed once and verified for the life of the hardware. Their signatures have to outlast the device, which is a different problem from securing a connection today."
+        >
+          {statefulLive ? (
+            <p className="text-[13.5px] leading-relaxed text-fg-muted">
+              Measurements have landed for these schemes &mdash; see{" "}
+              <a
+                href="/q-shield/compare"
+                className="font-semibold text-link underline decoration-border-strong underline-offset-2"
+              >
+                Compare
+              </a>
+              .
+            </p>
+          ) : (
+            <div className="rounded-lg border border-l-[3px] border-border border-l-accent bg-bg-card px-5 py-4">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="text-[14px] font-bold text-fg">LMS, HSS and XMSS</span>
+                <span className="rounded border border-border px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-eyebrow text-status-warn">
+                  tracked · awaiting a measurement host rebuild
+                </span>
+              </div>
+              <p className="mt-2 max-w-[72ch] text-[13px] leading-relaxed text-fg-muted">
+                Q-Shield tracks four parameter sets, with published test vectors and a
+                verification-only path &mdash; the operation that matters here, since a firmware
+                signature is produced once and checked on every boot. The schemes are compiled and
+                proven in Q-Advantage&rsquo;s own reference container. They are not yet enabled in
+                the liboqs build on the host that produces published numbers, and we will not
+                publish a figure measured anywhere else.
+              </p>
+              <p className="mt-2 text-[12px] leading-relaxed text-fg-subtle">
+                Shown here rather than left out. An algorithm absent from a benchmark is
+                indistinguishable from one nobody thought about, and these two are the standardised
+                answer for long-lived signing.
+              </p>
+            </div>
+          )}
         </Section>
 
         {m.ranked.length > 0 && (
