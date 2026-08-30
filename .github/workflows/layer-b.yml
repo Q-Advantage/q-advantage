@@ -197,24 +197,34 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # `slug` exists because Docker tags must be lowercase while the
+          # library's own name is what belongs in the published result. Deriving
+          # one from the other in shell would put a lowercasing step between the
+          # matrix and the result, which is where a mislabelled row comes from.
           - library: BoringSSL
+            slug: boringssl
             dockerfile: Dockerfile.boringssl
           - library: AWS-LC
+            slug: awslc
             dockerfile: Dockerfile.awslc
           - library: wolfSSL
+            slug: wolfssl
             dockerfile: Dockerfile.wolfssl
     steps:
       - uses: actions/checkout@v4
 
       - name: Build ${{ matrix.library }} from source
         working-directory: layer-b/crosslib
-        run: docker build -f ${{ matrix.dockerfile }} -t q-advantage/crosslib-${{ matrix.library }}:dev .
+        run: docker build -f ${{ matrix.dockerfile }} -t q-advantage/crosslib-${{ matrix.slug }}:dev .
 
       - name: Ask it what it exposes
         working-directory: layer-b
         run: |
           mkdir -p out/results
-          docker run --rm -v "$PWD/out:/out"             -e CROSSLIB_LIBRARY="${{ matrix.library }}"             q-advantage/crosslib-${{ matrix.library }}:dev             python3 probe_crosslib.py --output-dir /out/results
+          docker run --rm -v "$PWD/out:/out" \
+            -e CROSSLIB_LIBRARY="${{ matrix.library }}" \
+            q-advantage/crosslib-${{ matrix.slug }}:dev \
+            python3 probe_crosslib.py --output-dir /out/results
           cat out/results/crosslib-*.json
 
       - name: Upload this library's result
@@ -252,6 +262,26 @@ jobs:
         run: |
           python crosslib/merge_crosslib.py --results-dir out/results --output-dir out/results
           cat out/results/crosslib-merged-*.json
+
+      - name: Fail if no library reported at all
+        working-directory: layer-b
+        # One library missing is a missing opinion and the merged view says so.
+        # ALL of them missing is a broken build, and a run where nothing was
+        # asked of anything must not go green -- otherwise the most complete
+        # failure this track can have is also its quietest.
+        run: |
+          python - <<'EOF'
+          import glob, json, sys
+          f = sorted(glob.glob("out/results/crosslib-merged-*.json"))
+          if not f:
+              sys.exit("the merge step wrote no file")
+          cv = json.load(open(f[-1]))["cross_validation"]
+          if not cv["measurable"]:
+              sys.exit(cv["reason"])
+          print("reported: %s" % ", ".join(cv["libraries_that_reported"]))
+          if cv["libraries_that_did_not"]:
+              print("did NOT report: %s" % ", ".join(cv["libraries_that_did_not"]))
+          EOF
 
       - name: Upload the merged view
         if: always()
