@@ -29,12 +29,21 @@ export function ProductHeader({
   name,
   accentSplit,
   tabs,
+  homeHref = "/q-shield",
 }: {
   /** Product name, e.g. "Q-Shield". */
   name: string;
   /** Character to tint with the brand accent, e.g. the hyphen. */
   accentSplit?: string;
   tabs: ProductTab[];
+  /**
+   * Where the wordmark points — a product's own front door.
+   *
+   * Defaults to Q-Shield because it was the only product with a header when
+   * this was written. P-CBOM has one now, and a wordmark that navigated to a
+   * different product would be a small betrayal of the reader's expectation.
+   */
+  homeHref?: string;
 }) {
   const pathname = usePathname();
 
@@ -58,7 +67,7 @@ export function ProductHeader({
       <div className="mx-auto max-w-[1240px] px-4 md:px-6">
         <div className="flex h-[58px] items-center justify-between gap-5">
           <div className="flex min-w-0 items-baseline gap-2">
-            <Link href="/q-shield" className="flex-none text-[21px] font-bold tracking-[-0.025em] text-fg">
+            <Link href={homeHref} className="flex-none text-[21px] font-bold tracking-[-0.025em] text-fg">
               {before}
               {accentSplit && <span className="text-accent-ink">{accentSplit}</span>}
               {after}
