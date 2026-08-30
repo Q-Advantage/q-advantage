@@ -8,7 +8,7 @@ import {
   LINE_ITEMS,
   coverageSentence,
   tally,
-  useCaseCoverage,
+  coverageByUseCase,
   type Coverage,
   type UseCaseCoverage,
 } from "@/lib/data/cfdir";
@@ -55,7 +55,7 @@ function useCaseRows(rows: UseCaseCoverage[]): KitRow[] {
 
 export default function CfdirPage() {
   const data = loadProtocolsData();
-  const rows = useCaseCoverage(data);
+  const rows = coverageByUseCase(data);
   const t = tally(rows);
 
   const primary = data.byArch["x86_64"] ?? data.byArch[Object.keys(data.byArch)[0]];

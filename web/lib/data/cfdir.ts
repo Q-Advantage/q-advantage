@@ -258,7 +258,14 @@ export function tracksPresent(data: ProtocolsData): Set<string> {
   return present;
 }
 
-export function useCaseCoverage(data: ProtocolsData): UseCaseCoverage[] {
+/**
+ * Coverage per use case, computed from the data present in this build.
+ *
+ * Named `coverageByUseCase` rather than `useCaseCoverage` deliberately: in a
+ * React codebase a `use`-prefixed function reads as a Hook, and the lint rules
+ * enforce that reading. This is a plain projection over loaded data.
+ */
+export function coverageByUseCase(data: ProtocolsData): UseCaseCoverage[] {
   const present = tracksPresent(data);
   return USE_CASES.map((uc) => {
     if (uc.coverageWhenPresent === "not-applicable") {

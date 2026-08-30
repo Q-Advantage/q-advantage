@@ -6,7 +6,7 @@ import {
   coverageSentence,
   tally,
   tracksPresent,
-  useCaseCoverage,
+  coverageByUseCase,
 } from "./cfdir";
 import type { ProtocolsData } from "@/lib/protocols/types";
 
@@ -81,9 +81,9 @@ describe("tracksPresent", () => {
   });
 });
 
-describe("useCaseCoverage", () => {
+describe("coverageByUseCase", () => {
   it("marks the two fully-covered use cases when both tracks are present", () => {
-    const rows = useCaseCoverage(data({ tls: true, ssh: true, sig: true, aes: true }));
+    const rows = coverageByUseCase(data({ tls: true, ssh: true, sig: true, aes: true }));
     const covered = rows.filter((r) => r.coverage === "covered").map((r) => r.id);
     expect(covered.sort()).toEqual(["3.13", "3.4"]);
   });
@@ -91,7 +91,7 @@ describe("useCaseCoverage", () => {
   it("downgrades a use case whose track produced no data", () => {
     // The reason coverage is computed rather than declared: a track that stops
     // running must downgrade its own row instead of a stale table claiming it.
-    const rows = useCaseCoverage(data({ ssh: true }));
+    const rows = coverageByUseCase(data({ ssh: true }));
     const tls = rows.find((r) => r.id === "3.4")!;
     expect(tls.coverage).toBe("none");
     expect(tls.trackMissing).toBe(true);
@@ -100,7 +100,7 @@ describe("useCaseCoverage", () => {
   it("distinguishes a missing track from a use case nothing measures", () => {
     // These read differently and must not be collapsed: one is an outage, the
     // other is scope.
-    const rows = useCaseCoverage(data({}));
+    const rows = coverageByUseCase(data({}));
     expect(rows.find((r) => r.id === "3.4")!.trackMissing).toBe(true);
     expect(rows.find((r) => r.id === "3.10")!.trackMissing).toBe(false);
   });
@@ -109,26 +109,26 @@ describe("useCaseCoverage", () => {
     // 3.1 has no measurable cryptographic term at all. It must never appear as
     // a gap we could close.
     for (const d of [data({}), data({ tls: true, ssh: true, sig: true, aes: true })]) {
-      expect(useCaseCoverage(d).find((r) => r.id === "3.1")!.coverage).toBe("not-applicable");
+      expect(coverageByUseCase(d).find((r) => r.id === "3.1")!.coverage).toBe("not-applicable");
     }
   });
 });
 
 describe("tally and the headline sentence", () => {
   it("excludes not-applicable rows from the denominator", () => {
-    const t = tally(useCaseCoverage(data({ tls: true, ssh: true, sig: true, aes: true })));
+    const t = tally(coverageByUseCase(data({ tls: true, ssh: true, sig: true, aes: true })));
     expect(t.notApplicable).toBe(1);
     expect(t.scorable).toBe(13);
     expect(t.covered + t.partial + t.none).toBe(13);
   });
 
   it("reports two covered against the real track set", () => {
-    const t = tally(useCaseCoverage(data({ tls: true, ssh: true, sig: true, aes: true })));
+    const t = tally(coverageByUseCase(data({ tls: true, ssh: true, sig: true, aes: true })));
     expect(t.covered).toBe(2);
   });
 
   it("writes the sentence from the computed numbers, never a typed one", () => {
-    const t = tally(useCaseCoverage(data({ tls: true, ssh: true, sig: true, aes: true })));
+    const t = tally(coverageByUseCase(data({ tls: true, ssh: true, sig: true, aes: true })));
     const s = coverageSentence(t);
     expect(s).toContain(`${t.covered} of ${t.scorable}`);
     expect(s).toContain(`${t.partial} partial`);
@@ -136,7 +136,7 @@ describe("tally and the headline sentence", () => {
   });
 
   it("keeps the sentence honest when everything goes dark", () => {
-    const t = tally(useCaseCoverage(data({})));
+    const t = tally(coverageByUseCase(data({})));
     expect(t.covered).toBe(0);
     expect(coverageSentence(t)).toContain("0 of 13");
   });
