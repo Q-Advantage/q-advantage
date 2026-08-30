@@ -43,14 +43,25 @@ jobs:
         run: python -m pytest layer-b/tests -q
 
   scenarios:
-    name: "live: ${{ matrix.scenario }}"
+    name: "live: ${{ matrix.scenario }}${{ matrix.proxy && format(' ({0})', matrix.proxy) || '' }}"
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
       # One scenario failing should not hide the others' findings.
       fail-fast: false
       matrix:
-        scenario: [pairwise, mismatch, concurrency, rtt, middlebox]
+        include:
+          - scenario: pairwise
+          - scenario: mismatch
+          - scenario: concurrency
+          - scenario: rtt
+          - scenario: middlebox
+            proxy: haproxy
+          # A second product, because middlebox compatibility is a property of
+          # each product rather than of the category. Isolated as its own job so
+          # one proxy's packaging quirk cannot hide the other's result.
+          - scenario: middlebox
+            proxy: nginx
     steps:
       - uses: actions/checkout@v4
 
@@ -81,6 +92,8 @@ jobs:
         working-directory: layer-b
         # Invoked through bash rather than relying on the executable bit: this repo
         # is developed on Windows, where git does not track mode by default.
+        env:
+          PROXY: ${{ matrix.proxy }}
         run: bash ./run-scenario.sh ${{ matrix.scenario }}
 
       - name: Assert it established what it claims to
@@ -91,7 +104,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: layer-b-${{ matrix.scenario }}
+          name: layer-b-${{ matrix.scenario }}${{ matrix.proxy && format('-{0}', matrix.proxy) || '' }}
           path: |
             layer-b/out/*.pcap
             layer-b/out/*.csv

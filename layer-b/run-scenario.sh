@@ -56,8 +56,23 @@ case "$SCENARIO" in
   middlebox)
     export GROUPS_CLIENT="X25519MLKEM768:x25519"
     export GROUPS_SERVER="X25519MLKEM768:x25519"
-    export PROXY_IMAGE="${PROXY_IMAGE:-nginx:1.27-alpine}"
-    export PROXY_CONF="${PROXY_CONF:-nginx.conf}"
+    # PROXY selects the product. HAProxy is the default because it is a single
+    # static binary with no module system, so a startup failure there is a real
+    # finding rather than a packaging quirk. nginx's `stream` support differs
+    # between its own official image variants, which is exactly the kind of
+    # thing that would otherwise be misread as a PQC compatibility problem.
+    case "${PROXY:-haproxy}" in
+      haproxy)
+        export PROXY_IMAGE="haproxy:3.0-alpine"
+        export PROXY_CMD="haproxy -f /mb/haproxy.cfg"
+        ;;
+      nginx)
+        export PROXY_IMAGE="nginx:1.27"
+        export PROXY_CMD="nginx -c /mb/nginx.conf -g 'daemon off;'"
+        ;;
+      *)
+        echo "unknown proxy: ${PROXY}" >&2; exit 2 ;;
+    esac
     export CAPTURE_SECONDS=45
     ENV_NOTE="TCP passthrough proxy in the path: ${PROXY_IMAGE}"
     ;;

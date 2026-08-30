@@ -95,10 +95,16 @@ services:
   # TLS-terminating is the honest first case: it asks whether a middlebox
   # damages a PQC handshake it is not even trying to inspect.
   proxy:
-    image: ${PROXY_IMAGE:-nginx:1.27-alpine}
+    # Image and command are both injected, because "middlebox compatibility"
+    # is a property of each product rather than of the category -- and because
+    # each product disagrees about where its config lives. Mounting the whole
+    # directory read-only and passing an explicit command avoids encoding one
+    # product's filesystem layout into the testbed.
+    image: ${PROXY_IMAGE:-haproxy:3.0-alpine}
     depends_on: [server]
     volumes:
-      - ./middlebox/${PROXY_CONF:-nginx.conf}:/etc/nginx/nginx.conf:ro
+      - ./middlebox:/mb:ro
+    command: ${PROXY_CMD:-haproxy -f /mb/haproxy.cfg}
     networks: [testbed]
     profiles: [middlebox]
 
