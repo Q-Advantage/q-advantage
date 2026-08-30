@@ -184,9 +184,13 @@ export const LINE_ITEMS: LineItem[] = [
     name: "Testing",
     cfdirUse: "A whole performance-testing category resting on an assumption, with no number behind it.",
     requirement: "The classical-vs-PQC delta per use case.",
+    // Status is refined at render time by `lineItemsFor()` once the record
+    // shows whether a classical signature arm actually landed. Declared
+    // pessimistically here so a build with no data never over-claims.
     status: "partial",
     blocker:
-      "A delta needs a classical arm. TLS has one (X25519); the signature track has no RSA-PSS or ECDSA baseline, so for signing there is an absolute figure but no delta.",
+      "A delta needs a classical arm. TLS has one (X25519). The signature track's RSA-PSS and " +
+      "ECDSA baselines are instrumented but have not yet appeared in a committed run.",
   },
   {
     code: "MIA",
@@ -315,4 +319,53 @@ export function coverageSentence(t: CoverageTally): string {
     `${t.covered} of ${t.scorable} use cases fully covered, ${t.partial} partial, ${t.none} not covered. ` +
     `That is the honest answer to whether Q-Shield can fill this ledger today.`
   );
+}
+
+/**
+ * Whether the signature track carries a classical arm in this build.
+ *
+ * CFDIR's **T** line item wants a classical-vs-PQC delta, and a delta needs
+ * both arms measured in the same run. The harness gained RSA-PSS and ECDSA
+ * baselines on 2026-08-30, but the record only carries them from the next
+ * daily run onward — so this is read from the data rather than declared, and
+ * the page tells the truth on the day they land without anyone editing a
+ * string.
+ *
+ * A scheme with no `kind` is from before the marker existed and is NOT counted
+ * as classical: absent is not the same as post-quantum, and guessing here would
+ * be the over-claim this whole file exists to avoid.
+ */
+export function hasClassicalSignatureArm(data: ProtocolsData): boolean {
+  for (const arch of Object.keys(data.byArch ?? {})) {
+    const schemes = data.byArch[arch]?.sig?.schemes;
+    if (!schemes) continue;
+    for (const scheme of Object.values(schemes)) {
+      const s = scheme as { kind?: string; status?: string };
+      if (s.kind === "classical" && s.status !== "unavailable" && s.status !== "failed") {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Line items, with the statuses that depend on the record resolved against it.
+ *
+ * Only T is data-dependent today. The others rest on facts about what the
+ * harness can do at all, which no amount of data changes.
+ */
+export function lineItemsFor(data: ProtocolsData): LineItem[] {
+  const classicalArm = hasClassicalSignatureArm(data);
+  return LINE_ITEMS.map((li) => {
+    if (li.code !== "T" || !classicalArm) return li;
+    return {
+      ...li,
+      blocker:
+        "Both arms are now measured. TLS compares against X25519 and the signature track " +
+        "against RSA-PSS and ECDSA, all within a single run — a cross-run comparison is what " +
+        "flipped a published sign on 2026-08-16, so the same-run constraint is load-bearing. " +
+        "What remains is per-use-case breadth rather than a missing baseline.",
+    };
+  });
 }

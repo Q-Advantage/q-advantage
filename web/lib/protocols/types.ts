@@ -135,6 +135,14 @@ export interface SigTrackEnvironment {
   steal_time_pct?: number;
 }
 
+/**
+ * Whether a signature record is a candidate or a reference line.
+ *
+ * Emitted from 2026-08-30. Absent on every earlier committed run, which is why
+ * consumers must treat `undefined` as "not stated" rather than as post-quantum.
+ */
+export type SigKind = "post-quantum" | "classical";
+
 export interface SigTrackFile {
   environment: SigTrackEnvironment;
   schemes: Record<string, SigScheme>;

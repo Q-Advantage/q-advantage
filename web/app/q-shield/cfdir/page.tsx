@@ -5,7 +5,7 @@ import { loadProtocolsData } from "@/lib/protocols/load";
 import {
   CFDIR_FRAMEWORK_DATED,
   CFDIR_FRAMEWORK_VERSION,
-  LINE_ITEMS,
+  lineItemsFor,
   coverageSentence,
   tally,
   coverageByUseCase,
@@ -111,7 +111,7 @@ export default function CfdirPage() {
       >
         <DataTable
           head={["Code", "Line item", "What Q-Shield must emit", "Status"]}
-          rows={LINE_ITEMS.map((li) => ({
+          rows={lineItemsFor(data).map((li) => ({
             key: li.code,
             cells: [
               <span key="c" className="font-bold tabular-nums text-fg">

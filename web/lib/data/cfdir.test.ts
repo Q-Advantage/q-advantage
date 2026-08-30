@@ -7,6 +7,8 @@ import {
   tally,
   tracksPresent,
   coverageByUseCase,
+  hasClassicalSignatureArm,
+  lineItemsFor,
 } from "./cfdir";
 import type { ProtocolsData } from "@/lib/protocols/types";
 
@@ -139,5 +141,97 @@ describe("tally and the headline sentence", () => {
     const t = tally(coverageByUseCase(data({})));
     expect(t.covered).toBe(0);
     expect(coverageSentence(t)).toContain("0 of 13");
+  });
+});
+
+describe("hasClassicalSignatureArm", () => {
+  function withSchemes(schemes: Record<string, unknown>): ProtocolsData {
+    return {
+      manifest: null,
+      byArch: {
+        x86_64: {
+          tls: null,
+          ssh: null,
+          sig: { schemes } as never,
+          aes: null,
+          lmsXmss: null,
+        },
+      },
+    } as ProtocolsData;
+  }
+
+  it("is false when the track carries only post-quantum schemes", () => {
+    expect(
+      hasClassicalSignatureArm(
+        withSchemes({ "ML-DSA-44": { kind: "post-quantum", status: "ok" } }),
+      ),
+    ).toBe(false);
+  });
+
+  it("is true once a classical scheme has actually landed", () => {
+    expect(
+      hasClassicalSignatureArm(
+        withSchemes({
+          "ML-DSA-44": { kind: "post-quantum", status: "ok" },
+          "ECDSA-P256": { kind: "classical", status: "ok" },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it("does not count a classical scheme that failed to measure", () => {
+    // An unavailable baseline is a gap, not an arm.
+    expect(
+      hasClassicalSignatureArm(
+        withSchemes({ "RSA-2048-PSS": { kind: "classical", status: "unavailable" } }),
+      ),
+    ).toBe(false);
+  });
+
+  it("treats an unmarked scheme as not-stated rather than as classical", () => {
+    // Every run committed before 2026-08-30 has no `kind` at all. Guessing
+    // here would be the over-claim this file exists to avoid.
+    expect(hasClassicalSignatureArm(withSchemes({ "ML-DSA-44": { status: "ok" } }))).toBe(false);
+  });
+
+  it("is false for a build with no signature track", () => {
+    expect(hasClassicalSignatureArm({ manifest: null, byArch: {} } as ProtocolsData)).toBe(false);
+  });
+});
+
+describe("lineItemsFor", () => {
+  const noArm = { manifest: null, byArch: {} } as ProtocolsData;
+  const withArm = {
+    manifest: null,
+    byArch: {
+      x86_64: {
+        tls: null,
+        ssh: null,
+        sig: { schemes: { "ECDSA-P256": { kind: "classical", status: "ok" } } } as never,
+        aes: null,
+        lmsXmss: null,
+      },
+    },
+  } as ProtocolsData;
+
+  it("keeps T's pessimistic blocker while no classical arm has landed", () => {
+    const t = lineItemsFor(noArm).find((li) => li.code === "T")!;
+    expect(t.blocker).toContain("not yet appeared");
+  });
+
+  it("rewrites T's blocker once both arms are measured", () => {
+    const t = lineItemsFor(withArm).find((li) => li.code === "T")!;
+    expect(t.blocker).toContain("Both arms are now measured");
+    expect(t.blocker).toContain("same-run");
+  });
+
+  it("changes nothing else", () => {
+    const before = lineItemsFor(noArm).filter((li) => li.code !== "T");
+    const after = lineItemsFor(withArm).filter((li) => li.code !== "T");
+    expect(after).toEqual(before);
+  });
+
+  it("still returns all eleven line items", () => {
+    expect(lineItemsFor(withArm)).toHaveLength(11);
   });
 });

@@ -1,5 +1,10 @@
 """Job 2 — signature / authentication track.
 
+Carries both post-quantum and classical signature schemes, measured in the same
+run so a classical-vs-PQC delta is always a same-run comparison. `qshield-update-spec.md`
+§16.3 makes that delta what CFDIR's Testing line item needs: without a classical
+arm there is no delta, only an absolute figure.
+
 Emits the protocol `auth` block per signature scheme: keygen/sign/verify timing
 (house compute_stats) plus signature_bytes + public_key_bytes. This is the data
 that serves both PQ-certificate handshakes (later) and the blockchain framing
@@ -20,6 +25,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
+import classical_sig  # noqa: E402
 import common  # noqa: E402
 
 TEST_MESSAGE: bytes = b"q-advantage-bench-message-v1\x00\x00\x00\x00\x00"
@@ -51,14 +57,25 @@ def bench_scheme(name: str, iterations: int, warmup: int) -> dict | None:
     )
     sig.free()
 
-    return {
+    record = {
         "scheme": name,
+        # Distinguishes these from the classical baselines measured in the same
+        # run. Without it a consumer reading the schemes map has no way to tell
+        # a candidate from a reference line.
+        "kind": "post-quantum",
+        "status": "ok",
         "keygen": common.compute_stats(keygen_ns),
         "sign": common.compute_stats(sign_ns),
         "verify": common.compute_stats(verify_ns),
         "signature_bytes": d["length_signature"],
         "public_key_bytes": d["length_public_key"],
     }
+    # Secret key size: exposed by the binding on every run and never recorded
+    # until now. Blocking for the TCM's Expansion & Retention line item --
+    # storage for larger private keys cannot be priced from public key sizes.
+    if "length_secret_key" in d:
+        record["secret_key_bytes"] = d["length_secret_key"]
+    return record
 
 
 def run(iterations: int, warmup: int) -> dict:
@@ -72,6 +89,17 @@ def run(iterations: int, warmup: int) -> dict:
         if rec is not None:
             schemes[name] = rec
 
+    # Classical baselines, measured in THIS run and written to THIS file.
+    #
+    # Not a stylistic choice. On 2026-08-16 the composed-TLS harness measured
+    # its baseline in one pass and its suites in another, then compared across
+    # them; on a host with this much run-to-run movement the two passes landed
+    # in different modes and the published delta flipped sign. Putting the
+    # classical signature arms in a separate track would reintroduce that bug
+    # somewhere new, so a classical-vs-PQC signature delta is always a
+    # same-run comparison.
+    schemes.update(classical_sig.bench_all(iterations, warmup))
+
     steal = sampler.result_pct()
     return {
         "environment": {
@@ -84,6 +112,17 @@ def run(iterations: int, warmup: int) -> dict:
             "build_path": host.build_path,
             "steal_time_pct": steal,
         },
+        "families": {
+            "post-quantum": [s for s, r in schemes.items() if r.get("kind") == "post-quantum"],
+            "classical": [s for s, r in schemes.items() if r.get("kind") == "classical"],
+        },
+        "comparison_note": (
+            "Classical and post-quantum schemes in this file were measured in the same run on the "
+            "same host, so a delta between any two of them is a same-run comparison. No pairing "
+            "between a classical scheme and a post-quantum one is asserted: that is a "
+            "security-level argument rather than a measurement, and each classical record "
+            "publishes its documented strength so the argument can be made explicitly."
+        ),
         "schemes": schemes,
     }
 
