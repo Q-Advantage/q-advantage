@@ -78,6 +78,21 @@ class TestTheClaimBoundary:
         assert "NO timings" in probe.SCOPE["no_timings"]
         assert "dedicated" in probe.SCOPE["no_timings"]
 
+    def test_the_scope_names_what_a_speed_inventory_cannot_see(self):
+        # X25519MLKEM768 is absent from all three inventories and BoringSSL
+        # negotiates it in production Chrome. Without this stated, a reader
+        # draws exactly the wrong conclusion from a true observation.
+        note = probe.SCOPE["what_a_speed_inventory_can_see"]
+        assert "X25519MLKEM768" in note
+        assert "never as absent from the library" in note
+
+    def test_the_signature_blind_spot_is_flagged_unverified(self):
+        # No ML-DSA row appeared anywhere, including a wolfSSL build configured
+        # with --enable-dilithium. Unresolved, and published as unresolved.
+        note = probe.SCOPE["signature_schemes_are_a_known_blind_spot"]
+        assert "#unverified" in note
+        assert "NOT evidence" in note
+
     def test_the_scope_separates_availability_from_equivalence(self):
         # Two libraries exposing ML-KEM-768 is not two libraries agreeing on
         # what ML-KEM-768 produces.

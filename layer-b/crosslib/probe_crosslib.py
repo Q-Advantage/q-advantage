@@ -281,6 +281,20 @@ SCOPE = {
         "code was written relative to FIPS 203. The alias table is matched case-insensitively and "
         "the matched spelling is published, because the spelling is itself informative."
     ),
+    "what_a_speed_inventory_can_see": (
+        "These probes read a library's own SPEED INVENTORY, which lists primitives. A TLS group "
+        "such as X25519MLKEM768 is a negotiation construct rather than a primitive, so it does "
+        "not appear in one even in a library that ships it -- BoringSSL negotiates that group in "
+        "production Chrome and it is absent here. Read every hybrid-group row as 'not visible "
+        "from this vantage point', never as absent from the library. Settling it needs a "
+        "handshake, which is Layer B's job rather than this track's."
+    ),
+    "signature_schemes_are_a_known_blind_spot": (
+        "No ML-DSA row was observed in any of the three inventories, including a wolfSSL build "
+        "configured with --enable-dilithium. That is unresolved and is published as such: it may "
+        "be that these speed tools cover KEMs and not signature schemes, or that a flag did not "
+        "take. It is NOT evidence that these libraries lack ML-DSA. #unverified."
+    ),
     "availability_not_equivalence": (
         "Corroboration here means a second implementation EXPOSES the same primitive. It is not a "
         "check that two implementations produce identical output -- that needs shared test "
