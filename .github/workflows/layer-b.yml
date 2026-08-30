@@ -186,6 +186,81 @@ jobs:
             layer-b/out/compat-containers.log
           if-no-files-found: warn
 
+  crosslib:
+    name: "second opinion: ${{ matrix.library }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      # One library per job, and one failing must not hide the others. Same
+      # principle as the middlebox matrix: a build quirk in one product is not
+      # a finding about another.
+      fail-fast: false
+      matrix:
+        include:
+          - library: BoringSSL
+            dockerfile: Dockerfile.boringssl
+          - library: AWS-LC
+            dockerfile: Dockerfile.awslc
+          - library: wolfSSL
+            dockerfile: Dockerfile.wolfssl
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.library }} from source
+        working-directory: layer-b/crosslib
+        run: docker build -f ${{ matrix.dockerfile }} -t q-advantage/crosslib-${{ matrix.library }}:dev .
+
+      - name: Ask it what it exposes
+        working-directory: layer-b
+        run: |
+          mkdir -p out/results
+          docker run --rm -v "$PWD/out:/out"             -e CROSSLIB_LIBRARY="${{ matrix.library }}"             q-advantage/crosslib-${{ matrix.library }}:dev             python3 probe_crosslib.py --output-dir /out/results
+          cat out/results/crosslib-*.json
+
+      - name: Upload this library's result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crosslib-${{ matrix.library }}
+          path: layer-b/out/results/crosslib-*.json
+          if-no-files-found: warn
+
+  crosslib-merge:
+    name: "second opinion: cross-validation"
+    runs-on: ubuntu-latest
+    needs: crosslib
+    # Runs even when a library failed to build: a missing library is a missing
+    # opinion, and the merged view is built to say so rather than to require a
+    # complete set.
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Collect every library that reported
+        uses: actions/download-artifact@v4
+        with:
+          pattern: crosslib-*
+          merge-multiple: true
+          path: layer-b/out/results
+
+      - name: Cross-validate against liboqs
+        working-directory: layer-b
+        run: |
+          python crosslib/merge_crosslib.py --results-dir out/results --output-dir out/results
+          cat out/results/crosslib-merged-*.json
+
+      - name: Upload the merged view
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crosslib-merged
+          path: layer-b/out/results/crosslib-merged-*.json
+          if-no-files-found: warn
+
   scenarios:
     name: "live: ${{ matrix.scenario }}${{ matrix.proxy && format(' ({0})', matrix.proxy) || '' }}"
     runs-on: ubuntu-latest
