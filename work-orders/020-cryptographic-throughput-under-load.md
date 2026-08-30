@@ -88,9 +88,12 @@ threads. The measurement assertions are deliberately weak — "more workers comp
 same window" — because anything stronger would be asserting a property of whatever machine the test
 happens to run on.
 
-## Still needed to make it run — founder action
+## Wiring into the daily run
 
-`benchmark.yml` is off-limits under guardrail 3. One step, alongside the others:
+Added to `benchmark.yml` alongside the IPsec track. That file is normally left alone because its
+steps run sequentially and a failure aborts the job **before** the commit step — so both new steps
+carry `continue-on-error: true`, and `benchmark/tests/test_workflow_shape.py` asserts they keep it.
+Work-order 019 has the full reasoning.
 
 ```yaml
       - name: Run benchmark — cryptographic throughput under load
@@ -101,7 +104,12 @@ happens to run on.
 ```
 
 `build_manifest.py` discovers tracks by filename prefix, so `concurrency-*` is picked up
-automatically. Until a file lands, CFDIR's MIA correctly still reads as blocked.
+automatically and needed no change. Until a file lands, CFDIR's MIA correctly still reads as blocked;
+it rewrites itself on the first run after merge.
+
+The sweep adds roughly 90 seconds to a job that currently takes about 1h50m against a 180-minute
+timeout, and the IPsec track adds a few minutes more. Comfortable, but the timeout is worth watching
+as tracks accumulate.
 
 ## Not in this work-order
 

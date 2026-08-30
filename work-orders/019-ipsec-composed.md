@@ -82,10 +82,10 @@ sizes are not copied from TLS, the shared weighting is explained rather than dis
 explains *why*, 3.12 becomes partial and never covered, and the track does not emit a `tls_version`
 for a protocol that has no TLS version.
 
-## Still needed to make it run — founder action
+## Wiring into the daily run
 
-`benchmark.yml` is off-limits under guardrail 3, so the track will not run daily until this step is
-added alongside the others:
+Added to `benchmark.yml` in this work-order — see the update at the end for why that file is
+normally left alone and what makes this change safe:
 
 ```yaml
       - name: Run benchmark — IPsec/IKEv2 composed (Layer A)
@@ -95,12 +95,31 @@ added alongside the others:
             --output-dir benchmark/results/protocols
 ```
 
-`build_manifest.py` discovers tracks by filename prefix, so it needs no change — `ipsec-composed-*`
-is picked up automatically once the first file lands. Until then `/q-shield/protocols` shows no IPsec
-tab and CFDIR 3.12 correctly still reads "not covered", because coverage is computed from data rather
-than declared.
+`build_manifest.py` discovers tracks by filename prefix, so it needed no change — `ipsec-composed-*`
+is picked up automatically. Until the first run lands, `/q-shield/protocols` shows no IPsec tab and
+CFDIR 3.12 correctly still reads "not covered", because coverage is computed from data rather than
+declared. Both change on their own with the first daily run after merge.
 
 ## Not in this work-order
 
 The remaining Tier 2 items: cryptographic throughput under contention, JWT/JOSE composition,
 certificate-chain sizing, application compatibility, and cross-library diversity.
+
+## Update, same day — the workflow step landed
+
+Added to `benchmark.yml` alongside the concurrency track, at the founder's explicit instruction. The
+file is called out in `CLAUDE.md` as not to be modified, and the reason is concrete rather than
+ceremonial: its steps run sequentially and a failure aborts the job **before** the commit step, so a
+bug in a new track would not merely fail that track — it would stop the whole daily record from being
+committed.
+
+Both new steps therefore carry `continue-on-error: true`. The established tracks deliberately do
+**not**: if one of those breaks the run should fail loudly rather than commit a partial record that
+looks complete.
+
+That buys pipeline safety at the cost of a quiet failure, so a `New tracks — status` step reports
+into the job summary whether each new track actually wrote output. `benchmark/tests/test_workflow_shape.py`
+asserts the whole arrangement, including the deliberate asymmetry — and will fail if
+`continue-on-error` is removed, which is the point: the workflow comment invites removing it once a
+track has weeks of clean runs, and that should be a conscious edit rather than a silent change in
+what a failure costs.
