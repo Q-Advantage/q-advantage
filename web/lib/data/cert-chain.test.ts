@@ -7,6 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  chainDisplayName,
   congestionIsComposed,
   hasChainSizing,
   measuredChains,
@@ -136,5 +137,20 @@ describe("worstMultiple", () => {
     const f = file();
     f.comparison.rows = [{ algorithm: "x", sent_der_bytes: 1, delta_bytes: 0, multiple_of_baseline: null }];
     expect(worstMultiple(f)).toBeNull();
+  });
+});
+
+describe("chainDisplayName", () => {
+  it("prints standard names, not the generator's directory keys", () => {
+    // `mldsa87` is how a build script spells it; a reader expects the name the
+    // standard uses.
+    expect(chainDisplayName("mldsa87")).toBe("ML-DSA-87");
+    expect(chainDisplayName("ecdsa-p256")).toBe("ECDSA P-256");
+  });
+
+  it("passes an unknown key through rather than guessing at it", () => {
+    // A wrong expansion of an algorithm name is a factual error on a page whose
+    // whole claim is that its identities are correct.
+    expect(chainDisplayName("falcon512")).toBe("falcon512");
   });
 });

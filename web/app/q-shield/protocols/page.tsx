@@ -3,6 +3,14 @@ import { Suspense } from "react";
 import { PageShell } from "@/components/chrome/PageShell";
 import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 import {
+  congestionIsComposed,
+  chainDisplayName,
+  loadCertChain,
+  measuredChains,
+  overTheWindow,
+  worstMultiple,
+} from "@/lib/data/cert-chain";
+import {
   AuditBand,
   Caveat,
   DataTable,
@@ -198,7 +206,115 @@ function suiteRows(suites: Record<string, ComposedSuite> | undefined): KitRow[] 
     });
 }
 
+
+/**
+ * Certificate and token sizing.
+ *
+ * Written for somebody deciding whether to migrate, not for us. The point a
+ * reader should leave with is that post-quantum costs room as well as time, and
+ * that the room runs out in places nobody budgets for -- a congestion window, a
+ * cookie -- rather than in the handshake itself.
+ */
+function SizingSections({ chainFile }: { chainFile: ReturnType<typeof loadCertChain> }) {
+  const chains = measuredChains(chainFile);
+  if (chains.length === 0) return null;
+
+  const worst = worstMultiple(chainFile);
+  const over = overTheWindow(chainFile);
+
+  return (
+    <>
+      <Section
+        eyebrow="Certificates"
+        title={
+          worst
+            ? `An ${chainDisplayName(worst.algorithm)} certificate chain is ${worst.multiple.toFixed(1)}× the size of the one it replaces.`
+            : "What a post-quantum certificate chain costs on the wire."
+        }
+        hint="Every TLS connection that isn't resumed carries the server's chain. This is real: chains minted and measured, not key sizes added up."
+      >
+        <DataTable
+          head={["Certificate", "Sent on the wire", "Against ECDSA-P256"]}
+          rows={chains.map((c) => {
+            const cmp = chainFile?.comparison?.rows?.find((r) => r.algorithm === c.algorithm);
+            const mult = cmp?.multiple_of_baseline ?? null;
+            return {
+              key: c.algorithm,
+              cells: [
+                <RowName key="n" name={chainDisplayName(c.algorithm)} />,
+                <span key="s" className="num font-bold tabular-nums text-fg">
+                  {formatBytes(c.sent_in_handshake?.der_bytes ?? 0)}
+                </span>,
+                <span key="m" className="tabular-nums">
+                  {mult == null ? (
+                    <span className="text-fg-subtle">the baseline</span>
+                  ) : (
+                    <span
+                      className={
+                        mult >= 10 ? "font-bold text-status-err" : mult >= 5 ? "font-bold text-status-warn" : "text-fg-muted"
+                      }
+                    >
+                      {mult.toFixed(2)}×
+                    </span>
+                  )}
+                </span>,
+              ],
+            };
+          })}
+        />
+        <p className="mt-3 text-[12px] leading-relaxed text-fg-muted">
+          These are a floor. The certificates behind them carry short names and no Certificate
+          Transparency extensions, where a public certificate carries more &mdash; so a real chain is
+          larger, and the post-quantum penalty on a real chain is larger still.
+        </p>
+      </Section>
+
+      {chainFile?.congestion && over.length > 0 && (
+        <Section
+          eyebrow="What that costs"
+          title="Two of them no longer fit in the first round trip."
+          hint={`A server's opening flight has about ${formatBytes(chainFile.congestion.assumed_initcwnd_bytes)} before it has to stop and wait for an acknowledgement. Crossing that line doesn't make the handshake bigger — it makes it slower, by a full round trip, on every new connection.`}
+        >
+          <div className="grid gap-px overflow-hidden rounded border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+            {chainFile.congestion.rows.map((r) => (
+              <div key={r.certificate_algorithm} className="min-w-0 bg-bg-surface px-4 py-4">
+                <div className="eyebrow">{chainDisplayName(r.certificate_algorithm)}</div>
+                <div
+                  className={`num mt-1.5 text-[25px] font-bold leading-none tracking-[-0.035em] ${
+                    r.exceeds_initcwnd ? "text-status-err" : "text-fg"
+                  }`}
+                >
+                  {formatBytes(r.composed_first_flight_bytes)}
+                </div>
+                <div
+                  className={`mt-1.5 text-[11.5px] font-semibold ${
+                    r.exceeds_initcwnd ? "text-status-err" : "text-status-ok"
+                  }`}
+                >
+                  {r.exceeds_initcwnd
+                    ? `over by ${formatBytes(-r.headroom_bytes)}`
+                    : `fits, ${formatBytes(r.headroom_bytes)} spare`}
+                </div>
+              </div>
+            ))}
+          </div>
+          {congestionIsComposed(chainFile) && (
+            <p className="mt-3 text-[12px] leading-relaxed text-fg-muted">
+              Each figure adds three measured parts &mdash; a captured ServerHello, the chain above,
+              and the signature over the handshake. The shape of the flight is assumed rather than
+              captured, and it assumes nothing extra: no stapled revocation response, no client
+              certificate, no session ticket. Every one of those pushes the total further over, not
+              back under.
+            </p>
+          )}
+        </Section>
+      )}
+    </>
+  );
+}
+
 export default function ProtocolsPage() {
+  const chainFile = loadCertChain();
   const data = loadProtocolsData();
   const arches = Object.keys(data.byArch);
   const primary = data.byArch["x86_64"] ?? data.byArch[arches[0]];
@@ -415,14 +531,7 @@ export default function ProtocolsPage() {
           exactly 100% — they are the measurement, not an attribution over it.
         </Caveat>
 
-        <Caveat label="What these benchmarks do not measure">
-          These are composed handshakes sized on the wire. They are{" "}
-          <strong className="font-bold text-fg">not</strong> packet captures: packets per handshake,
-          initial congestion window effects, connections per core under real concurrency, and
-          per-connection memory are not measured here and are not inferable from this data. Where
-          those numbers matter to a capacity decision, they need their own instrument — naming the
-          gap is more useful than estimating across it.
-        </Caveat>
+        <SizingSections chainFile={chainFile} />
 
         <Section
           eyebrow="Take the data"

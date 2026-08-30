@@ -164,3 +164,26 @@ export function loadCertChain(): CertChainFile | null {
 export function hasChainSizing(file: CertChainFile | null): boolean {
   return Boolean(file?.comparison?.measurable && (file.comparison.rows?.length ?? 0) > 0);
 }
+
+/**
+ * The name to print for a chain's algorithm.
+ *
+ * The generator names directories after OpenSSL's own algorithm keys, which is
+ * right for the filesystem and wrong for a reader: `mldsa87` and `ecdsa-p256`
+ * are how a build script spells things, not how a standard does. An unmapped
+ * key falls through unchanged rather than being guessed at — a wrong expansion
+ * of an algorithm name is a factual error, not a cosmetic one.
+ */
+const DISPLAY_NAMES: Record<string, string> = {
+  "mldsa44": "ML-DSA-44",
+  "mldsa65": "ML-DSA-65",
+  "mldsa87": "ML-DSA-87",
+  "ecdsa-p256": "ECDSA P-256",
+  "ecdsa-p384": "ECDSA P-384",
+  "rsa-2048": "RSA-2048",
+  "rsa-3072": "RSA-3072",
+};
+
+export function chainDisplayName(algorithm: string): string {
+  return DISPLAY_NAMES[algorithm] ?? algorithm;
+}
