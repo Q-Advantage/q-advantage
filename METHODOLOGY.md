@@ -116,6 +116,43 @@ runner so it survives reboots.
 
 ---
 
+## Layer B — live handshakes (summary)
+
+Everything above is measured **in process**: the harness calls the library
+directly and times it. That is the right way to compare algorithms, and it is
+structurally incapable of answering some of the questions a migration actually
+raises — a composed harness has no socket, so it cannot count packets, observe
+fragmentation, or watch two stacks fail to agree.
+
+Layer B is the second measurement layer, added 2026-08-30. Real TLS handshakes
+between stacks we control, over real sockets, captured with `tcpdump`.
+
+**Every negotiation fact is parsed from the wire bytes**, never from a client's
+own report of what it negotiated. The negotiated group is read out of the
+ServerHello `key_share` extension. A tool that reports its own behaviour is
+reporting its belief about its behaviour; the packets are the evidence.
+
+**Structural facts are portable; timings are not.** Packets per handshake, wire
+bytes, the negotiated group, fragmentation and outcome are properties of the
+protocol exchange — they hold wherever the capture was taken, and anyone with
+Docker can reproduce them. Durations are properties of the machine. A capture
+taken anywhere other than the measurement host carries `publishable: false` and
+its timing is stripped before it reaches the site, rather than shown and
+disclaimed.
+
+**Scenarios:** a baseline pairwise handshake; a deliberate group mismatch, which
+succeeds by *not* negotiating; concurrency; injected round-trip latency; and a
+middlebox case with nginx and HAProxy in the path.
+
+**A control every probe carries.** When a probe reports that something failed,
+the first question is whether the instrument works. Every probe runs a classical
+arm alongside the post-quantum one: **a failing classical baseline points at the
+instrument, not at post-quantum.** This was learned the expensive way — two
+probes were written without it, and each produced a confident false finding
+about someone else's software before the control was added.
+
+---
+
 ## Q-Day Index methodology (summary)
 
 The Q-Day Index is a 0–100 score measuring how close today's quantum
@@ -244,8 +281,12 @@ while being heavier on the wire — so collapsing them into one number requires 
 price for microseconds against bytes. That price belongs to whoever is doing the
 costing. Components are published signed and separate.
 
-Coverage today is published at `/q-shield/cfdir`, with the uncovered cells shown
-as empty. Those cells are the roadmap.
+Coverage against the framework is derived internally, from which tracks actually
+produced data, and is **not published as a scorecard**. Scoring ourselves in
+public against someone else's framework says less than the measurements do. The
+findings that came out of that alignment work — certificate-chain sizing and
+token sizing — are published on their own terms at
+<https://qadvantage.io/q-shield/protocols>.
 
 ## Statistical reporting
 
@@ -279,12 +320,30 @@ a finding.
   percentage from an affected run does not, and the site withholds any that
   is structurally impossible. A c7i.large overlap is running; migration to
   that fixed instance class has not been cut over.
-- **Single machine for Q-Shield.** Cross-architecture comparison (Graviton,
-  AMD EPYC) is a future deliverable.
+- **One live architecture.** x86_64 runs daily. There is a single aarch64
+  (Graviton3) run, from 2026-07-11 — one historical data point, not a second
+  series. Where both appear side by side, the ARM column is that July run and
+  is not contemporaneous with the x86 figures next to it. Treat a
+  cross-architecture comparison as indicative, not as a same-day measurement.
 - **`liboqs` is a prototyping library**, not a production cryptographic
   implementation. Q-Shield numbers are representative of the algorithms
   but should not be cited as authoritative for a specific production
-  deployment.
+  deployment. Since 2026-08-30 liboqs is no longer the sole implementation
+  consulted: BoringSSL, AWS-LC and wolfSSL are each built from a pinned tag
+  and asked what post-quantum primitives they expose. ML-KEM-768 and
+  ML-KEM-1024 are corroborated by all three. That track publishes **no
+  timings** — those builds run on a shared CI runner, and a speed figure from
+  there would undo the dedicated-measurement-host discipline every other
+  number depends on.
+- **Hash-based signatures (LMS/XMSS) have no measurements yet.** The
+  measurement host's liboqs was built without the stateful-signature schemes
+  compiled in. The harness reports that rather than fabricating, and the site
+  says so where the numbers would otherwise sit.
+- **Layer B timings are not published.** Live handshake captures record
+  packets, wire bytes, the negotiated group, fragmentation and outcome — all
+  properties of the protocol exchange, portable to any machine. Durations from
+  a capture taken anywhere other than the measurement host are withheld rather
+  than shown, because a timing is a property of the machine.
 - **Q-Day Index dataset depth.** Currently 8 scored systems plus 2 analog
   N/A entries and 4 footnoted candidates. Coverage will grow as more
   vendors publish qualifying specs.
