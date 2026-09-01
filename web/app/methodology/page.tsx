@@ -57,16 +57,45 @@ export default function MethodologyPage() {
             source.
           </p>
 
-          <nav aria-label="On this page" className="mt-10 border-t border-b border-border py-5">
-            <div className="eyebrow mb-3">On this page</div>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-              <li><a href="#three-pillars" className="text-fg-muted hover:text-accent transition-colors">Three pillars</a></li>
-              <li><a href="#q-shield" className="text-fg-muted hover:text-accent transition-colors">Q-Shield methodology</a></li>
-              <li><a href="#q-day-index" className="text-fg-muted hover:text-accent transition-colors">Q-Day Index methodology</a></li>
-              <li><a href="#pqc-readiness-index" className="text-fg-muted hover:text-accent transition-colors">PQC Readiness Index methodology</a></li>
-              <li><a href="#glossary" className="text-fg-muted hover:text-accent transition-colors">Measurement-method glossary</a></li>
-              <li><a href="#challenge" className="text-fg-muted hover:text-accent transition-colors">Challenge a result</a></li>
-            </ul>
+          {/* A contents block, not a link list. This document is long, and the
+              previous version named five destinations for thirty subsections,
+              which is how a reader loses their place halfway down. */}
+          <nav aria-label="Contents" className="mt-10 border-t border-b border-border py-6">
+            <div className="eyebrow mb-4">Contents</div>
+            <ol className="grid grid-cols-1 gap-x-10 gap-y-5 sm:grid-cols-2">
+              <Contents
+                n="01"
+                href="#three-pillars"
+                label="Three pillars"
+                sub="Public · auditable · reproducible"
+              />
+              <Contents
+                n="02"
+                href="#q-shield"
+                label="Q-Shield"
+                sub="How a run works · the environment · hardware and the burstable caveat · CI discipline · algorithms covered · what these benchmarks do not measure"
+              />
+              <Contents
+                n="03"
+                href="#q-day-index"
+                label="Q-Day Index"
+                sub="The moving anchor · the threat-score formula · the sourcing bar · cross-method fidelity · why no projected year"
+              />
+              <Contents
+                n="04"
+                href="#glossary"
+                label="Measurement methods"
+                sub="Every method tag used on the dashboard, defined"
+              />
+            </ol>
+            <div className="mt-5 border-t border-border-subtle pt-4">
+              <a
+                href="#challenge"
+                className="text-sm font-medium text-fg-muted transition-colors hover:text-accent"
+              >
+                Challenge a result &rarr;
+              </a>
+            </div>
           </nav>
         </div>
 
@@ -92,18 +121,12 @@ export default function MethodologyPage() {
         {/* ====================================================================== */}
         {/* ============ Q-SHIELD ============ */}
         {/* ====================================================================== */}
-        <section id="q-shield" className="mb-20 scroll-mt-20">
-          <div className="eyebrow mb-3">Section 1</div>
-          <h2 className="text-[clamp(32px,4.5vw,44px)] font-bold leading-[1.1] tracking-[-0.028em] text-fg mb-6">
-            Q-Shield — post-quantum cryptography benchmarks
-          </h2>
-          <p className="text-base text-fg-muted leading-[1.7] font-medium mb-12">
-            Q-Shield measures the wall-clock performance of the NIST-standardized post-quantum
-            algorithms — key generation, key encapsulation/decapsulation for KEMs; key generation,
-            signing, and verification for signatures. Re-run daily on dedicated infrastructure with
-            CPU pinning and garbage collection disabled during measurement, so scheduler noise
-            doesn&apos;t leak into the numbers.
-          </p>
+        <MajorSection
+          id="q-shield"
+          eyebrow="Q-Shield"
+          title="Post-quantum cryptography benchmarks"
+          standfirst="Q-Shield measures the wall-clock performance of the NIST-standardized post-quantum algorithms — key generation, key encapsulation and decapsulation for KEMs; key generation, signing and verification for signatures. Re-run daily on dedicated infrastructure with CPU pinning and garbage collection disabled during measurement, so scheduler noise doesn't leak into the numbers."
+        >
 
           <H3 id="q-shield-how-a-run-works">How a run works</H3>
           <Prose>
@@ -427,22 +450,17 @@ export default function MethodologyPage() {
               <span aria-hidden>→</span>
             </Link>
           </div>
-        </section>
+        </MajorSection>
 
         {/* ====================================================================== */}
         {/* ============ Q-DAY INDEX ============ */}
         {/* ====================================================================== */}
-        <section id="q-day-index" className="mb-20 scroll-mt-20">
-          <div className="eyebrow mb-3">Section 2</div>
-          <h2 className="text-[clamp(32px,4.5vw,44px)] font-bold leading-[1.1] tracking-[-0.028em] text-fg mb-6">
-            Q-Day Index — distance to breaking RSA-2048
-          </h2>
-          <p className="text-base text-fg-muted leading-[1.7] font-medium mb-12">
-            The Q-Day Index is a 0–100 score measuring how close today&apos;s quantum hardware is to
-            breaking RSA-2048 with Shor&apos;s algorithm. It is the answer to a single question, set
-            against a named published target, with every input sourced. The score for nearly every
-            machine is zero today, and that is the honest answer.
-          </p>
+        <MajorSection
+          id="q-day-index"
+          eyebrow="Q-Day Index"
+          title="Distance to breaking RSA-2048"
+          standfirst="A 0–100 score measuring how close today's quantum hardware is to breaking RSA-2048 with Shor's algorithm. It is the answer to a single question, set against a named published target, with every input sourced. The score for nearly every machine is zero today, and that is the honest answer."
+        >
 
           {/* anchor #q-day-anchor-moving-target — linked from the dashboard hovercards */}
           <H3 id="q-day-anchor-moving-target">The anchor is algorithm-specific, and it&apos;s moving</H3>
@@ -693,206 +711,26 @@ export default function MethodologyPage() {
               <span aria-hidden>→</span>
             </Link>
           </div>
-        </section>
+        </MajorSection>
 
-        {/* ====================================================================== */}
-        {/* ============ PQC READINESS INDEX ============ */}
-        {/* ====================================================================== */}
-        <section id="pqc-readiness-index" className="mb-20 scroll-mt-20">
-          <div className="eyebrow mb-3">Section 3</div>
-          <h2 className="text-[clamp(32px,4.5vw,44px)] font-bold leading-[1.1] tracking-[-0.028em] text-fg mb-6">
-            PQC Readiness Index — key exchange vs. authentication, named
-          </h2>
-          <p className="text-base text-fg-muted leading-[1.7] font-medium mb-12">
-            A weekly, per-institution measurement of the observable post-quantum posture of named
-            banks, exchanges, card networks, and certificate authorities — negotiated TLS version,
-            key-exchange group, and certificate chain, nothing more. Two tracks, never merged into
-            one score.
-          </p>
 
-          <H3 id="pqc-what-is-measured">What is measured, and what isn&apos;t</H3>
-          <Prose>
-            <p>
-              Every measurement is an ordinary TLS handshake with a publicly-advertised hostname on
-              a standard port — the same handshake any browser completes visiting the page. We
-              record only the negotiated protocol parameters the server voluntarily presents:
-              highest negotiated TLS version, whether TLS 1.2 is still accepted, which key-exchange
-              groups the server accepts when offered, and the certificate chain&apos;s metadata
-              (signature algorithm, public key algorithm, key size, issuer, validity dates).
-            </p>
-            <p>
-              We never authenticate, never scan for vulnerabilities, never touch a non-standard
-              port, and never parse or store page content. If an endpoint blocks, rate-limits, or
-              refuses a connection, that is the answer — it is recorded as not measurable and we
-              move on. We do not work around it.
-            </p>
-          </Prose>
-
-          <H3 id="pqc-support-not-preference">Support, not preference</H3>
-          <Prose>
-            <p>
-              Key-exchange group support is measured by connecting once per candidate group and
-              observing whether the server accepts it — not by reading which group the server
-              happens to negotiate by default when several are offered. &ldquo;Accepts
-              X25519MLKEM768 when it&apos;s the only group offered&rdquo; and &ldquo;prefers it in
-              a normal handshake&rdquo; are different claims. Conflating them is the first
-              correction request we would receive, and would deserve.
-            </p>
-          </Prose>
-
-          <H3 id="pqc-two-track">The two-track model, and why it&apos;s never merged</H3>
-          <Prose>
-            <p>
-              <strong>KEX</strong> is the share of an institution&apos;s measurable endpoints that
-              accept at least one hybrid post-quantum key-exchange group
-              (<code>X25519MLKEM768</code>, <code>SecP256r1MLKEM768</code>). <strong>AUTH</strong>
-              {" "}is the share presenting a post-quantum or hybrid certificate signature. They are
-              reported side by side, always, never combined into one number.
-            </p>
-            <p>
-              The reason is the finding the whole index exists to surface: as of this methodology
-              version, ML-DSA is not permitted in publicly-trusted TLS certificates at all — the
-              CA/Browser Forum&apos;s Baseline Requirements (v2.2.9 §6.1.5) permit only RSA and
-              ECDSA key pairs, full stop. AUTH is at or near zero across the entire index today, by
-              construction, while KEX moves. A single composite score would average those two facts
-              into a misleading middle, exactly hiding the finding.
-            </p>
-            <p>
-              An institution with zero measurable endpoints (every endpoint blocked, unreachable,
-              or excluded) shows <strong>&ldquo;—&rdquo;</strong> in both tracks, never
-              {" "}<strong>0%</strong>. Those are different claims — one is &ldquo;we don&apos;t
-              know,&rdquo; the other is a specific, false &ldquo;we know, and the answer is
-              none.&rdquo;
-            </p>
-          </Prose>
-
-          <H3 id="pqc-hygiene-flags">Hygiene flags — not scored, always shown</H3>
-          <Prose>
-            <p>
-              Four flags are recorded and displayed on every row, independent of the two-track
-              score: whether TLS 1.2 is still accepted, a weak or deprecated certificate signature
-              algorithm, a certificate key below the recommended minimum size, and a certificate
-              that is expired or within 90 days of expiry. These are not scored — they are shown
-              because they are independently worth knowing, and folding them into a score would
-              obscure which specific thing is wrong.
-            </p>
-          </Prose>
-
-          <H3 id="pqc-pinned-client">The pinned client configuration</H3>
-          <Prose>
-            <p>
-              Negotiated parameters depend on the client as well as the server — the measurement
-              paper this index builds on notes this explicitly. Every scan run publishes its exact
-              client configuration (OpenSSL version, offered group list, candidate groups probed)
-              as a hash stamped on every record. A configuration change is a methodology-version
-              change, dated and disclosed, never a silent shift in what a score means.
-            </p>
-          </Prose>
-
-          <H3 id="pqc-institution-selection">Institution and endpoint selection</H3>
-          <Prose>
-            <p>
-              Institutions are drawn from public regulator and association listings — the
-              Financial Stability Board&apos;s G-SIB list, national bank-holding-company and
-              systemic-institution lists (US Federal Reserve, EU EBA O-SII list, UK ring-fencing
-              regime), the CA/Browser ecosystem&apos;s own trusted-root reports, and well-known card
-              networks — never scraped or crawled. Endpoints (the specific hostnames measured per
-              institution) are discovered only from what the institution has itself published:
-              linked login pages, announced developer portals, documented mobile endpoints. No
-              endpoint is guessed from a naming convention and left unverified.
-            </p>
-          </Prose>
-
-          <H3 id="pqc-rate-limits">Rate limits and identification</H3>
-          <Prose>
-            <p>
-              At most one connection per second to any single hostname; at most one concurrent
-              connection to any one institution; a full sweep once per week. Any connection refusal
-              or reset ends measurement of that host for the entire sweep immediately — not just
-              the probe that hit it. The scanning source is a single, stable, publicly-disclosed
-              address with correct reverse DNS and a monitored abuse contact, so any institution
-              that notices the traffic can identify it and request exclusion.
-            </p>
-          </Prose>
-
-          <H3 id="pqc-exclusion">Exclusion, honestly labeled</H3>
-          <Prose>
-            <p>
-              Any institution may request exclusion from measurement, unconditionally, without
-              justification. An excluded institution is not silently removed from the index and is
-              not scored as zero — its row states plainly &ldquo;excluded at the institution&apos;s
-              request,&rdquo; dated, with no score in either track. Silent removal would let the
-              index be edited by whoever complains; scoring an exclusion as zero would make opting
-              out punitive. Naming the exclusion is the only version that is neither.
-            </p>
-          </Prose>
-
-          <H3 id="pqc-right-of-reply">Right of reply</H3>
-          <Prose>
-            <p>
-              Every institution sees its own complete data — every endpoint, every negotiated
-              parameter, both track scores — before its row is ever published for the first time,
-              with 14 calendar days to respond. Material changes (a track score crossing a
-              published threshold, a new hygiene flag) trigger a shorter notice window before the
-              change goes live. Silence is not consent and is not a veto — after the window elapses
-              without response, publication proceeds with a note that reply was invited.
-            </p>
-          </Prose>
-
-          <H3 id="pqc-corrections">Corrections and disputes</H3>
-          <Prose>
-            <p>
-              A permanent, published address plus a correction link on every row accepts reports
-              from anyone, not only the rated institution. Every report is acknowledged within 5
-              business days; a disputed row is marked <strong>disputed</strong> publicly while under
-              review. A confirmed correction updates the row, carries a visible correction notice
-              for one full refresh cycle, and gets a dated entry in a permanent public corrections
-              log — a wrong number is never silently fixed.
-            </p>
-          </Prose>
-
-          <H3 id="pqc-cdn-caveat">Known limitation: CDN attribution</H3>
-          <Prose>
-            <p>
-              Some measured posture reflects a CDN or edge provider in front of an institution
-              rather than the institution&apos;s own infrastructure — &ldquo;your PQ readiness is
-              rented&rdquo; is itself part of the finding, per the spec this index is built from.
-              Automatic CDN detection and per-row attribution is specified but not yet built; until
-              it is, a strong key-exchange score should be read with that caveat in mind, not as a
-              claim about the institution&apos;s own stack.
-            </p>
-          </Prose>
-
-          <H3 id="pqc-independence">Independence</H3>
-          <Prose>
-            <p>
-              Rated institutions may buy data, reports, and analyst time. They receive no influence
-              over methodology, scoring, their own position, or publication timing. No pre-publication
-              access exists beyond right of reply, identical for customers and non-customers. We do
-              not sell migration tools or remediation services to a rated institution — selling the
-              fix for the problem we score would end the only thing that makes the score worth
-              reading.
-            </p>
-          </Prose>
-
-          {/* CTA to the index page itself removed while it's paused, 2026-08-09 —
-              see web/app/pqc-readiness-index/page.tsx. Re-add once it's back. */}
-        </section>
+        {/* The PQC Readiness Index section was removed here on 2026-09-01. The
+            product it documented is paused and its routes return 404, so this
+            page was explaining, at length, something no reader could reach.
+            The prose is intact in git history at commit bebde29 and should be
+            restored alongside the product, not rewritten. Note /corrections
+            deep-links #pqc-right-of-reply; that page is also paused today, so
+            nothing live dangles, but both need to come back together. */}
 
         {/* ====================================================================== */}
         {/* ============ GLOSSARY ============ */}
         {/* ====================================================================== */}
-        <section id="glossary" className="mb-16 scroll-mt-20">
-          <div className="eyebrow mb-3">Glossary</div>
-          <h2 className="text-[clamp(28px,3.5vw,38px)] font-bold leading-[1.1] tracking-[-0.028em] text-fg mb-6">
-            Measurement methods, in one place
-          </h2>
-          <p className="text-fg-muted leading-[1.7] mb-8">
-            Every fidelity, coherence, and readout figure on the Q-Day Index dashboard is tagged
-            with the measurement method that produced it. These tags are not interchangeable —
-            different methods measure different physical quantities. Hover any tag on a row in the
-            dashboard, or read the definitions below.
-          </p>
+        <MajorSection
+          id="glossary"
+          eyebrow="Reference"
+          title="Measurement methods, in one place"
+          standfirst="Every fidelity, coherence and readout figure on the Q-Day Index dashboard is tagged with the measurement method that produced it. These tags are not interchangeable — different methods measure different physical quantities. Hover any tag on a row in the dashboard, or read the definitions below."
+        >
 
           <dl className="space-y-5">
             <Term id="glossary-median-ECR-error" name="Median ECR error">
@@ -981,7 +819,7 @@ export default function MethodologyPage() {
               The figure is dated by its peer-reviewed publication.
             </Term>
           </dl>
-        </section>
+        </MajorSection>
 
         {/* ====================================================================== */}
         {/* ============ CHALLENGE ============ */}
@@ -1035,6 +873,47 @@ export default function MethodologyPage() {
 
 // ---------------------------------------------------------------------------
 
+function Contents({ n, href, label, sub }: { n: string; href: string; label: string; sub: string }) {
+  return (
+    <li className="flex gap-3.5">
+      <span className="mt-[3px] font-mono text-[11px] tracking-[0.05em] text-fg-subtle">{n}</span>
+      <div className="min-w-0">
+        <a href={href} className="text-[15px] font-bold text-fg transition-colors hover:text-accent">
+          {label}
+        </a>
+        <p className="mt-0.5 text-[12.5px] leading-[1.5] text-fg-subtle">{sub}</p>
+      </div>
+    </li>
+  );
+}
+
+function MajorSection({
+  id,
+  eyebrow,
+  title,
+  standfirst,
+  children,
+}: {
+  id: string;
+  eyebrow: string;
+  title: string;
+  standfirst: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section id={id} className="mb-20 scroll-mt-24 border-t-2 border-border pt-10">
+      <div className="eyebrow mb-3">{eyebrow}</div>
+      <h2 className="text-[clamp(30px,4vw,42px)] font-bold leading-[1.1] tracking-[-0.028em] text-fg mb-5">
+        {title}
+      </h2>
+      <p className="text-base text-fg-muted leading-[1.7] font-medium mb-10 max-w-[68ch]">
+        {standfirst}
+      </p>
+      {children}
+    </section>
+  );
+}
+
 function Pillar({ num, title, body }: { num: string; title: string; body: string }) {
   return (
     <div className="border-l-2 border-accent/40 pl-6">
@@ -1056,7 +935,10 @@ function EnvRow({ label, value }: { label: string; value: string }) {
 
 function H3({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <h3 id={id} className="text-[22px] md:text-2xl font-bold text-fg mt-10 mb-4 tracking-[-0.01em] scroll-mt-20">
+    <h3
+      id={id}
+      className="text-[20px] md:text-[22px] font-bold text-fg mt-12 mb-4 pt-6 border-t border-border-subtle tracking-[-0.01em] scroll-mt-24 first:mt-0 first:pt-0 first:border-t-0"
+    >
       {children}
     </h3>
   );

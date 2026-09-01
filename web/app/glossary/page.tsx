@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
 import { PageShell } from "@/components/chrome/PageShell";
@@ -13,10 +14,30 @@ import {
 } from "@/lib/data/glossary";
 
 export const metadata: Metadata = {
+  // De-indexed alongside the pause below. An orphaned page without this stays
+  // in search results, reachable by exactly the people we least want landing
+  // on it cold.
+  robots: { index: false, follow: false },
   title: "Glossary | Q-Advantage",
   description:
     "The terms used across Q-Shield and the Q-Day Index, each defined once and cited to a primary source — or marked unverified where there isn't one.",
 };
+
+// Taken down 2026-09-01, deliberately, and not by deleting anything.
+//
+// The route was already unreachable: nothing in the header, the footer or the
+// sitemap has ever linked it, so it has been orphaned since it shipped. This
+// makes that state explicit rather than accidental, and closes the last way in
+// — a bare URL.
+//
+// Everything below is intact and unmodified. lib/data/glossary.ts and its
+// tests are untouched, so the terms and their citations remain available to
+// any surface that wants them. Flip this to false to bring the page back.
+//
+// Same pattern as /pqc-readiness-index. Typed `boolean` rather than the
+// literal `true` so TS does not treat the rest of the component as unreachable
+// and drop its normal type narrowing.
+const TAKEN_DOWN: boolean = true;
 
 function Entry({ t }: { t: GlossaryTerm }) {
   return (
@@ -72,6 +93,8 @@ function Entry({ t }: { t: GlossaryTerm }) {
 }
 
 export default function GlossaryPage() {
+  if (TAKEN_DOWN) notFound();
+
   const uncited = unsourced();
 
   return (

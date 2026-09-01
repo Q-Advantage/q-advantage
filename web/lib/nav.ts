@@ -75,7 +75,10 @@ export const TOOLS: Surface[] = [
 export const COMPANY_LINKS: { name: string; href: string }[] = [
   { name: "About", href: "/about" },
   { name: "Methodology", href: "/methodology" },
-  { name: "Glossary", href: "/glossary" },
+  // Glossary is deliberately absent for the same reason as Corrections below:
+  // /glossary was taken down 2026-09-01 and now returns 404, and this list
+  // feeds the footer on every page. lib/data/glossary.ts and its tests are
+  // untouched. Restore this entry if the route comes back.
   // Corrections policy is deliberately absent: /corrections is paused
   // (`notFound()`), so linking it from every page in the site would put a
   // guaranteed 404 in the footer. Restore this entry when the route comes back.
