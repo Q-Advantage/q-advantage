@@ -408,13 +408,13 @@ export default function MethodologyPage() {
             <p>
               Handshake packet count (and whether it exceeds <code>initcwnd</code>), connections per
               core, and bytes of state per half-open connection are <strong>not measured</strong> by
-              anything this repo currently runs. The composed-protocol tracks above time
-              cryptographic operations and accounts key/ciphertext sizes in-process — it does not open
-              a socket or capture packets. Producing these numbers for real would require Layer B
-              (live handshakes, currently planned via Docker), which does not exist yet. This is
-              stated here explicitly rather than left as a silent gap, per the same sourcing
-              discipline that governs every other claim on this page: an absence is a fact worth
-              stating, not a placeholder worth guessing at.
+              the composed-protocol tracks above. Those tracks time cryptographic operations and
+              account key and ciphertext sizes in process; they never open a socket, so they cannot
+              count a packet. Since 30 August 2026 these figures are measured separately, by
+              capturing real handshakes on the wire between two stacks we control. Those captures
+              are not yet published on this site. This is stated explicitly rather than left as a
+              silent gap, per the same sourcing discipline that governs every other claim on this
+              page: an absence is a fact worth stating, not a placeholder worth guessing at.
             </p>
           </Prose>
 

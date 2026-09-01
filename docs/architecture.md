@@ -7,10 +7,10 @@ How the Forge's governance layer sits on top of the existing q-advantage system.
 **Product code:**
 ```
 web/        Next.js 14 site — qadvantage.io — deployed on Vercel, GitHub-integrated (preview per PR, prod on main merge)
-benchmark/  Python measurement + scoring (Layer A, in-process) — runs daily on a self-hosted EC2 runner
+benchmark/  In-process measurement + scoring — runs daily on a self-hosted EC2 runner
             (label: q-advantage-bench), pushes results straight to main via .github/workflows/benchmark.yml
             — NOT gated by the app CI or PR flow
-layer-b/    Layer B (live sockets) — Docker, runs on any machine and in CI. No EC2, no credentials.
+layer-b/    Live-socket measurement — Docker, runs on any machine and in CI. No EC2, no credentials.
             Its workflow is .github/workflows/layer-b.yml and it does NOT push to main.
 data/       Measured/vendor-sourced datasets (quantum_hardware.json)
 schema/     P-CBOM schema, mirrors the separate Q-Advantage/p-cbom repo
@@ -27,21 +27,22 @@ docs/adr/              architecture decisions, numbered, append-only
 context/               read-only bridge to the founder's vault, as a Windows junction — see below
 ```
 
-## The two measurement layers
+## The two kinds of measurement
 
 They answer different questions and neither replaces the other.
 
-**Layer A** calls the library in process and times it. It is how algorithms are compared, and it
-runs only on the measurement host, because a timing is a property of the machine.
+**In process** (`benchmark/`) calls the library directly and times it. It is how algorithms are
+compared, and it runs only on the measurement host, because a timing is a property of the machine.
 
-**Layer B** performs real handshakes over real sockets and reads the result off the wire. It answers
-what Layer A structurally cannot — packets per handshake, fragmentation, what happens when two
-stacks do not agree — and because those facts are properties of the protocol rather than the
-machine, it runs anywhere, including in CI on a shared runner.
+**On the wire** (`layer-b/`) performs real handshakes over real sockets and reads the result out of
+the captured packets. It answers what an in-process harness structurally cannot — packets per
+handshake, fragmentation, what happens when two stacks do not agree — and because those facts are
+properties of the protocol rather than the machine, it runs anywhere, including in CI on a shared
+runner.
 
-The split has a consequence worth stating: a Layer B result carries `publishable: false` unless it
-ran on the measurement host, and `layer-b/publish-results.py` strips its timings before anything
-reaches the site. Structural figures travel; durations do not.
+The split has a consequence worth stating: a capture carries `publishable: false` unless it ran on
+the measurement host, and `layer-b/publish-results.py` strips its timings before anything reaches
+the site. Structural figures travel; durations do not.
 
 ## How a change flows
 
@@ -73,6 +74,6 @@ a signal to repair the junction, never to recreate its contents inside the repo.
 
 - Four of five subagents — stubs only, built when a real need pulls them.
 - Any change to `benchmark/` internals or the self-hosted runner — out of scope for the factory build.
-- Layer B's Tier 3 extensions — interop matrix across the stacks `layer-b/crosslib/` already builds,
+- Live-socket extensions — an interop matrix across the stacks `layer-b/crosslib/` already builds,
   Envoy and an inspection case, downgrade *detection* as opposed to downgrade behaviour, and
   certificate-chain impact on page-load. Sequenced in `work-orders/025-lms-publication-and-tier3.md`.

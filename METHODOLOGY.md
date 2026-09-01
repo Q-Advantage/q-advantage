@@ -116,7 +116,7 @@ runner so it survives reboots.
 
 ---
 
-## Layer B — live handshakes (summary)
+## Live handshakes, measured on the wire (summary)
 
 Everything above is measured **in process**: the harness calls the library
 directly and times it. That is the right way to compare algorithms, and it is
@@ -124,8 +124,9 @@ structurally incapable of answering some of the questions a migration actually
 raises — a composed harness has no socket, so it cannot count packets, observe
 fragmentation, or watch two stacks fail to agree.
 
-Layer B is the second measurement layer, added 2026-08-30. Real TLS handshakes
-between stacks we control, over real sockets, captured with `tcpdump`.
+So since 30 August 2026 there is a second kind of measurement: real TLS
+handshakes between two stacks we control, over real sockets, captured with
+`tcpdump`.
 
 **Every negotiation fact is parsed from the wire bytes**, never from a client's
 own report of what it negotiated. The negotiated group is read out of the
@@ -147,9 +148,10 @@ middlebox case with nginx and HAProxy in the path.
 **A control every probe carries.** When a probe reports that something failed,
 the first question is whether the instrument works. Every probe runs a classical
 arm alongside the post-quantum one: **a failing classical baseline points at the
-instrument, not at post-quantum.** This was learned the expensive way — two
-probes were written without it, and each produced a confident false finding
-about someone else's software before the control was added.
+instrument, not at post-quantum.** Two probes were built without that control
+and each produced a false finding about third-party software before it was
+added. Both were caught before publication; the control is now a requirement
+rather than a habit.
 
 ---
 
@@ -339,7 +341,7 @@ a finding.
   measurement host's liboqs was built without the stateful-signature schemes
   compiled in. The harness reports that rather than fabricating, and the site
   says so where the numbers would otherwise sit.
-- **Layer B timings are not published.** Live handshake captures record
+- **Live-capture timings are not published.** Handshake captures record
   packets, wire bytes, the negotiated group, fragmentation and outcome — all
   properties of the protocol exchange, portable to any machine. Durations from
   a capture taken anywhere other than the measurement host are withheld rather

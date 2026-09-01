@@ -20,7 +20,7 @@ The PQC migration market runs on vendor claims and analyst PDFs. Q-Advantage run
 
 ## What's been built
 
-**Measurement — Layer A (in-process, on the measurement host)**
+**Measurement — in process, on the measurement host**
 
 - Q-Shield benchmark harness — liboqs 0.15.0, self-hosted GHA runner on AWS EC2, daily cron, full environment capture (CPU, kernel, git SHA, steal-time)
 - Composed protocol tracks — TLS 1.3, SSH, IKEv2 (RFC 9370), and JOSE/JWT signing, each measuring the key exchange or signature *inside* the protocol rather than beside it
@@ -29,7 +29,7 @@ The PQC migration market runs on vendor claims and analyst PDFs. Q-Advantage run
 - Concurrency track — throughput under parallel load, not just single-op latency
 - Per-operation secret-key size, CPU and RSS; 95% confidence intervals on every mean, derived retroactively across the whole record
 
-**Measurement — Layer B (live sockets, Docker, runs anywhere)**
+**Measurement — on the wire, over live sockets**
 
 - Real TLS handshakes between stacks we control, captured on the wire: packets per handshake, wire bytes, negotiated group read from the ServerHello `key_share` rather than from a client's own report, fragmentation, and downgrade behaviour
 - Scenarios: pairwise, deliberate group mismatch, concurrency, injected RTT, and middlebox (nginx and HAProxy in the path)
@@ -53,7 +53,7 @@ The PQC migration market runs on vendor claims and analyst PDFs. Q-Advantage run
 
 ```
 .
-├── benchmark/                  Python — Layer A measurement and scoring
+├── benchmark/                  Python — in-process measurement and scoring
 │   ├── benchmark.py            Q-Shield PQC benchmark runner
 │   ├── protocols/              Composed tracks — tls, ssh, ipsec, jose, sig,
 │   │                           concurrency, aes baseline, classical sigs, lms/xmss
@@ -62,7 +62,7 @@ The PQC migration market runs on vendor claims and analyst PDFs. Q-Advantage run
 │   ├── build-q-day-index.py    Emits the dashboard scored JSON
 │   ├── tests/                  Harness and workflow-shape tests
 │   └── results/                Daily result files (one per run)
-├── layer-b/                    Layer B — live handshakes over real sockets, in Docker
+├── layer-b/                    Live handshakes over real sockets, in Docker
 │   ├── compose.yml             Scenario topologies (pairwise, mismatch, rtt, middlebox…)
 │   ├── capture/                pcap capture and wire-bytes parsing
 │   ├── certs/                  Chain generation and sizing
@@ -116,7 +116,7 @@ python3 benchmark/build-q-day-index.py
 # Should match the website to the third decimal.
 ```
 
-Run a live handshake yourself — Layer B needs only Docker, no EC2 and no credentials:
+Run a live handshake yourself — this needs only Docker, no EC2 and no credentials:
 ```bash
 cd layer-b
 docker build -t q-advantage/layer-b:dev .
@@ -126,8 +126,8 @@ python assert-scenario.py pairwise
 
 **Structural facts are portable; timings are not.** Packets, wire bytes, the negotiated group,
 fragmentation and outcome are properties of the protocol exchange and will match ours anywhere.
-Timings are properties of the machine, so a Layer B result carries `publishable: false` unless it
-ran on the measurement host — your handshake is capability evidence, never a Q-Shield figure.
+Timings are properties of the machine, so a capture carries `publishable: false` unless it ran on
+the measurement host — your handshake is capability evidence, never a Q-Shield figure.
 
 All workflow runs: https://github.com/Q-Advantage/q-advantage/actions
 Latest results: benchmark/results/
