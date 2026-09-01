@@ -138,7 +138,7 @@ export default function CalculatorPage() {
         />
       </Section>
 
-      <Caveat label="What this is, and what it is not">
+      <Caveat label="This page computes — everything else here measures">
         Everything else Q-Advantage publishes reports a measurement. This page{" "}
         <strong className="font-bold text-fg">computes</strong> — it multiplies measured handshake
         costs by traffic volumes and cloud rates to produce a figure nobody measured. That is

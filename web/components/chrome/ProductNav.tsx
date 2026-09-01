@@ -58,14 +58,24 @@ export function ProductNav({ current = "Overview" }: { current?: string }) {
 export function StatBand({
   items,
 }: {
-  items: { k: string; v: string; unit?: string; d: string }[];
+  /**
+   * `lead` marks the one figure a reader should leave with.
+   *
+   * At most one per band, and it is a judgement about which number carries the
+   * page — four accented tiles is the same as none.
+   */
+  items: { k: string; v: string; unit?: string; d: string; lead?: boolean }[];
 }) {
   return (
     <div className="grid grid-cols-1 gap-px overflow-hidden rounded border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
       {items.map((s) => (
         <div key={s.k} className="min-w-0 bg-bg-surface px-4 py-4">
           <div className="eyebrow">{s.k}</div>
-          <div className="num mt-1.5 text-[27px] font-bold leading-none tracking-[-0.035em] text-fg">
+          <div
+            className={`num mt-1.5 text-[27px] font-bold leading-none tracking-[-0.035em] ${
+              s.lead ? "text-accent-ink" : "text-fg"
+            }`}
+          >
             {s.v}
             {s.unit && <span className="ml-0.5 text-[14px] text-fg-muted">{s.unit}</span>}
           </div>

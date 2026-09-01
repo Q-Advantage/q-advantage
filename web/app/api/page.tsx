@@ -137,7 +137,7 @@ export default function ApiReferencePage() {
         </div>
       </Section>
 
-      <Caveat label="No interpolation, anywhere">
+      <Caveat label="Gaps stay gaps">
         Other benchmark publishers interpolate between measured points to offer a value at any
         operating point you like. We do not, and the history endpoint says so in its own payload.
         There is no value between two daily runs — if you resample this series as though it were
