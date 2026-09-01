@@ -1,25 +1,30 @@
 import type { Metadata } from "next";
 import { PageShell } from "@/components/chrome/PageShell";
 import { Section } from "@/components/product/kit";
-import { PcbomTool } from "@/components/pcbom/PcbomTool";
+import { PcbomWorkbench } from "@/components/pcbom/PcbomWorkbench";
 import { getPcbomCatalog } from "@/lib/pcbom/catalog";
 
 export const metadata: Metadata = {
-  title: "P-CBOM Snippet Generator",
+  title: "P-CBOM — price your cryptographic inventory",
   description:
-    "Pick an algorithm Q-Shield measures, get back a live, cited, downloadable P-CBOM v0.1 record — the performance extension to CycloneDX's Cryptography Bill of Materials.",
+    "Generate a cited P-CBOM v0.1 record for any algorithm Q-Shield measures, or upload your own CycloneDX CBOM and get it back annotated with real measured performance data. Runs entirely in your browser.",
 };
 
 export const dynamic = "force-static";
 
 /**
- * /p-cbom — P-CBOM algorithm snippet generator. Work-order 012, Capability 1
- * of `pcbom-web-tool-spec.md` (vault). Capability 2 (upload-and-enrich a
- * user's own CBOM) is a separate, later work-order — see the spec's §8 build
- * table and this work-order's "Not in this work-order".
+ * /p-cbom — both capabilities of `pcbom-web-tool-spec.md` (vault).
+ *
+ * Capability 1, the algorithm snippet generator, shipped in work-order 012.
+ * Capability 2, upload-and-enrich, is added here. The spec's own v1 scope said
+ * the two ship together; they did not, and this closes that gap.
+ *
+ * The page stays statically rendered: the catalog is built from committed
+ * measurement data at build time, and every capability runs client-side, so
+ * there is no request path that could carry a reader's inventory anywhere.
  */
 export default function PcbomPage() {
-  const { entries, arch } = getPcbomCatalog();
+  const catalog = getPcbomCatalog();
 
   return (
     <PageShell variant="frame" className="min-w-0 space-y-10">
@@ -75,13 +80,13 @@ export default function PcbomPage() {
         </ol>
       </div>
 
-      {/* ------------------------------------------------------- generator */}
+      {/* -------------------------------------------------------- the tool */}
       <Section
-        eyebrow="Generate"
-        title="Pick an algorithm and an operation."
+        eyebrow="Tools"
+        title="Generate a record, or annotate the inventory you already have."
         hint="Only algorithms Q-Shield has actually measured appear here. If something is missing, it is because no run has produced it — not because it was left out."
       >
-        <PcbomTool entries={entries} arch={arch} />
+        <PcbomWorkbench catalog={catalog} />
       </Section>
 
       {/* ------------------------------------------------- what it covers */}
@@ -108,6 +113,63 @@ export default function PcbomPage() {
           <code>pct_over_classical</code> means the post-quantum one is{" "}
           <strong className="font-bold text-status-ok">faster</strong>. That happens more often than
           people expect, and the sign convention is the schema&rsquo;s, not ours.
+        </p>
+      </Section>
+
+      {/* --------------------------------------------- standards position */}
+      <Section
+        eyebrow="Where this sits"
+        title="An extension to CycloneDX, not a fork of it."
+        hint="Worth being precise about, because the alternative reading is that we invented a competing format."
+      >
+        <p className="max-w-[70ch] text-[13.5px] leading-relaxed text-fg-muted">
+          P-CBOM extends the Cryptography Bill of Materials defined by{" "}
+          <a
+            href="https://cyclonedx.org/docs/1.6/json/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-fg underline decoration-border-strong underline-offset-2 hover:text-accent"
+          >
+            CycloneDX 1.6
+          </a>{" "}
+          &mdash; the standard{" "}
+          <a
+            href="https://www.federalregister.gov/executive-orders"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-fg underline decoration-border-strong underline-offset-2 hover:text-accent"
+          >
+            EO 14412
+          </a>{" "}
+          (June 2026) names in federal post-quantum work. The performance data rides as namespaced{" "}
+          <code>q-advantage:p-cbom:*</code> entries in the component&rsquo;s own{" "}
+          <code>properties</code> array, which is CycloneDX&rsquo;s sanctioned extension point. A
+          document this tool returns is still a CycloneDX document, and any tool that has never
+          heard of P-CBOM will read it unchanged.
+        </p>
+        <p className="mt-3 max-w-[70ch] text-[13.5px] leading-relaxed text-fg-muted">
+          The spec is CC0 and the tooling is Apache-2.0. Q-Advantage is not affiliated with
+          CycloneDX or OWASP, and claims no endorsement from either.
+        </p>
+      </Section>
+
+      {/* -------------------------------------------- calculator cross-link */}
+      <Section
+        eyebrow="Next"
+        title="Knowing what is in the estate is half of it."
+        hint="An inventory tells you what you run. It does not tell you what changing it costs."
+      >
+        <p className="max-w-[70ch] text-[13.5px] leading-relaxed text-fg-muted">
+          Once your inventory carries measured figures, the next question is what they add up to on
+          your own traffic &mdash; latency, bytes on the wire, egress. That is a different
+          calculation, and it has its own tool:{" "}
+          <a
+            href="/calculator"
+            className="font-semibold text-link underline decoration-border-strong underline-offset-2"
+          >
+            the network cost calculator
+          </a>
+          , built on the same measurements this page cites.
         </p>
       </Section>
 
@@ -153,10 +215,6 @@ export default function PcbomPage() {
             <code>commit</code>) — rendered above the JSON, not only inside it.
           </li>
         </ul>
-        <p className="mt-4 text-[11px] text-fg-subtle">
-          Q-Advantage is not affiliated with CycloneDX or OWASP. P-CBOM extends their published standard;
-          it does not carry any formal endorsement or relationship.
-        </p>
       </Section>
     </PageShell>
   );

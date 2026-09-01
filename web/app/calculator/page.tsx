@@ -152,6 +152,26 @@ export default function CalculatorPage() {
         not replace measuring your own.
       </Caveat>
 
+      {/* ------------------------------------------- p-cbom cross-link */}
+      <Section
+        eyebrow="Before this"
+        title="Not sure what is actually in your stack yet?"
+        hint="This page prices an algorithm you already know you run. Finding out what you run is the step before it."
+      >
+        <p className="max-w-[70ch] text-[13.5px] leading-relaxed text-fg-muted">
+          A Cryptography Bill of Materials inventories the algorithms across your estate, and{" "}
+          <a
+            href="/p-cbom"
+            className="font-semibold text-link underline decoration-border-strong underline-offset-2"
+          >
+            the P-CBOM tool
+          </a>{" "}
+          annotates one with the same measured figures this calculator runs on &mdash; so the
+          inventory that drives a migration budget can actually price one. It runs entirely in your
+          browser; nothing you upload is sent anywhere.
+        </p>
+      </Section>
+
       {/* ---------------------------------------------------------- CTA */}
       <section className="rounded border border-border-strong bg-bg-inset px-6 py-8">
         <div className="eyebrow">The number above is the easy half</div>
