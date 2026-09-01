@@ -176,6 +176,15 @@ jobs:
                 % h["certificates_invisible_to_a_parser"])
           EOF
 
+      - name: Confirm the result would survive the publication gate
+        working-directory: layer-b
+        # Catches an unpublishable result here rather than when somebody tries
+        # to put it on the site months later. publish-results.py is the same
+        # gate the website copy goes through, so a track that quietly starts
+        # emitting a timing, or drops the scope note that keeps a true
+        # observation from reading as the wrong claim, fails this job.
+        run: python publish-results.py --src out/results --dest "$RUNNER_TEMP/publishable"
+
       - name: Upload the compatibility result
         if: always()
         uses: actions/upload-artifact@v4
@@ -282,6 +291,15 @@ jobs:
           if cv["libraries_that_did_not"]:
               print("did NOT report: %s" % ", ".join(cv["libraries_that_did_not"]))
           EOF
+
+      - name: Confirm the result would survive the publication gate
+        working-directory: layer-b
+        # Catches an unpublishable result here rather than when somebody tries
+        # to put it on the site months later. publish-results.py is the same
+        # gate the website copy goes through, so a track that quietly starts
+        # emitting a timing, or drops the scope note that keeps a true
+        # observation from reading as the wrong claim, fails this job.
+        run: python publish-results.py --src out/results --dest "$RUNNER_TEMP/publishable"
 
       - name: Upload the merged view
         if: always()

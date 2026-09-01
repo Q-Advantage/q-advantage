@@ -1,0 +1,75 @@
+{
+  "schema": "crosslib/1",
+  "track": "crosslib",
+  "label": "cross-library diversity",
+  "environment": {
+    "iso_timestamp": "2026-09-01T05:50:13+00:00"
+  },
+  "scope": {
+    "no_timings": "This track publishes NO timings, deliberately. These builds run on a shared, unpinned, co-tenanted CI runner. Every number this product publishes comes from a dedicated measurement host, and a cross-library speed comparison measured here would undo that. Timing belongs on the measurement host or nowhere.",
+    "what_a_negative_means": "A primitive listed under not_exposed was not observed in THIS build's output. That is not a claim that the library lacks it: it may be behind a flag this image did not pass, in a version it did not pin, or under a name the alias table does not yet know.",
+    "evidence_is_published": "Every classification carries the raw output lines it was derived from, so the inference can be checked rather than trusted.",
+    "naming_is_unsettled": "The same algorithm appears as Kyber768, ML-KEM-768 and MLKEM768 depending on when the code was written relative to FIPS 203. The alias table is matched case-insensitively and the matched spelling is published, because the spelling is itself informative.",
+    "what_a_speed_inventory_can_see": "These probes read a library's own SPEED INVENTORY, which lists primitives. A TLS group such as X25519MLKEM768 is a negotiation construct rather than a primitive, so it does not appear in one even in a library that ships it -- BoringSSL negotiates that group in production Chrome and it is absent here. Read every hybrid-group row as 'not visible from this vantage point', never as absent from the library. Settling it needs a handshake, which is Layer B's job rather than this track's.",
+    "signature_schemes_are_a_known_blind_spot": "No ML-DSA row was observed in any of the three inventories, including a wolfSSL build configured with --enable-dilithium. That is unresolved and is published as such: it may be that these speed tools cover KEMs and not signature schemes, or that a flag did not take. It is NOT evidence that these libraries lack ML-DSA. #unverified.",
+    "availability_not_equivalence": "Corroboration here means a second implementation EXPOSES the same primitive. It is not a check that two implementations produce identical output -- that needs shared test vectors at the API level, and is the natural next slice of this track."
+  },
+  "library": {
+    "library": "wolfSSL",
+    "source": "https://github.com/wolfSSL/wolfssl",
+    "version": null,
+    "status": "probed",
+    "build_flags": "--enable-kyber --enable-dilithium",
+    "probe_command": "wolfssl-benchmark",
+    "probe_exit_code": 0,
+    "exposed": [
+      "ML-KEM-1024",
+      "ML-KEM-512",
+      "ML-KEM-768"
+    ],
+    "spellings": {
+      "ML-KEM-512": [
+        "kyber512"
+      ],
+      "ML-KEM-768": [
+        "kyber768"
+      ],
+      "ML-KEM-1024": [
+        "kyber1024"
+      ]
+    },
+    "control_markers_seen": [
+      "rsa",
+      "aes",
+      "sha",
+      "ecdsa"
+    ],
+    "not_exposed": [
+      "ML-DSA-44",
+      "ML-DSA-65",
+      "ML-DSA-87",
+      "X25519MLKEM768"
+    ],
+    "evidence": [
+      "KYBER512    128  key gen     70600 ops took 1.001 sec, avg 0.014 ms, 70525.511 ops/sec",
+      "KYBER512    128    encap     63700 ops took 1.001 sec, avg 0.016 ms, 63610.854 ops/sec",
+      "KYBER512    128    decap     46000 ops took 1.001 sec, avg 0.022 ms, 45942.253 ops/sec",
+      "KYBER768    192  key gen     41300 ops took 1.001 sec, avg 0.024 ms, 41248.399 ops/sec",
+      "KYBER768    192    encap     36700 ops took 1.002 sec, avg 0.027 ms, 36616.872 ops/sec",
+      "KYBER768    192    decap     28400 ops took 1.001 sec, avg 0.035 ms, 28385.023 ops/sec",
+      "KYBER1024   256  key gen     25400 ops took 1.002 sec, avg 0.039 ms, 25360.318 ops/sec",
+      "KYBER1024   256    encap     23400 ops took 1.003 sec, avg 0.043 ms, 23336.211 ops/sec",
+      "KYBER1024   256    decap     18800 ops took 1.002 sec, avg 0.053 ms, 18769.704 ops/sec"
+    ],
+    "claim": "This build, with the flags named above, exposed the primitives in `exposed`. A primitive in `not_exposed` was NOT observed in this build's output -- which is not the same as the library not supporting it. It may be behind a flag this image did not pass, in a version it did not pin, or under a name the alias table does not yet know."
+  },
+  "liboqs_exposes": [
+    "ML-KEM-512",
+    "ML-KEM-768",
+    "ML-KEM-1024",
+    "ML-DSA-44",
+    "ML-DSA-65",
+    "ML-DSA-87",
+    "X25519MLKEM768"
+  ]
+}

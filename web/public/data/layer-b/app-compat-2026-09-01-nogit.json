@@ -1,0 +1,604 @@
+{
+  "schema": "app-compat/1",
+  "track": "app-compat",
+  "label": "application compatibility",
+  "environment": {
+    "iso_timestamp": "2026-09-01T05:52:21+00:00",
+    "git_commit": null
+  },
+  "scope": {
+    "what_is_under_test": "The receiving software's behaviour at a measured artifact size. No algorithm is exercised: header tokens are filler of a real measured LENGTH, so these results hold regardless of which post-quantum scheme is eventually deployed.",
+    "defaults_not_limits": "Every limit exercised is a configurable default. A rejection is a statement about what happens to somebody who deploys without changing anything, not a statement that the product is unsuitable.",
+    "not_a_product_comparison": "Stock builds on default configuration, named and versioned. No claim is made about any product's roadmap, intent, or suitability relative to another.",
+    "token_sizes_source": "Measured by the composed JOSE track (work-order 022), carried here as lengths so this probe needs no crypto library."
+  },
+  "http_front_doors": [
+    {
+      "target": "nginx",
+      "product": "nginx (official image, default configuration)",
+      "defaults": "large_client_header_buffers defaults to 4 buffers of 8k; a single header line must fit within one buffer.",
+      "by_token": {
+        "authorization / ES256 (ECDSA-P256)": {
+          "carrier": "authorization",
+          "token_bytes": 414,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.002
+        },
+        "authorization / PS256 (RSA-2048)": {
+          "carrier": "authorization",
+          "token_bytes": 660,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.0
+        },
+        "authorization / ML-DSA-44": {
+          "carrier": "authorization",
+          "token_bytes": 3545,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "authorization / ML-DSA-65": {
+          "carrier": "authorization",
+          "token_bytes": 4730,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "authorization / ML-DSA-87": {
+          "carrier": "authorization",
+          "token_bytes": 6488,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "cookie / ES256 (ECDSA-P256)": {
+          "carrier": "cookie",
+          "token_bytes": 414,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "cookie / PS256 (RSA-2048)": {
+          "carrier": "cookie",
+          "token_bytes": 660,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.0
+        },
+        "cookie / ML-DSA-44": {
+          "carrier": "cookie",
+          "token_bytes": 3545,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.0
+        },
+        "cookie / ML-DSA-65": {
+          "carrier": "cookie",
+          "token_bytes": 4730,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.0
+        },
+        "cookie / ML-DSA-87": {
+          "carrier": "cookie",
+          "token_bytes": 6488,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        }
+      },
+      "carriers": [
+        "authorization",
+        "cookie"
+      ],
+      "accepted": [
+        "authorization / ES256 (ECDSA-P256)",
+        "authorization / PS256 (RSA-2048)",
+        "authorization / ML-DSA-44",
+        "authorization / ML-DSA-65",
+        "authorization / ML-DSA-87",
+        "cookie / ES256 (ECDSA-P256)",
+        "cookie / PS256 (RSA-2048)",
+        "cookie / ML-DSA-44",
+        "cookie / ML-DSA-65",
+        "cookie / ML-DSA-87"
+      ],
+      "rejected": [],
+      "rejected_without_naming_the_problem": [],
+      "summary": "nginx accepted every token size tested, on its default configuration."
+    },
+    {
+      "target": "haproxy",
+      "product": "HAProxy (official image, default configuration)",
+      "defaults": "tune.bufsize defaults to 16384 bytes, covering the whole request head.",
+      "by_token": {
+        "authorization / ES256 (ECDSA-P256)": {
+          "carrier": "authorization",
+          "token_bytes": 414,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "authorization / PS256 (RSA-2048)": {
+          "carrier": "authorization",
+          "token_bytes": 660,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "authorization / ML-DSA-44": {
+          "carrier": "authorization",
+          "token_bytes": 3545,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "authorization / ML-DSA-65": {
+          "carrier": "authorization",
+          "token_bytes": 4730,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "authorization / ML-DSA-87": {
+          "carrier": "authorization",
+          "token_bytes": 6488,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "cookie / ES256 (ECDSA-P256)": {
+          "carrier": "cookie",
+          "token_bytes": 414,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "cookie / PS256 (RSA-2048)": {
+          "carrier": "cookie",
+          "token_bytes": 660,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "cookie / ML-DSA-44": {
+          "carrier": "cookie",
+          "token_bytes": 3545,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "cookie / ML-DSA-65": {
+          "carrier": "cookie",
+          "token_bytes": 4730,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "cookie / ML-DSA-87": {
+          "carrier": "cookie",
+          "token_bytes": 6488,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        }
+      },
+      "carriers": [
+        "authorization",
+        "cookie"
+      ],
+      "accepted": [
+        "authorization / ES256 (ECDSA-P256)",
+        "authorization / PS256 (RSA-2048)",
+        "authorization / ML-DSA-44",
+        "authorization / ML-DSA-65",
+        "authorization / ML-DSA-87",
+        "cookie / ES256 (ECDSA-P256)",
+        "cookie / PS256 (RSA-2048)",
+        "cookie / ML-DSA-44",
+        "cookie / ML-DSA-65",
+        "cookie / ML-DSA-87"
+      ],
+      "rejected": [],
+      "rejected_without_naming_the_problem": [],
+      "summary": "haproxy accepted every token size tested, on its default configuration."
+    },
+    {
+      "target": "node",
+      "product": "Node.js http server (default configuration)",
+      "defaults": "--max-http-header-size defaults to 16384 bytes across the whole header block.",
+      "by_token": {
+        "authorization / ES256 (ECDSA-P256)": {
+          "carrier": "authorization",
+          "token_bytes": 414,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.007
+        },
+        "authorization / PS256 (RSA-2048)": {
+          "carrier": "authorization",
+          "token_bytes": 660,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "authorization / ML-DSA-44": {
+          "carrier": "authorization",
+          "token_bytes": 3545,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "authorization / ML-DSA-65": {
+          "carrier": "authorization",
+          "token_bytes": 4730,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "authorization / ML-DSA-87": {
+          "carrier": "authorization",
+          "token_bytes": 6488,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "cookie / ES256 (ECDSA-P256)": {
+          "carrier": "cookie",
+          "token_bytes": 414,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "cookie / PS256 (RSA-2048)": {
+          "carrier": "cookie",
+          "token_bytes": 660,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "cookie / ML-DSA-44": {
+          "carrier": "cookie",
+          "token_bytes": 3545,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        },
+        "cookie / ML-DSA-65": {
+          "carrier": "cookie",
+          "token_bytes": 4730,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.002
+        },
+        "cookie / ML-DSA-87": {
+          "carrier": "cookie",
+          "token_bytes": 6488,
+          "outcome": "accepted",
+          "status": 200,
+          "detail": "HTTP/1.1 200 OK",
+          "names_the_problem": true,
+          "elapsed_s": 0.001
+        }
+      },
+      "carriers": [
+        "authorization",
+        "cookie"
+      ],
+      "accepted": [
+        "authorization / ES256 (ECDSA-P256)",
+        "authorization / PS256 (RSA-2048)",
+        "authorization / ML-DSA-44",
+        "authorization / ML-DSA-65",
+        "authorization / ML-DSA-87",
+        "cookie / ES256 (ECDSA-P256)",
+        "cookie / PS256 (RSA-2048)",
+        "cookie / ML-DSA-44",
+        "cookie / ML-DSA-65",
+        "cookie / ML-DSA-87"
+      ],
+      "rejected": [],
+      "rejected_without_naming_the_problem": [],
+      "summary": "node accepted every token size tested, on its default configuration."
+    }
+  ],
+  "certificate_parsers": [
+    {
+      "algorithm": "ecdsa-p256",
+      "measured": true,
+      "leaf_der_bytes": 467,
+      "tools": [
+        {
+          "tool": "openssl (default provider only)",
+          "version": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)",
+          "outcome": "parsed_fully",
+          "fields_read": {
+            "subject": "subject=CN = leaf.example",
+            "not_after": "notAfter=Sep  1 05:52:09 2027 GMT",
+            "serial": "serial=18F69C3DA4980C7E4A2C5ACF2C2F7A92320859B7"
+          },
+          "public_key_readable": true,
+          "errors": {}
+        },
+        {
+          "tool": "python cryptography",
+          "version": "41.0.7",
+          "outcome": "parsed_fully",
+          "fields_read": {
+            "subject": "CN=leaf.example",
+            "not_after": "2027-09-01T05:52:09",
+            "serial": "0x18f69c3da4980c7e4a2c5acf2c2f7a92320859b7"
+          },
+          "public_key_readable": true,
+          "errors": {}
+        }
+      ],
+      "invisible_to": [],
+      "inventoriable_by": [
+        "openssl (default provider only)",
+        "python cryptography"
+      ]
+    },
+    {
+      "algorithm": "mldsa44",
+      "measured": true,
+      "leaf_der_bytes": 4059,
+      "tools": [
+        {
+          "tool": "openssl (default provider only)",
+          "version": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)",
+          "outcome": "parsed_structure_key_opaque",
+          "fields_read": {
+            "subject": "subject=CN = leaf.example",
+            "not_after": "notAfter=Sep  1 05:52:06 2027 GMT",
+            "serial": "serial=2C0B8B1C1610C3F7763C46BB3860CE48A7442D2B"
+          },
+          "public_key_readable": false,
+          "errors": {
+            "public_key": "Error getting public key\n40873A5CCF7F0000:error:03000072:digital envelope routines:X509_PUBKEY_get0:decode error:../crypto/x509/x_pubkey.c:458:"
+          }
+        },
+        {
+          "tool": "python cryptography",
+          "version": "41.0.7",
+          "outcome": "parsed_structure_key_opaque",
+          "fields_read": {
+            "subject": "CN=leaf.example",
+            "not_after": "2027-09-01T05:52:06",
+            "serial": "0x2c0b8b1c1610c3f7763c46bb3860ce48a7442d2b"
+          },
+          "public_key_readable": false,
+          "errors": {
+            "public_key": "UnsupportedAlgorithm: Unsupported key type."
+          }
+        }
+      ],
+      "invisible_to": [],
+      "inventoriable_by": [
+        "openssl (default provider only)",
+        "python cryptography"
+      ]
+    },
+    {
+      "algorithm": "mldsa65",
+      "measured": true,
+      "leaf_der_bytes": 5588,
+      "tools": [
+        {
+          "tool": "openssl (default provider only)",
+          "version": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)",
+          "outcome": "parsed_structure_key_opaque",
+          "fields_read": {
+            "subject": "subject=CN = leaf.example",
+            "not_after": "notAfter=Sep  1 05:52:10 2027 GMT",
+            "serial": "serial=28E16A68301CFEBC53EF1C803F5B2DFF9D701E5B"
+          },
+          "public_key_readable": false,
+          "errors": {
+            "public_key": "Error getting public key\n4057D0D51F7F0000:error:03000072:digital envelope routines:X509_PUBKEY_get0:decode error:../crypto/x509/x_pubkey.c:458:"
+          }
+        },
+        {
+          "tool": "python cryptography",
+          "version": "41.0.7",
+          "outcome": "parsed_structure_key_opaque",
+          "fields_read": {
+            "subject": "CN=leaf.example",
+            "not_after": "2027-09-01T05:52:10",
+            "serial": "0x28e16a68301cfebc53ef1c803f5b2dff9d701e5b"
+          },
+          "public_key_readable": false,
+          "errors": {
+            "public_key": "UnsupportedAlgorithm: Unsupported key type."
+          }
+        }
+      ],
+      "invisible_to": [],
+      "inventoriable_by": [
+        "openssl (default provider only)",
+        "python cryptography"
+      ]
+    },
+    {
+      "algorithm": "mldsa87",
+      "measured": true,
+      "leaf_der_bytes": 7546,
+      "tools": [
+        {
+          "tool": "openssl (default provider only)",
+          "version": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)",
+          "outcome": "parsed_structure_key_opaque",
+          "fields_read": {
+            "subject": "subject=CN = leaf.example",
+            "not_after": "notAfter=Sep  1 05:52:04 2027 GMT",
+            "serial": "serial=0A49229F0D1928D3408A6967731C4810FC11CC5B"
+          },
+          "public_key_readable": false,
+          "errors": {
+            "public_key": "Error getting public key\n40B79D0DFC7E0000:error:03000072:digital envelope routines:X509_PUBKEY_get0:decode error:../crypto/x509/x_pubkey.c:458:"
+          }
+        },
+        {
+          "tool": "python cryptography",
+          "version": "41.0.7",
+          "outcome": "parsed_structure_key_opaque",
+          "fields_read": {
+            "subject": "CN=leaf.example",
+            "not_after": "2027-09-01T05:52:04",
+            "serial": "0xa49229f0d1928d3408a6967731c4810fc11cc5b"
+          },
+          "public_key_readable": false,
+          "errors": {
+            "public_key": "UnsupportedAlgorithm: Unsupported key type."
+          }
+        }
+      ],
+      "invisible_to": [],
+      "inventoriable_by": [
+        "openssl (default provider only)",
+        "python cryptography"
+      ]
+    },
+    {
+      "algorithm": "rsa-2048",
+      "measured": true,
+      "leaf_der_bytes": 860,
+      "tools": [
+        {
+          "tool": "openssl (default provider only)",
+          "version": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)",
+          "outcome": "parsed_fully",
+          "fields_read": {
+            "subject": "subject=CN = leaf.example",
+            "not_after": "notAfter=Sep  1 05:52:05 2027 GMT",
+            "serial": "serial=7A2C6BA1D7C46576DF88241E258FE9A213D47842"
+          },
+          "public_key_readable": true,
+          "errors": {}
+        },
+        {
+          "tool": "python cryptography",
+          "version": "41.0.7",
+          "outcome": "parsed_fully",
+          "fields_read": {
+            "subject": "CN=leaf.example",
+            "not_after": "2027-09-01T05:52:05",
+            "serial": "0x7a2c6ba1d7c46576df88241e258fe9a213d47842"
+          },
+          "public_key_readable": true,
+          "errors": {}
+        }
+      ],
+      "invisible_to": [],
+      "inventoriable_by": [
+        "openssl (default provider only)",
+        "python cryptography"
+      ]
+    },
+    {
+      "algorithm": "rsa-3072",
+      "measured": true,
+      "leaf_der_bytes": 1116,
+      "tools": [
+        {
+          "tool": "openssl (default provider only)",
+          "version": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)",
+          "outcome": "parsed_fully",
+          "fields_read": {
+            "subject": "subject=CN = leaf.example",
+            "not_after": "notAfter=Sep  1 05:52:09 2027 GMT",
+            "serial": "serial=3123ECE68CBB839DC28A3B84C83F13A1F4462C2B"
+          },
+          "public_key_readable": true,
+          "errors": {}
+        },
+        {
+          "tool": "python cryptography",
+          "version": "41.0.7",
+          "outcome": "parsed_fully",
+          "fields_read": {
+            "subject": "CN=leaf.example",
+            "not_after": "2027-09-01T05:52:09",
+            "serial": "0x3123ece68cbb839dc28a3b84c83f13a1f4462c2b"
+          },
+          "public_key_readable": true,
+          "errors": {}
+        }
+      ],
+      "invisible_to": [],
+      "inventoriable_by": [
+        "openssl (default provider only)",
+        "python cryptography"
+      ]
+    }
+  ],
+  "headline": {
+    "targets_probed": 3,
+    "algorithms_probed": 6,
+    "silent_rejections": 0,
+    "silent_rejection_detail": [],
+    "certificates_invisible_to_a_parser": 0,
+    "invisible_detail": [],
+    "note": "A count of zero means the probes ran and found nothing, which is a result. It does not mean the probes did not run -- targets_probed and algorithms_probed say that."
+  }
+}

@@ -73,6 +73,21 @@ TARGETS = [
 
 
 def git_commit() -> str | None:
+    """
+    The commit this probe ran against, or None.
+
+    GITHUB_SHA is preferred over `git rev-parse` because the probe does not
+    always run somewhere git can answer. The 2026-09-01 run on main produced
+    `app-compat-2026-09-01-nogit.json` -- `git_commit: null` -- and a result
+    that cannot name its commit cannot be traced back to the run that produced
+    it, which is the whole provenance claim this repo makes.
+
+    Never invents one: if neither source answers, the caller still gets None
+    and the filename still says `nogit`, visibly.
+    """
+    sha = os.environ.get("GITHUB_SHA", "").strip()
+    if sha:
+        return sha
     try:
         out = subprocess.run(
             ["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10, check=False
