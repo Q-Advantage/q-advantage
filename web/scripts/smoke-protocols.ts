@@ -10,13 +10,19 @@
 import { loadProtocolsData } from "../lib/protocols/load";
 import {
   amplificationFactor,
+  classifySuite,
   formatAmplificationFactor,
+  formatMultiplier,
   hasLiveStatefulSigs,
   statefulSigsUnavailableReason,
 } from "../lib/protocols/derive";
 import { decomposePhases, PHASE_ORDER } from "../lib/protocols/phases";
 import { aesBaselinesByArch, formatTailRatio, tailRatio, vsBaselinePct } from "../lib/protocols/metrics";
-import { detectSuiteAnomaly, publishableVsBaselinePct } from "../lib/protocols/anomaly";
+import {
+  detectSuiteAnomaly,
+  publishableHybridToPurePqcRatio,
+  publishableVsBaselinePct,
+} from "../lib/protocols/anomaly";
 import type { ComposedSuite, LmsXmssFile, TimingBlock } from "../lib/protocols/types";
 
 /** Sentinel timing block — the values could never pass as a measurement. */
@@ -80,13 +86,31 @@ if (arches.length === 0) {
 } else {
   for (const arch of arches) {
     const bucket = data.byArch[arch];
-    for (const [name, suite] of Object.entries(bucket.tls?.suites ?? {})) {
-      const f = amplificationFactor(suite);
-      console.log(`  [tls/${arch}] ${name.padEnd(20)} ${formatAmplificationFactor(f)}`);
-    }
-    for (const [name, suite] of Object.entries(bucket.ssh?.suites ?? {})) {
-      const f = amplificationFactor(suite);
-      console.log(`  [ssh/${arch}] ${name.padEnd(20)} ${formatAmplificationFactor(f)}`);
+    for (const proto of ["tls", "ssh"] as const) {
+      const entries = Object.entries(bucket[proto]?.suites ?? {});
+      // The pure-PQC suite this protocol's hybrids are compared against, if one
+      // was measured. ssh-composed has none, and must print that, not borrow
+      // TLS's suite.
+      const pure = entries.find(([, s]) => classifySuite(s) === "pure-pqc")?.[1];
+      for (const [name, suite] of entries) {
+        const f = amplificationFactor(suite);
+        const cls = classifySuite(suite);
+        let vsPure = "";
+        if (cls === "hybrid") {
+          if (!pure) {
+            vsPure = " (no pure-PQC suite measured for this protocol)";
+          } else {
+            const r = publishableHybridToPurePqcRatio(suite, pure);
+            vsPure =
+              r == null
+                ? " (vs pure PQC WITHHELD — structurally impossible, see anomaly.ts)"
+                : ` (${formatMultiplier(r)} vs pure PQC)`;
+          }
+        }
+        console.log(
+          `  [${proto}/${arch}] ${name.padEnd(22)} ${formatAmplificationFactor(f).padEnd(8)} [${cls}]${vsPure}`,
+        );
+      }
     }
   }
 }

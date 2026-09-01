@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   amplificationFactor,
+  classifySuite,
+  formatMultiplier,
   hasLiveStatefulSigs,
   humanizeStatefulSigError,
+  hybridToPurePqcRatio,
   statefulSigsUnavailableReason,
 } from "./derive";
 import type { ComposedSuite, LmsXmssFile } from "./types";
@@ -112,5 +115,98 @@ describe("amplificationFactor", () => {
 
   it("is null when the suite has no size block", () => {
     expect(amplificationFactor({} as ComposedSuite)).toBeNull();
+  });
+});
+
+// Sentinel discipline, per CLAUDE.md guardrail 1: fabricated inputs must be
+// impossible to mistake for a measurement. Degenerate distribution, n=1,
+// zero stdev — the same shape anomaly.test.ts uses.
+function timing(median: number) {
+  return {
+    mean_us: median,
+    median_us: median,
+    p95_us: median,
+    p99_us: median,
+    stdev_us: 0,
+    min_us: median,
+    max_us: median,
+    ops_per_sec: 1,
+    n_iterations: 1,
+  };
+}
+
+function phased(median: number, phaseNames: string[]): ComposedSuite {
+  const phases: Record<string, ReturnType<typeof timing>> = {};
+  for (const p of phaseNames) phases[p] = timing(1);
+  return {
+    identity: { protocol: "tls", mode: "fixture", suite: "fixture" },
+    timing: timing(median),
+    phases,
+  } as unknown as ComposedSuite;
+}
+
+describe("classifySuite", () => {
+  // The four phase-key shapes as they actually appear in the committed
+  // record, per tls-composed-2026-08-31 / ssh-composed-2026-08-31.
+  const HYBRID = ["kem_keygen", "kem_encaps", "kem_decaps", "classical_keygen", "classical_derive"];
+  const PURE = ["kem_keygen", "kem_encaps", "kem_decaps"];
+  const CLASSICAL = ["classical_keygen", "classical_derive"];
+
+  it("is hybrid when both a KEM phase and a classical phase were measured", () => {
+    expect(classifySuite(phased(265.514, HYBRID))).toBe("hybrid");
+  });
+
+  it("is pure-pqc for a KEM-only suite — the case that must not read as hybrid", () => {
+    // MLKEM768 is legitimately faster than the classical baseline. Calling it
+    // hybrid would make anomaly.ts withhold a true published finding; calling
+    // a hybrid pure-pqc would let an impossible comparison through.
+    expect(classifySuite(phased(102.166, PURE))).toBe("pure-pqc");
+  });
+
+  it("is classical for a classical-only suite", () => {
+    expect(classifySuite(phased(231.698, CLASSICAL))).toBe("classical");
+  });
+
+  it("is unknown — never guessed — when there is no phase data", () => {
+    expect(classifySuite(phased(1, []))).toBe("unknown");
+    expect(classifySuite({} as ComposedSuite)).toBe("unknown");
+  });
+
+  it("reads the phase block, not the suite name", () => {
+    // A suite named like a hybrid but carrying only KEM phases is pure-pqc.
+    // Name patterns are a house convention; the measurement is the truth.
+    const misleading = phased(102.166, PURE);
+    (misleading as { identity: { suite: string } }).identity.suite = "X25519MLKEM768";
+    expect(classifySuite(misleading)).toBe("pure-pqc");
+  });
+});
+
+describe("hybridToPurePqcRatio", () => {
+  const hybrid = phased(265.514, ["kem_keygen", "classical_keygen"]);
+  const pure = phased(102.166, ["kem_keygen"]);
+
+  it("is hybrid median over pure median", () => {
+    expect(hybridToPurePqcRatio(hybrid, pure)).toBeCloseTo(265.514 / 102.166, 10);
+  });
+
+  it("is null, never Infinity, when the pure suite has a zero median", () => {
+    expect(hybridToPurePqcRatio(hybrid, phased(0, ["kem_keygen"]))).toBeNull();
+  });
+
+  it("is null when either side has no timing block", () => {
+    expect(hybridToPurePqcRatio(hybrid, {} as ComposedSuite)).toBeNull();
+    expect(hybridToPurePqcRatio({} as ComposedSuite, pure)).toBeNull();
+  });
+});
+
+describe("formatMultiplier", () => {
+  it("renders an em dash for null rather than a zero", () => {
+    expect(formatMultiplier(null)).toBe("—");
+  });
+
+  it("scales precision with magnitude", () => {
+    expect(formatMultiplier(2.5988)).toBe("2.60×");
+    expect(formatMultiplier(12.34)).toBe("12.3×");
+    expect(formatMultiplier(148.6)).toBe("149×");
   });
 });
