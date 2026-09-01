@@ -3,43 +3,7 @@
 import { useMemo, useState } from "react";
 import type { PcbomCatalogEntry } from "@/lib/pcbom/catalog";
 import { Caveat } from "@/components/product/kit";
-
-const inputClass =
-  "h-9 w-full min-w-0 rounded border border-border bg-bg-surface px-2.5 text-[13px] font-semibold text-fg " +
-  "transition-colors hover:border-border-strong focus:outline-none focus:ring-1 focus:ring-accent";
-
-function ActionButton({
-  onClick,
-  children,
-  primary,
-}: {
-  onClick: () => void;
-  children: React.ReactNode;
-  primary?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`h-8 shrink-0 rounded border px-2.5 text-[12px] font-semibold transition-colors ${
-        primary
-          ? "border-accent bg-accent/10 text-fg hover:bg-accent/20"
-          : "border-border bg-bg-surface text-fg-muted hover:border-border-strong hover:text-fg"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function triggerDownload(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
+import { ActionButton, inputClass, triggerDownload } from "./shared";
 
 const OP_LABEL: Record<string, string> = {
   keygen: "Key generation",

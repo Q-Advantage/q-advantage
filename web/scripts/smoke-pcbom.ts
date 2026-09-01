@@ -11,6 +11,12 @@
  */
 import { getPcbomCatalog } from "../lib/pcbom/catalog";
 import { normalizePcbomName, inferPcbomType, inferPcbomStandard } from "../lib/pcbom/emit";
+import {
+  checkCdxStructure,
+  coverageSentence,
+  enrichCdxDocument,
+  type CdxDocument,
+} from "../lib/pcbom/enrich";
 
 console.log("=== normalize / infer match the upstream reference tool ===");
 const cases: [string, string][] = [
@@ -98,5 +104,104 @@ for (const e of entries) {
   }
 }
 console.log("  OK");
+
+console.log("\n=== capability 2: enrichment against the real catalog ===");
+
+// Shaped like something a real scanner emits: assets nested under an
+// application, a measured algorithm, an unmeasured one, a legacy spelling, a
+// protocol asset, and a component that is not a crypto asset at all.
+const sampleBom: CdxDocument = {
+  bomFormat: "CycloneDX",
+  specVersion: "1.6",
+  components: [
+    {
+      type: "application",
+      name: "payments-api",
+      components: [
+        {
+          type: "cryptographic-asset",
+          name: "ML-KEM-768",
+          cryptoProperties: {
+            assetType: "algorithm",
+            algorithmProperties: { parameterSetIdentifier: "ML-KEM-768" },
+          },
+          properties: [{ name: "internal:owner", value: "payments" }],
+        },
+      ],
+    },
+    {
+      type: "cryptographic-asset",
+      name: "RSA-2048",
+      cryptoProperties: { assetType: "algorithm", algorithmProperties: { parameterSetIdentifier: "RSA-2048" } },
+    },
+    {
+      type: "cryptographic-asset",
+      name: "Kyber768",
+      cryptoProperties: { assetType: "algorithm", algorithmProperties: { parameterSetIdentifier: "Kyber768" } },
+    },
+    { type: "cryptographic-asset", name: "TLSv1.3", cryptoProperties: { assetType: "protocol" } },
+    { type: "library", name: "openssl" },
+  ],
+};
+
+if (checkCdxStructure(sampleBom).length !== 0) {
+  throw new Error("the sample CycloneDX 1.6 document failed the structural gate");
+}
+
+const frozen = JSON.stringify(sampleBom);
+const enrichment = enrichCdxDocument(sampleBom, { entries, arch });
+
+if (JSON.stringify(sampleBom) !== frozen) {
+  throw new Error("enrichCdxDocument mutated the caller's document -- it must deep-clone first.");
+}
+if (enrichment.overlayProblems.length > 0) {
+  throw new Error(
+    "enriched output failed the published overlay contract: " + enrichment.overlayProblems.join("; "),
+  );
+}
+if (enrichment.summary.cryptoAssetsTotal !== 4) {
+  throw new Error("expected 4 crypto assets counted, got " + enrichment.summary.cryptoAssetsTotal);
+}
+
+const enrichedNames = enrichment.summary.enriched.map((e) => e.matchedAlgorithm);
+if (!enrichedNames.includes("ML-KEM-768")) {
+  throw new Error("ML-KEM-768 is in the catalog but was not enriched -- the nested walk is broken.");
+}
+
+const kyber = enrichment.summary.skipped.find((sk) => sk.identifier === "Kyber768");
+if (!kyber || kyber.reason !== "not-measured") {
+  throw new Error(
+    "Kyber768 must be reported as unmatched. Silently treating it as ML-KEM-768 would be this tool " +
+      "asserting an algorithm identity on someone else's inventory without a source for the claim.",
+  );
+}
+
+const proto = enrichment.summary.skipped.find((sk) => sk.componentName === "TLSv1.3");
+if (!proto || proto.reason !== "asset-type-out-of-scope") {
+  throw new Error("a protocol asset must be left alone -- P-CBOM v0.1 binds to algorithm assets only.");
+}
+
+// The reader's own data must survive being enriched.
+const nested = enrichment.document.components?.[0]?.components?.[0];
+if (!nested?.properties?.some((prop) => prop.name === "internal:owner")) {
+  throw new Error("enrichment dropped a property the caller's document already carried.");
+}
+
+// Re-running must not duplicate anything.
+const again = enrichCdxDocument(enrichment.document, { entries, arch });
+const firstCount = nested.properties.length;
+const secondCount = again.document.components?.[0]?.components?.[0]?.properties?.length ?? -1;
+if (firstCount !== secondCount) {
+  throw new Error("enrichment is not idempotent: " + firstCount + " properties became " + secondCount);
+}
+
+console.log("  " + coverageSentence(enrichment.summary));
+for (const e of enrichment.summary.enriched) {
+  console.log("    enriched  " + e.componentName.padEnd(12) + " -> " + e.matchedAlgorithm + " / " + e.operation);
+}
+for (const sk of enrichment.summary.skipped) {
+  console.log("    skipped   " + sk.componentName.padEnd(12) + " " + sk.reason);
+}
+console.log("  input unmutated, overlay contract satisfied, re-run idempotent");
 
 console.log("\nOK — P-CBOM smoke test passed.");
