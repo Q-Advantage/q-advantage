@@ -1,0 +1,110 @@
+# Report whether a measurement host's liboqs has LMS/XMSS compiled in.
+#
+# Manual dispatch only. Read-only: it imports oqs, asks what it can construct,
+# and prints the answer into the job summary. It builds nothing, installs
+# nothing, and writes no result file.
+#
+# Why this exists: the LMS/XMSS rebuild happens by hand on the EC2 box, and
+# until now the only way to know whether it took was to SSH in and run a
+# one-liner. This puts the answer on the record where a run link can be cited,
+# without touching benchmark.yml -- which is off-limits under CLAUDE.md
+# guardrail 3 and needs no change for this.
+#
+# The rebuild is outstanding on BOTH boxes, so the runner is an input.
+
+name: liboqs stateful-sig verify
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: "Which measurement host to inspect"
+        required: true
+        default: q-advantage-bench
+        type: choice
+        options:
+          - q-advantage-bench
+          - c7i-x86
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: "stateful-sig inventory"
+    runs-on: [self-hosted, "${{ inputs.runner }}"]
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Report the stateful-signature build state
+        shell: bash
+        run: |
+          set -uo pipefail
+          VENV="${VENV:-$HOME/q-advantage/venv}"
+          if [[ -f "$VENV/bin/activate" ]]; then
+            # shellcheck disable=SC1091
+            source "$VENV/bin/activate"
+          else
+            echo "::warning::no venv at $VENV — reading the system python instead"
+          fi
+
+          python3 - <<'PY' | tee /tmp/stfl.txt
+          import os
+
+          try:
+              import oqs
+          except Exception as exc:
+              print(f"oqs import FAILED: {type(exc).__name__}: {exc}")
+              raise SystemExit(0)
+
+          print(f"host                 {os.uname().nodename}")
+          print(f"liboqs               {getattr(oqs, 'oqs_version', lambda: '?')()}")
+          print(f"liboqs-python        {getattr(oqs, 'oqs_python_version', lambda: '?')()}")
+
+          fn = getattr(oqs, "get_enabled_stateful_sig_mechanisms", None)
+          enabled = list(fn()) if fn else []
+          print(f"enabled stateful     {enabled or 'NONE (expected under Option A)'}")
+          print()
+
+          SCHEMES = [
+              "LMS_SHA256_H10_W8",
+              "LMS_SHA256_H15_W8",
+              "XMSS-SHA2_10_256",
+              "XMSSMT-SHA2_20/2_256",
+          ]
+          ok = 0
+          for name in SCHEMES:
+              try:
+                  with oqs.StatefulSignature(name):
+                      print(f"  {name:24} compiled in")
+                      ok += 1
+              except Exception as exc:
+                  print(f"  {name:24} ABSENT ({type(exc).__name__})")
+
+          print()
+          if ok == len(SCHEMES):
+              print("VERDICT: rebuild has taken. The next daily run should report")
+              print("         status 'ok' / mode 'verify_only' for all four.")
+          elif ok == 0:
+              print("VERDICT: not rebuilt. This is the state since 2026-08-14.")
+              print("         Run benchmark/scripts/rebuild-liboqs-stfl.sh on this box.")
+          else:
+              print(f"VERDICT: PARTIAL -- {ok} of {len(SCHEMES)}. Not a state the")
+              print("         documented procedure produces; investigate.")
+          PY
+
+      - name: Put the answer in the job summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## liboqs stateful-signature inventory"
+            echo
+            echo "Runner: \`${{ inputs.runner }}\`"
+            echo
+            echo '```'
+            cat /tmp/stfl.txt 2>/dev/null || echo "(no output captured)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

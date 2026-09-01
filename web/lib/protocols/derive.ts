@@ -5,7 +5,7 @@
 // fabrication. Keep this logic in ONE place (mirrors the discipline in
 // web/lib/data/normalize.ts) — components must never recompute these inline.
 
-import type { ComposedSuite, LmsXmssFile } from "./types";
+import type { ComposedSuite, JoseComposedFile, LmsXmssFile } from "./types";
 
 /**
  * Server bytes returned per byte the client sends, for one handshake suite.
@@ -166,4 +166,63 @@ export function humanizeStatefulSigError(error: string): string {
     );
   }
   return error;
+}
+
+/** One documented size limit a measured token either fits inside or does not. */
+export interface TokenLimitVerdict {
+  name: string;
+  bytes: number;
+  source: string;
+  exceeded: boolean;
+}
+
+/**
+ * Which of the track's own documented size limits a token of `bytes` exceeds.
+ *
+ * The limits are read from the result file rather than retyped here, so the
+ * page cannot drift from what the harness published, and each carries its own
+ * source string.
+ *
+ * These are configurable defaults, not protocol constants. The track says so
+ * itself: they exist so a measured token size means something, NOT so a
+ * pass/fail can be declared -- that judgement needs a reader who knows their
+ * own stack. So this reports which lines a size crosses and never labels the
+ * result "broken".
+ */
+export function tokenLimitVerdicts(
+  file: JoseComposedFile | null | undefined,
+  bytes: number | null | undefined,
+): TokenLimitVerdict[] {
+  const limits = file?.size_limits ?? [];
+  if (bytes == null || !Number.isFinite(bytes)) return [];
+  return limits.map((l) => ({
+    name: l.name,
+    bytes: l.bytes,
+    source: l.source,
+    exceeded: bytes > l.bytes,
+  }));
+}
+
+/**
+ * The largest post-quantum token the JOSE track measured, or null.
+ *
+ * Post-quantum only, deliberately: the headline is what migrating costs, and a
+ * classical arm topping the table would mean something has gone wrong with the
+ * run rather than being a finding. Returns null when the track could not
+ * produce a comparison at all -- the file records `measurable: false` with a
+ * reason in that case, and a page must show the reason, not a blank.
+ */
+export function largestPostQuantumToken(
+  file: JoseComposedFile | null | undefined,
+): { scheme: string; bytes: number; multiple: number } | null {
+  const cmp = file?.comparison;
+  if (!cmp?.measurable || !cmp.rows?.length) return null;
+  const pq = cmp.rows.filter((r) => r.kind === "post-quantum" && Number.isFinite(r.token_bytes));
+  if (pq.length === 0) return null;
+  const worst = pq.reduce((a, b) => (b.token_bytes > a.token_bytes ? b : a));
+  return {
+    scheme: worst.scheme,
+    bytes: worst.token_bytes,
+    multiple: worst.token_multiple_of_baseline,
+  };
 }

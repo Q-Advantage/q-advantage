@@ -32,7 +32,8 @@ import {
   tailRatio,
 } from "@/lib/protocols/metrics";
 import { detectFileAnomalies, publishableVsBaselinePct } from "@/lib/protocols/anomaly";
-import type { ComposedSuite, TimingBlock } from "@/lib/protocols/types";
+import type { ComposedSuite, JoseComposedFile, TimingBlock } from "@/lib/protocols/types";
+import { largestPostQuantumToken, tokenLimitVerdicts } from "@/lib/protocols/derive";
 import {
   formatBytes,
   formatDuration,
@@ -215,15 +216,23 @@ function suiteRows(suites: Record<string, ComposedSuite> | undefined): KitRow[] 
  * that the room runs out in places nobody budgets for -- a congestion window, a
  * cookie -- rather than in the handshake itself.
  */
-function SizingSections({ chainFile }: { chainFile: ReturnType<typeof loadCertChain> }) {
+function SizingSections({
+  chainFile,
+  jose,
+}: {
+  chainFile: ReturnType<typeof loadCertChain>;
+  jose: JoseComposedFile | null;
+}) {
   const chains = measuredChains(chainFile);
-  if (chains.length === 0) return null;
+  const token = largestPostQuantumToken(jose);
+  if (chains.length === 0 && token == null) return null;
 
   const worst = worstMultiple(chainFile);
   const over = overTheWindow(chainFile);
 
   return (
     <>
+      {chains.length > 0 && (
       <Section
         eyebrow="Certificates"
         title={
@@ -268,6 +277,7 @@ function SizingSections({ chainFile }: { chainFile: ReturnType<typeof loadCertCh
           larger, and the post-quantum penalty on a real chain is larger still.
         </p>
       </Section>
+      )}
 
       {chainFile?.congestion && over.length > 0 && (
         <Section
@@ -307,6 +317,74 @@ function SizingSections({ chainFile }: { chainFile: ReturnType<typeof loadCertCh
               back under.
             </p>
           )}
+        </Section>
+      )}
+
+      {token && jose?.comparison?.rows && (
+        <Section
+          eyebrow="Tokens"
+          title={`A post-quantum access token is ${token.multiple.toFixed(1)}× the one it replaces.`}
+          hint="Every signed API call, session cookie and identity assertion carries one of these. Unlike a certificate chain, a token is re-sent on each request — so its size is paid over and over, not once per connection."
+        >
+          <DataTable
+            head={["Signature", "Token on the wire", `Against ${jose.comparison.baseline ?? "the classical baseline"}`]}
+            rows={[...jose.comparison.rows]
+              .sort((a, b) => b.token_bytes - a.token_bytes)
+              .map((r) => ({
+                key: r.scheme,
+                cells: [
+                  <RowName key="n" name={r.scheme} />,
+                  <span key="b" className="num font-bold tabular-nums text-fg">
+                    {formatBytes(r.token_bytes)}
+                  </span>,
+                  <span key="m" className="tabular-nums">
+                    {r.scheme === jose.comparison.baseline ? (
+                      <span className="text-fg-subtle">the baseline</span>
+                    ) : (
+                      <span
+                        className={
+                          r.token_multiple_of_baseline >= 10
+                            ? "font-bold text-status-err"
+                            : r.token_multiple_of_baseline >= 5
+                              ? "font-bold text-status-warn"
+                              : "text-fg-muted"
+                        }
+                      >
+                        {r.token_multiple_of_baseline.toFixed(2)}×
+                      </span>
+                    )}
+                  </span>,
+                ],
+              }))}
+          />
+
+          <div className="mt-5 grid gap-px overflow-hidden rounded border border-border bg-border sm:grid-cols-3">
+            {tokenLimitVerdicts(jose, token.bytes).map((v) => (
+              <div key={v.name} className="min-w-0 bg-bg-surface px-4 py-4">
+                <div className="eyebrow">{v.name}</div>
+                <div className="num mt-1.5 text-[25px] font-bold leading-none tracking-[-0.035em] text-fg">
+                  {formatBytes(v.bytes)}
+                </div>
+                <div
+                  className={`mt-1.5 text-[11.5px] font-semibold ${
+                    v.exceeded ? "text-status-warn" : "text-status-ok"
+                  }`}
+                >
+                  {v.exceeded
+                    ? `${formatBytes(token.bytes - v.bytes)} over`
+                    : `fits, ${formatBytes(v.bytes - token.bytes)} spare`}
+                </div>
+                <div className="mt-2 text-[11px] leading-snug text-fg-subtle">{v.source}</div>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-3 text-[12px] leading-relaxed text-fg-muted">
+            Every figure above is a configurable default, not a limit of the protocol. Crossing one
+            is a question to ask of your own stack rather than a failure &mdash; raise the buffer and
+            the token fits. What it tells you is where a post-quantum token stops being invisible:
+            it is the cookie, not the handshake, that runs out of room first.
+          </p>
         </Section>
       )}
     </>
@@ -531,7 +609,7 @@ export default function ProtocolsPage() {
           exactly 100% — they are the measurement, not an attribution over it.
         </Caveat>
 
-        <SizingSections chainFile={chainFile} />
+        <SizingSections chainFile={chainFile} jose={primary?.jose ?? null} />
 
         <Section
           eyebrow="Take the data"

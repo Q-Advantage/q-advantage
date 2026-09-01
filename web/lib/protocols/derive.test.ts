@@ -6,9 +6,11 @@ import {
   hasLiveStatefulSigs,
   humanizeStatefulSigError,
   hybridToPurePqcRatio,
+  largestPostQuantumToken,
   statefulSigsUnavailableReason,
+  tokenLimitVerdicts,
 } from "./derive";
-import type { ComposedSuite, LmsXmssFile } from "./types";
+import type { ComposedSuite, JoseComposedFile, LmsXmssFile } from "./types";
 
 const env = { iso_timestamp: "", liboqs_version: "", git_commit: "", cpu_model: "", arch: "" };
 const file = (schemes: Record<string, unknown>) =>
@@ -208,5 +210,84 @@ describe("formatMultiplier", () => {
     expect(formatMultiplier(2.5988)).toBe("2.60×");
     expect(formatMultiplier(12.34)).toBe("12.3×");
     expect(formatMultiplier(148.6)).toBe("149×");
+  });
+});
+
+// Shapes taken from jose-composed-2026-08-31: a 413-byte ECDSA-P256 baseline,
+// ML-DSA-87 at 6,494 bytes, and the three documented limits the track publishes.
+const joseFile = (over: Partial<JoseComposedFile> = {}) =>
+  ({
+    size_limits: [
+      { name: "HTTP cookie value", bytes: 4096, source: "RFC 6265 section 6.1" },
+      { name: "nginx large_client_header_buffers (one header)", bytes: 8192, source: "nginx default" },
+      { name: "Node.js --max-http-header-size (whole header block)", bytes: 16384, source: "Node default" },
+    ],
+    comparison: {
+      measurable: true,
+      baseline: "ECDSA-P256",
+      baseline_token_bytes: 413,
+      rows: [
+        { scheme: "ML-DSA-87", kind: "post-quantum", token_bytes: 6494, token_delta_bytes: 6081, token_multiple_of_baseline: 15.72, sign_delta_pct: 447.8 },
+        { scheme: "ML-DSA-44", kind: "post-quantum", token_bytes: 3551, token_delta_bytes: 3138, token_multiple_of_baseline: 8.6, sign_delta_pct: 153.2 },
+        { scheme: "RSA-2048", kind: "classical", token_bytes: 500, token_delta_bytes: 87, token_multiple_of_baseline: 1.21, sign_delta_pct: 10 },
+      ],
+    },
+    ...over,
+  }) as unknown as JoseComposedFile;
+
+describe("tokenLimitVerdicts", () => {
+  it("marks only the limits a token actually crosses", () => {
+    const v = tokenLimitVerdicts(joseFile(), 6494);
+    expect(v.map((x) => x.exceeded)).toEqual([true, false, false]);
+  });
+
+  it("treats a token exactly on a limit as fitting, not exceeding", () => {
+    // RFC 6265 asks servers to SUPPORT 4096 bytes, so 4096 is inside it.
+    expect(tokenLimitVerdicts(joseFile(), 4096)[0].exceeded).toBe(false);
+    expect(tokenLimitVerdicts(joseFile(), 4097)[0].exceeded).toBe(true);
+  });
+
+  it("carries each limit's own source through rather than restating it", () => {
+    expect(tokenLimitVerdicts(joseFile(), 500)[0].source).toBe("RFC 6265 section 6.1");
+  });
+
+  it("returns nothing when there is no size to judge", () => {
+    expect(tokenLimitVerdicts(joseFile(), null)).toEqual([]);
+    expect(tokenLimitVerdicts(joseFile(), Number.NaN)).toEqual([]);
+    expect(tokenLimitVerdicts(null, 6494)).toEqual([]);
+  });
+});
+
+describe("largestPostQuantumToken", () => {
+  it("is the biggest post-quantum row, never a classical one", () => {
+    const worst = largestPostQuantumToken(joseFile());
+    expect(worst).toEqual({ scheme: "ML-DSA-87", bytes: 6494, multiple: 15.72 });
+  });
+
+  it("is null when the track recorded that it could not compare", () => {
+    // The file carries a reason in this case; a page must show that, not a blank.
+    expect(
+      largestPostQuantumToken(
+        joseFile({ comparison: { measurable: false, reason: "no classical arm" } } as Partial<JoseComposedFile>),
+      ),
+    ).toBeNull();
+  });
+
+  it("is null when every arm is classical, rather than promoting one", () => {
+    expect(
+      largestPostQuantumToken(
+        joseFile({
+          comparison: {
+            measurable: true,
+            baseline: "ECDSA-P256",
+            rows: [{ scheme: "RSA-2048", kind: "classical", token_bytes: 500, token_delta_bytes: 87, token_multiple_of_baseline: 1.21, sign_delta_pct: 10 }],
+          },
+        } as Partial<JoseComposedFile>),
+      ),
+    ).toBeNull();
+  });
+
+  it("is null for a missing file", () => {
+    expect(largestPostQuantumToken(null)).toBeNull();
   });
 });
