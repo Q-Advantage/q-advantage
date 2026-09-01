@@ -5,11 +5,14 @@
 Test what would embarrass the company or corrupt the product if it silently broke. Skip ceremony elsewhere.
 
 **Must have tests:**
-- Anything in `web/lib/data/` that classifies, normalizes, or labels benchmark data — a silent misclassification becomes a false claim on the public dashboard.
+- Anything in `web/lib/data/` **or `web/lib/protocols/`** that classifies, normalizes, labels or withholds benchmark data — a silent misclassification becomes a false claim on the public dashboard. `normalize.ts`, `derive.ts` and `anomaly.ts` are the load-bearing ones.
+- Any rule that decides a number must **not** be published — the anomaly gate, the live-capture timing gate, the publication gate in `layer-b/publish-results.py`. A withholding rule that silently stops withholding is indistinguishable from having no rule.
 - The public-facing rendering of any benchmark number — must display what the source JSON says, never a hardcoded literal.
-- P-CBOM emission correctness and CycloneDX schema validity, if/when that tooling moves into this repo.
+- **P-CBOM emission correctness and CycloneDX schema validity.** No longer conditional: the tooling is in this repo at `web/lib/pcbom/`.
 
 **Must always pass, cheap and non-negotiable:** `npm run type-check`, `npm run lint`, `npm run build` (in `web/`).
+
+> **Known environment caveat.** On Windows, `npm run build` currently fails at the export step on eight `opengraph-image` routes with an `@vercel/og` `Invalid URL` error from `fileURLToPath`. It reproduces on a clean checkout of `main` and is unrelated to any change under review. Static generation still completes 174/174. **CI on Linux is the authority** — confirm there before concluding a change broke the build, and do not chase this locally.
 
 **Not required:** 100% coverage, tests on trivial presentational components, tests written to hit a coverage number.
 

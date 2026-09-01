@@ -212,10 +212,10 @@ export default function CfdirPage() {
 
       {congestionIsComposed(chainFile) && (
         <Caveat label="This corrects something published earlier on this site">
-          Layer B measured a real TLS first flight at{" "}
+          A live handshake capture measured a real TLS first flight at{" "}
           <strong className="font-bold text-fg">1,762 bytes</strong> and we said the congestion-window
           cliff was not binding. That measurement is correct; the conclusion drawn from it was too
-          broad. Layer B&rsquo;s testbed serves a throwaway classical certificate by design, so its
+          broad. That testbed serves a throwaway classical certificate by design, so its
           flight contains no post-quantum certificate at all.
           {" "}
           {overWindow.length > 0 && (
