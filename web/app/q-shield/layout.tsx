@@ -10,8 +10,16 @@ const TABS: ProductTab[] = [
   { label: "Overview", href: "/q-shield" },
   { label: "Compare", href: "/q-shield/compare" },
   { label: "Protocols", href: "/q-shield/protocols" },
+  { label: "Trends", href: "/q-shield/trends" },
   { label: "Methodology", href: "/methodology" },
 ];
+
+// THIS LIST IS THE NAVIGATION. There is no other one.
+//
+// /q-shield/trends shipped in #30 with a nav entry added to a `TABS` const in
+// components/chrome/ProductNav.tsx — a component nothing renders. The page has
+// been live, indexable and unreachable by clicking ever since. A new route is
+// not published until its href is in this array.
 
 // TAKEN OFFLINE 2026-08-30, deliberately, and not by deleting the code.
 //

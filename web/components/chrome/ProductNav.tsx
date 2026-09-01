@@ -1,58 +1,13 @@
-import Link from "next/link";
-
 /**
- * Q-Shield's own navigation bar — the "InferenceX by SemiAnalysis" lockup.
+ * Shared product-page furniture.
  *
- * A product is its own property, not a section of the marketing site. This
- * sits directly under the company header and gives the instrument its own
- * tab set, so clicking into Q-Shield feels like arriving somewhere else.
+ * The `ProductNav` component that gave this file its name was removed on
+ * 2026-09-01: nothing rendered it, but it carried its own TABS array, and a
+ * route added there instead of to app/q-shield/layout.tsx never appeared in
+ * the navigation. /q-shield/trends shipped that way in #30 and stayed
+ * unreachable for months. The real tab list lives in the layout — keep it
+ * the only one.
  */
-const TABS = [
-  { label: "Overview", href: "/q-shield" },
-  { label: "Compare", href: "/q-shield/compare" },
-  { label: "Protocols", href: "/q-shield/protocols" },
-  { label: "Trends", href: "/q-shield/trends" },
-  { label: "Methodology", href: "/methodology" },
-];
-
-export function ProductNav({ current = "Overview" }: { current?: string }) {
-  return (
-    <div className="-mx-5 mb-6 border-b border-border px-5 pb-4 md:-mx-7 md:px-7">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-baseline gap-2">
-          <span className="text-[21px] font-bold tracking-[-0.025em] text-fg">
-            Q<span className="text-accent-ink">-</span>Shield
-          </span>
-          <span className="text-[11.5px] font-semibold text-fg-subtle">
-            by{" "}
-            <Link href="/" className="border-b border-border text-fg-muted hover:text-fg">
-              Q-Advantage
-            </Link>
-          </span>
-        </div>
-
-        <nav className="-mb-px flex flex-wrap items-center gap-1 overflow-x-auto">
-          {TABS.map((t) => {
-            const on = t.label === current;
-            return (
-              <Link
-                key={t.label}
-                href={t.href}
-                className={`flex-none rounded-lg px-3 py-1.5 text-[13px] transition-colors ${
-                  on
-                    ? "bg-bg-surface font-bold text-fg"
-                    : "font-semibold text-fg-muted hover:bg-bg-surface hover:text-fg"
-                }`}
-              >
-                {t.label}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
-    </div>
-  );
-}
 
 /** The four headline figures, shared-edge tiles. */
 export function StatBand({
