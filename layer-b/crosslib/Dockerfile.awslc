@@ -1,0 +1,26 @@
+# AWS-LC, built from source, probed for post-quantum availability.
+#
+# One Dockerfile per library rather than one image containing all three. The
+# middlebox scenario already established the principle: a build quirk in one
+# product must not be able to hide another product's result, and a single
+# multi-stage image fails as a unit.
+FROM golang:1.23-bookworm AS build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      cmake ninja-build git ca-certificates perl \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+# Pinned. An unpinned clone would let this image's answer change with no commit
+# here changing, which is the opposite of what a cross-check is for.
+ARG REF=v1.37.0
+RUN git clone --depth 1 --branch "${REF}" https://github.com/aws/aws-lc.git
+RUN cmake -GNinja -B build -S aws-lc -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+    && ninja -C build bssl
+
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends python3 \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=build /src/build/tool/bssl /usr/local/bin/bssl
+COPY probe_crosslib.py /crosslib/probe_crosslib.py
+ENV CROSSLIB_LIBRARY=AWS-LC
+WORKDIR /crosslib
+CMD ["python3", "probe_crosslib.py"]
