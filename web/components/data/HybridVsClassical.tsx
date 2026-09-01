@@ -11,11 +11,25 @@
 
 import { useMemo } from "react";
 import type { ComposedSuite } from "@/lib/protocols/types";
-import { amplificationFactor, formatAmplificationFactor, BYTES_ON_WIRE_LABEL } from "@/lib/protocols/derive";
-import { publishableVsBaselinePct } from "@/lib/protocols/anomaly";
+import {
+  amplificationFactor,
+  formatAmplificationFactor,
+  BYTES_ON_WIRE_LABEL,
+  classifySuite,
+  formatMultiplier,
+  type SuiteClassification,
+} from "@/lib/protocols/derive";
+import { publishableVsBaselinePct, publishableHybridToPurePqcRatio } from "@/lib/protocols/anomaly";
 import { formatDuration, formatBytes, githubCommitUrl } from "@/lib/format";
 import { toCsv, downloadCsv } from "@/lib/csv";
 import { ShareButton } from "./ShareButton";
+
+const CLASS_LABEL: Record<SuiteClassification, string> = {
+  hybrid: "hybrid",
+  "pure-pqc": "pure PQC",
+  classical: "classical",
+  unknown: "unclassified",
+};
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
@@ -42,15 +56,24 @@ function SuiteRow({
   suite,
   protocol,
   siblings,
+  purePqcSuite,
 }: {
   name: string;
   suite: ComposedSuite;
   protocol: "TLS" | "SSH";
   /** The other suites from the same file — the delta is computed against these. */
   siblings: Record<string, ComposedSuite>;
+  /** Same-protocol pure-PQC suite to compare against, when one was measured.
+   * Only meaningful when this row itself classifies as "hybrid"; ssh-composed
+   * has no pure-PQC suite, so this is legitimately absent there. */
+  purePqcSuite?: ComposedSuite;
 }) {
   const factor = amplificationFactor(suite);
-  const isHybrid = suite.baseline?.baseline_suite != null;
+  const classification = classifySuite(suite);
+  const ratioToPurePqc =
+    classification === "hybrid" && purePqcSuite
+      ? publishableHybridToPurePqcRatio(suite, purePqcSuite)
+      : null;
 
   return (
     <div className="border border-border rounded-md bg-bg-inset px-5 py-4 flex flex-col gap-3">
@@ -58,9 +81,15 @@ function SuiteRow({
         <div className="flex items-center gap-2">
           <span className="text-2xs num text-fg-subtle border border-border rounded px-1.5 py-0.5">{protocol}</span>
           <span className="num text-fg font-medium">{name}</span>
-          {!isHybrid && (
-            <span className="text-2xs text-fg-subtle border border-border rounded px-1.5 py-0.5">classical</span>
-          )}
+          <span
+            className={`text-2xs border rounded px-1.5 py-0.5 ${
+              classification === "pure-pqc"
+                ? "text-emerald-500 border-emerald-500/30"
+                : "text-fg-subtle border-border"
+            }`}
+          >
+            {CLASS_LABEL[classification]}
+          </span>
         </div>
         <DeltaBadge pct={publishableVsBaselinePct(suite, siblings) ?? undefined} />
       </div>
@@ -79,6 +108,18 @@ function SuiteRow({
           label="client → server"
           value={suite.size ? `${formatBytes(suite.size.bytes_client_to_server)} → ${formatBytes(suite.size.bytes_server_to_client)}` : "—"}
         />
+        {classification === "hybrid" && (
+          <Stat
+            label="vs pure PQC alone"
+            value={
+              ratioToPurePqc == null
+                ? purePqcSuite
+                  ? "withheld — see note"
+                  : "no pure-PQC suite measured"
+                : `${formatMultiplier(ratioToPurePqc)} slower`
+            }
+          />
+        )}
       </div>
 
       {suite.audit?.git_commit && (
@@ -114,29 +155,52 @@ export function HybridVsClassical({
     return out;
   }, [tlsSuites, sshSuites]);
 
+  // One pure-PQC suite per protocol for hybrids to be compared against, when
+  // one was measured. Not a hardcoded name match — classifySuite() reads the
+  // actual phase block, so this stays correct if suites are added or renamed.
+  // ssh-composed has no pure-PQC suite today; that resolves to undefined and
+  // the row says so rather than borrowing TLS's.
+  const purePqcByProtocol = useMemo(() => {
+    const found: Partial<Record<"TLS" | "SSH", ComposedSuite>> = {};
+    for (const { suite, protocol } of rows) {
+      if (classifySuite(suite) === "pure-pqc" && !found[protocol]) found[protocol] = suite;
+    }
+    return found;
+  }, [rows]);
+
   function handleExport() {
     const headers = [
       "protocol",
       "suite",
+      "classification",
       "median_latency_us",
       "pct_over_classical_recomputed_same_run",
+      "vs_pure_pqc_ratio",
       "bytes_client_to_server",
       "bytes_server_to_client",
       "bytes_total",
       "amplification_factor",
       "git_commit",
     ];
-    const csvRows = rows.map(({ name, suite, protocol, siblings }) => [
-      protocol,
-      name,
-      suite.timing.median_us,
-      publishableVsBaselinePct(suite, siblings) ?? "",
-      suite.size?.bytes_client_to_server ?? "",
-      suite.size?.bytes_server_to_client ?? "",
-      suite.size?.bytes_total ?? "",
-      amplificationFactor(suite) ?? "",
-      suite.audit?.git_commit ?? "",
-    ]);
+    const csvRows = rows.map(({ name, suite, protocol, siblings }) => {
+      const classification = classifySuite(suite);
+      const pure = purePqcByProtocol[protocol];
+      const ratio =
+        classification === "hybrid" && pure ? publishableHybridToPurePqcRatio(suite, pure) : null;
+      return [
+        protocol,
+        name,
+        classification,
+        suite.timing.median_us,
+        publishableVsBaselinePct(suite, siblings) ?? "",
+        ratio ?? "",
+        suite.size?.bytes_client_to_server ?? "",
+        suite.size?.bytes_server_to_client ?? "",
+        suite.size?.bytes_total ?? "",
+        amplificationFactor(suite) ?? "",
+        suite.audit?.git_commit ?? "",
+      ];
+    });
     downloadCsv("q-shield-hybrid-vs-classical.csv", toCsv(headers, csvRows));
   }
 
@@ -174,6 +238,7 @@ export function HybridVsClassical({
             suite={suite}
             protocol={protocol}
             siblings={siblings}
+            purePqcSuite={purePqcByProtocol[protocol]}
           />
         ))}
       </div>

@@ -30,6 +30,70 @@ export function formatAmplificationFactor(factor: number | null): string {
   return `${factor.toFixed(2)}×`;
 }
 
+export type SuiteClassification = "hybrid" | "pure-pqc" | "classical" | "unknown";
+
+/**
+ * Classifies a composed suite by what it actually measured, from the phase
+ * keys present — not by parsing the suite name. Names are wire-format
+ * identifiers and a house convention, not a guarantee; a renamed or added
+ * suite must not silently land in the wrong bucket.
+ *
+ *   kem_* and classical_*  → "hybrid"     (KEM exchange AND classical exchange)
+ *   kem_* only             → "pure-pqc"   (PQC alone, no classical leg)
+ *   classical_* only       → "classical"  (the baseline everyone already runs)
+ *   neither                → "unknown"    — never guessed
+ *
+ * All four shapes are present in the committed record. As of
+ * tls-composed-2026-08-31: X25519MLKEM768 and SecP256r1MLKEM768 are hybrid,
+ * MLKEM768 is pure-pqc, X25519 is classical; ssh-composed has no pure-PQC
+ * suite at all, which is why callers must handle its absence rather than
+ * assume every protocol has one.
+ *
+ * This is the single source of truth for that question. `isHybridSuite` in
+ * anomaly.ts delegates here — two independent readings of the same phase
+ * block is exactly how they drift apart.
+ */
+export function classifySuite(suite: ComposedSuite): SuiteClassification {
+  const phaseNames = Object.keys(suite.phases ?? {});
+  const hasKem = phaseNames.some((p) => p.startsWith("kem_"));
+  const hasClassical = phaseNames.some((p) => p.startsWith("classical_"));
+  if (hasKem && hasClassical) return "hybrid";
+  if (hasKem) return "pure-pqc";
+  if (hasClassical) return "classical";
+  return "unknown";
+}
+
+/**
+ * How much slower a hybrid suite is than its same-protocol pure-PQC
+ * counterpart: hybrid.median_us / pure.median_us.
+ *
+ * Arithmetic only — the raw projection, mirroring `vsBaselinePct` in
+ * metrics.ts. It does NOT gate on whether the answer is structurally
+ * possible; a hybrid that measures faster than pure PQC alone is an
+ * impossible result, not a fast one, and screening for that lives in
+ * anomaly.ts as `publishableHybridToPurePqcRatio`. Rendering surfaces must
+ * call that one, never this. This stays raw so analysis and the smoke test
+ * can still see a bad value in order to report it.
+ *
+ * Returns `null` (never a guess) when either side lacks a real median.
+ * Picking a same-protocol pure-PQC suite to compare against is the caller's
+ * job — that matching is context-dependent and does not belong hidden in here.
+ */
+export function hybridToPurePqcRatio(hybrid: ComposedSuite, pure: ComposedSuite): number | null {
+  const h = hybrid.timing?.median_us;
+  const p = pure.timing?.median_us;
+  if (!h || !p) return null;
+  if (!Number.isFinite(h) || !Number.isFinite(p)) return null;
+  return h / p;
+}
+
+export function formatMultiplier(ratio: number | null): string {
+  if (ratio == null) return "—";
+  if (ratio >= 100) return `${Math.round(ratio)}×`;
+  if (ratio >= 10) return `${ratio.toFixed(1)}×`;
+  return `${ratio.toFixed(2)}×`;
+}
+
 /**
  * The honest label for `size.bytes_total` on a composed suite. The composed-protocol harness
  * measures the cryptographic key-exchange payload (public key / ciphertext

@@ -3,6 +3,7 @@ import {
   detectFileAnomalies,
   detectSuiteAnomaly,
   isHybridSuite,
+  publishableHybridToPurePqcRatio,
   publishableVsBaselinePct,
 } from "./anomaly";
 import { vsBaselinePct } from "./metrics";
@@ -182,5 +183,38 @@ describe("detectFileAnomalies", () => {
 
   it("returns an empty list, not null, for an absent suite set", () => {
     expect(detectFileAnomalies(undefined)).toEqual([]);
+  });
+});
+
+describe("publishableHybridToPurePqcRatio", () => {
+  const hybrid = suite("X25519MLKEM768", 265.514, { phases: HYBRID_PHASES });
+  const pure = suite("MLKEM768", 102.166, { phases: PQC_ONLY_PHASES });
+
+  it("publishes the ratio when the comparison is structurally possible", () => {
+    expect(publishableHybridToPurePqcRatio(hybrid, pure)).toBeCloseTo(265.514 / 102.166, 10);
+  });
+
+  it("withholds a hybrid measured FASTER than pure PQC alone", () => {
+    // Hybrid does the KEM exchange the pure suite does, plus a classical one.
+    // Faster is not a fast result, it is an impossible one — the same
+    // degraded-measurement failure this module exists to catch, on a second
+    // comparison. Withheld, never corrected.
+    const impossible = suite("X25519MLKEM768", 80, { phases: HYBRID_PHASES });
+    expect(publishableHybridToPurePqcRatio(impossible, pure)).toBeNull();
+  });
+
+  it("withholds an exact tie — a free classical exchange is still impossible", () => {
+    const tied = suite("X25519MLKEM768", 102.166, { phases: HYBRID_PHASES });
+    expect(publishableHybridToPurePqcRatio(tied, pure)).toBeNull();
+  });
+
+  it("returns null when the suites are mismatched rather than a confident wrong number", () => {
+    expect(publishableHybridToPurePqcRatio(pure, pure)).toBeNull();
+    expect(publishableHybridToPurePqcRatio(hybrid, hybrid)).toBeNull();
+  });
+
+  it("returns null when either suite has no phase data to classify", () => {
+    expect(publishableHybridToPurePqcRatio(suite("A", 200), pure)).toBeNull();
+    expect(publishableHybridToPurePqcRatio(hybrid, suite("B", 100))).toBeNull();
   });
 });

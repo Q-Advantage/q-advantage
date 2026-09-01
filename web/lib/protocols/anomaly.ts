@@ -29,6 +29,7 @@
 
 import type { ComposedSuite } from "./types";
 import { vsBaselinePct } from "./metrics";
+import { classifySuite, hybridToPurePqcRatio } from "./derive";
 
 export type SuiteAnomalyKind = "hybrid-faster-than-classical";
 
@@ -57,9 +58,7 @@ export interface SuiteAnomaly {
  * predicate must never widen to include them.
  */
 export function isHybridSuite(suite: ComposedSuite): boolean {
-  const phases = suite.phases ?? {};
-  const keys = Object.keys(phases);
-  return keys.some((k) => k.startsWith("kem_")) && keys.some((k) => k.startsWith("classical_"));
+  return classifySuite(suite) === "hybrid";
 }
 
 /**
@@ -132,4 +131,33 @@ export function publishableVsBaselinePct(
 ): number | null {
   if (detectSuiteAnomaly(suite, suitesInSameFile)) return null;
   return vsBaselinePct(suite, suitesInSameFile);
+}
+
+/**
+ * The hybrid-vs-pure-PQC figure a UI is allowed to render, or null.
+ *
+ * Same posture as `publishableVsBaselinePct`, applied to a second comparison
+ * that has the same failure mode. A hybrid suite performs the KEM exchange
+ * that the pure-PQC suite performs AND a classical exchange on top, so it
+ * cannot be faster than pure PQC alone. A ratio at or below 1 therefore means
+ * one of the two runs was measured in a degraded mode — the same bimodal x86
+ * floor documented at the top of this file — not that hybrid is cheap.
+ *
+ * Withheld rather than published, and never "corrected": the suite's own
+ * timing is still shown, the comparison is not.
+ *
+ * Also returns null when `pure` is not actually a pure-PQC suite or `hybrid`
+ * is not actually hybrid, so a caller that mismatches suites gets nothing
+ * rather than a confident wrong number.
+ */
+export function publishableHybridToPurePqcRatio(
+  hybrid: ComposedSuite,
+  pure: ComposedSuite,
+): number | null {
+  if (classifySuite(hybrid) !== "hybrid") return null;
+  if (classifySuite(pure) !== "pure-pqc") return null;
+  const ratio = hybridToPurePqcRatio(hybrid, pure);
+  if (ratio == null) return null;
+  if (ratio <= 1) return null;
+  return ratio;
 }
