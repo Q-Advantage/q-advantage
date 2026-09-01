@@ -160,6 +160,11 @@ services:
   compat-probe:
     image: q-advantage/layer-b:dev
     depends_on: [compat-nginx, compat-haproxy, compat-node]
+    environment:
+      # The probe records the commit it ran against. It cannot ask git from in
+      # here, so CI's value is passed through; empty when run locally, and the
+      # result then says `nogit` rather than inventing one.
+      GITHUB_SHA: "${GITHUB_SHA:-}"
     volumes:
       - ./compat:/layer-b/compat:ro
       - ./out:/out

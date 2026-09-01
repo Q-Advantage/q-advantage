@@ -31,6 +31,47 @@ DEFAULT_DEST = REPO_ROOT / "web" / "public" / "data" / "layer-b"
 
 REQUIRED_TOP_LEVEL = ("schema", "identity", "outcome")
 
+#: Result files that are inputs to a merge rather than publishable on their own.
+#: The per-library crosslib probes are combined by merge_crosslib.py into the
+#: cross_validation view; publishing the parts as well would put three files on
+#: the site saying less than the one that reconciles them.
+INPUT_ONLY_SCHEMAS = ("crosslib/",)
+
+#: A track that promises no timings must ship none. This is the promise, checked
+#: rather than trusted -- crosslib's own scope says a speed comparison measured
+#: on a shared CI runner "would undo" the dedicated-host discipline the rest of
+#: the product depends on.
+TIMING_KEYS = ("mean_us", "median_us", "p95_us", "ops_per_sec", "duration_seconds")
+
+
+def kind_of(result: dict) -> str:
+    """Which family a result belongs to, from its own schema string."""
+    schema = str(result.get("schema", ""))
+    if schema.startswith("app-compat/"):
+        return "app-compat"
+    if schema.startswith("crosslib-merged/"):
+        return "crosslib-merged"
+    if schema.startswith("crosslib/"):
+        return "crosslib-part"
+    return "layer-b-scenario"
+
+
+def _contains_timing(node: object) -> str | None:
+    """First timing-shaped key found anywhere in the structure, or None."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if k in TIMING_KEYS and v is not None:
+                return k
+            found = _contains_timing(v)
+            if found:
+                return found
+    elif isinstance(node, list):
+        for item in node:
+            found = _contains_timing(item)
+            if found:
+                return found
+    return None
+
 
 def sanitise(result: dict) -> tuple[dict, list[str]]:
     """Return the publishable form of a result, plus what was stripped."""
@@ -58,6 +99,41 @@ def sanitise(result: dict) -> tuple[dict, list[str]]:
 
 
 def validate(result: dict, path: Path) -> list[str]:
+    kind = kind_of(result)
+
+    if kind == "app-compat":
+        # No identity/outcome block: this track probes receiving software at a
+        # measured size rather than negotiating anything.
+        missing = [
+            k
+            for k in ("schema", "track", "scope", "http_front_doors", "certificate_parsers")
+            if k not in result
+        ]
+        problems = ["%s: missing required field %r" % (path.name, k) for k in missing]
+        if not (result.get("scope") or {}).get("defaults_not_limits"):
+            # Without it a reader can read a rejection as "this product is
+            # unsuitable" rather than "this is what an unchanged default does".
+            problems.append("%s: scope.defaults_not_limits is required" % path.name)
+        return problems
+
+    if kind == "crosslib-merged":
+        missing = [
+            k for k in ("schema", "track", "scope", "libraries", "cross_validation") if k not in result
+        ]
+        problems = ["%s: missing required field %r" % (path.name, k) for k in missing]
+        leaked = _contains_timing(result)
+        if leaked:
+            problems.append(
+                "%s: publishes no timings by design, but %r is present -- these builds "
+                "run on a shared CI runner and a speed figure from here would undo the "
+                "dedicated-measurement-host claim" % (path.name, leaked)
+            )
+        if not (result.get("scope") or {}).get("what_a_negative_means"):
+            # A "not exposed" row without this reads as a claim about the
+            # library rather than about what this probe could see.
+            problems.append("%s: scope.what_a_negative_means is required" % path.name)
+        return problems
+
     problems = []
     for key in REQUIRED_TOP_LEVEL:
         if key not in result:
@@ -106,11 +182,15 @@ def main(argv: list[str] | None = None) -> int:
             problems.append("%s: not valid JSON (%s)" % (path.name, exc))
             continue
 
+        if kind_of(result) == "crosslib-part":
+            print("skipped   %-14s <- %s (merge input, not published alone)" % ("crosslib", path.name))
+            continue
+
         problems.extend(validate(result, path))
         clean, stripped = sanitise(result)
         (args.dest / path.name).write_text(json.dumps(clean, indent=2))
         published += 1
-        label = (result.get("identity") or {}).get("label", "?")
+        label = (result.get("identity") or {}).get("label") or result.get("label") or "?"
         note = (" stripped: %s" % ", ".join(stripped)) if stripped else ""
         print("published %-14s <- %s%s" % (label, path.name, note))
 
