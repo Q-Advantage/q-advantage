@@ -1,0 +1,694 @@
+{
+  "schema": "jose-composed/1",
+  "track": "jose-composed",
+  "label": "JWT/JOSE composed signing",
+  "environment": {
+    "iso_timestamp": "2026-09-04T12:16:21Z",
+    "liboqs_version": "0.15.0",
+    "liboqs_python_version": "0.15.0",
+    "git_commit": "1c66f000f05de85ecff8bfb6bda92c9fdb543137",
+    "cpu_model": "Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz",
+    "arch": "x86_64",
+    "ec2_instance_type": "t3.medium",
+    "steal_time_pct": 1.4887
+  },
+  "claims": {
+    "iss": "https://issuer.example",
+    "sub": "01J0000000000000000000000",
+    "aud": "https://api.example",
+    "exp": 1893456000,
+    "iat": 1893452400,
+    "scope": "read:metrics write:metrics",
+    "jti": "00000000-0000-4000-8000-000000000000"
+  },
+  "claims_note": "The payload is this module's choice, close in shape to an OAuth2 access token. It is published because it is an input: a larger payload would make the signature's share of the token look smaller than it is, and a smaller one would do the reverse.",
+  "alg_note": "The alg header for a post-quantum scheme carries the scheme's own name as a NON-STANDARD value. No registered JOSE algorithm identifier is asserted for it, and no standardisation draft is named or anticipated here. The measurement does not depend on which identifier is eventually registered: a token's size is driven by the signature and by base64url, and the alg string's own contribution is counted in header_bytes where a reader can see it.",
+  "size_limits": [
+    {
+      "name": "HTTP cookie value",
+      "bytes": 4096,
+      "source": "RFC 6265 section 6.1 - servers SHOULD support at least 4096 bytes per cookie."
+    },
+    {
+      "name": "nginx large_client_header_buffers (one header)",
+      "bytes": 8192,
+      "source": "nginx default: 4 buffers of 8k. A single header line must fit within one buffer."
+    },
+    {
+      "name": "Node.js --max-http-header-size (whole header block)",
+      "bytes": 16384,
+      "source": "Node.js default since 12.x, applied to the total header block rather than one line."
+    }
+  ],
+  "limits_note": "Every limit above is a configurable default, not a protocol constant. They are published so a measured token size means something, not so this track can declare a pass or a fail - that judgement needs a reader who knows their own stack.",
+  "arms": {
+    "ECDSA-P256": {
+      "scheme": "ECDSA-P256",
+      "kind": "classical",
+      "status": "ok",
+      "alg": "ES256",
+      "alg_is_registered": true,
+      "alg_note": null,
+      "sign": {
+        "mean_us": 33.621,
+        "median_us": 32.964,
+        "p95_us": 34.959,
+        "p99_us": 44.029,
+        "stdev_us": 4.367,
+        "min_us": 32.722,
+        "max_us": 144.346,
+        "ops_per_sec": 29742.88,
+        "n_iterations": 1000,
+        "ci95_low_us": 33.351,
+        "ci95_high_us": 33.892,
+        "std_error_us": 0.1381,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "verify": {
+        "mean_us": 101.876,
+        "median_us": 92.77,
+        "p95_us": 163.422,
+        "p99_us": 197.246,
+        "stdev_us": 23.938,
+        "min_us": 91.875,
+        "max_us": 309.903,
+        "ops_per_sec": 9815.85,
+        "n_iterations": 1000,
+        "ci95_low_us": 100.392,
+        "ci95_high_us": 103.36,
+        "std_error_us": 0.757,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "size": {
+        "token_bytes": 413,
+        "header_bytes": 36,
+        "payload_bytes": 280,
+        "signature_raw_bytes": 71,
+        "signature_encoded_bytes": 95,
+        "encoding_overhead_bytes": 24,
+        "signature_share_pct": 23.0,
+        "note": "The signature is base64url-encoded in the compact serialization, so it costs about a third more on the wire than its raw length. The payload is this module's choice and is published with the result; the signature length is not a choice."
+      },
+      "limits": [
+        {
+          "limit": "HTTP cookie value",
+          "limit_bytes": 4096,
+          "token_bytes": 413,
+          "headroom_bytes": 3683,
+          "within_default": true,
+          "source": "RFC 6265 section 6.1 - servers SHOULD support at least 4096 bytes per cookie."
+        },
+        {
+          "limit": "nginx large_client_header_buffers (one header)",
+          "limit_bytes": 8192,
+          "token_bytes": 413,
+          "headroom_bytes": 7779,
+          "within_default": true,
+          "source": "nginx default: 4 buffers of 8k. A single header line must fit within one buffer."
+        },
+        {
+          "limit": "Node.js --max-http-header-size (whole header block)",
+          "limit_bytes": 16384,
+          "token_bytes": 413,
+          "headroom_bytes": 15971,
+          "within_default": true,
+          "source": "Node.js default since 12.x, applied to the total header block rather than one line."
+        }
+      ],
+      "resources": {
+        "measured": true,
+        "cpu_us_per_op": 102.988,
+        "cpu_seconds_total": 0.205976,
+        "cpu_note": "User+system CPU across the timed loop, divided by iterations. On this harness the process is pinned to one core with nothing else scheduled, so this reads close to wall time by construction. It becomes informative only when utilisation varies under contention, which this harness deliberately does not create.",
+        "max_rss_delta_bytes": 987136,
+        "max_rss_bytes": 37773312,
+        "rss_note": "Growth in the process high-water mark across the loop. ru_maxrss is a peak that never falls, so this is NOT a per-operation footprint and is not divided by the iteration count -- doing so would produce a confident, meaningless number.",
+        "rss_unit_note": "ru_maxrss read as kilobytes (Linux convention) and converted to bytes."
+      }
+    },
+    "RSA-2048": {
+      "scheme": "RSA-2048",
+      "kind": "classical",
+      "status": "ok",
+      "alg": "PS256",
+      "alg_is_registered": true,
+      "alg_note": null,
+      "sign": {
+        "mean_us": 893.064,
+        "median_us": 756.268,
+        "p95_us": 1330.983,
+        "p99_us": 1707.28,
+        "stdev_us": 273.738,
+        "min_us": 658.189,
+        "max_us": 2915.083,
+        "ops_per_sec": 1119.74,
+        "n_iterations": 1000,
+        "ci95_low_us": 876.097,
+        "ci95_high_us": 910.03,
+        "std_error_us": 8.6564,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "verify": {
+        "mean_us": 68.231,
+        "median_us": 56.386,
+        "p95_us": 107.259,
+        "p99_us": 253.517,
+        "stdev_us": 41.05,
+        "min_us": 49.96,
+        "max_us": 606.81,
+        "ops_per_sec": 14656.16,
+        "n_iterations": 1000,
+        "ci95_low_us": 65.686,
+        "ci95_high_us": 70.775,
+        "std_error_us": 1.2981,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "size": {
+        "token_bytes": 660,
+        "header_bytes": 36,
+        "payload_bytes": 280,
+        "signature_raw_bytes": 256,
+        "signature_encoded_bytes": 342,
+        "encoding_overhead_bytes": 86,
+        "signature_share_pct": 51.8,
+        "note": "The signature is base64url-encoded in the compact serialization, so it costs about a third more on the wire than its raw length. The payload is this module's choice and is published with the result; the signature length is not a choice."
+      },
+      "limits": [
+        {
+          "limit": "HTTP cookie value",
+          "limit_bytes": 4096,
+          "token_bytes": 660,
+          "headroom_bytes": 3436,
+          "within_default": true,
+          "source": "RFC 6265 section 6.1 - servers SHOULD support at least 4096 bytes per cookie."
+        },
+        {
+          "limit": "nginx large_client_header_buffers (one header)",
+          "limit_bytes": 8192,
+          "token_bytes": 660,
+          "headroom_bytes": 7532,
+          "within_default": true,
+          "source": "nginx default: 4 buffers of 8k. A single header line must fit within one buffer."
+        },
+        {
+          "limit": "Node.js --max-http-header-size (whole header block)",
+          "limit_bytes": 16384,
+          "token_bytes": 660,
+          "headroom_bytes": 15724,
+          "within_default": true,
+          "source": "Node.js default since 12.x, applied to the total header block rather than one line."
+        }
+      ],
+      "resources": {
+        "measured": true,
+        "cpu_us_per_op": 904.306,
+        "cpu_seconds_total": 1.808611,
+        "cpu_note": "User+system CPU across the timed loop, divided by iterations. On this harness the process is pinned to one core with nothing else scheduled, so this reads close to wall time by construction. It becomes informative only when utilisation varies under contention, which this harness deliberately does not create.",
+        "max_rss_delta_bytes": 0,
+        "max_rss_bytes": 37904384,
+        "rss_note": "Growth in the process high-water mark across the loop. ru_maxrss is a peak that never falls, so this is NOT a per-operation footprint and is not divided by the iteration count -- doing so would produce a confident, meaningless number.",
+        "rss_unit_note": "ru_maxrss read as kilobytes (Linux convention) and converted to bytes."
+      }
+    },
+    "RSA-3072": {
+      "scheme": "RSA-3072",
+      "kind": "classical",
+      "status": "ok",
+      "alg": "PS256",
+      "alg_is_registered": true,
+      "alg_note": null,
+      "sign": {
+        "mean_us": 2160.017,
+        "median_us": 2072.284,
+        "p95_us": 2800.691,
+        "p99_us": 3304.396,
+        "stdev_us": 280.332,
+        "min_us": 1975.036,
+        "max_us": 5359.942,
+        "ops_per_sec": 462.96,
+        "n_iterations": 1000,
+        "ci95_low_us": 2142.642,
+        "ci95_high_us": 2177.392,
+        "std_error_us": 8.8649,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "verify": {
+        "mean_us": 112.119,
+        "median_us": 94.888,
+        "p95_us": 184.438,
+        "p99_us": 392.164,
+        "stdev_us": 54.336,
+        "min_us": 78.491,
+        "max_us": 685.586,
+        "ops_per_sec": 8919.07,
+        "n_iterations": 1000,
+        "ci95_low_us": 108.752,
+        "ci95_high_us": 115.487,
+        "std_error_us": 1.7183,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "size": {
+        "token_bytes": 830,
+        "header_bytes": 36,
+        "payload_bytes": 280,
+        "signature_raw_bytes": 384,
+        "signature_encoded_bytes": 512,
+        "encoding_overhead_bytes": 128,
+        "signature_share_pct": 61.7,
+        "note": "The signature is base64url-encoded in the compact serialization, so it costs about a third more on the wire than its raw length. The payload is this module's choice and is published with the result; the signature length is not a choice."
+      },
+      "limits": [
+        {
+          "limit": "HTTP cookie value",
+          "limit_bytes": 4096,
+          "token_bytes": 830,
+          "headroom_bytes": 3266,
+          "within_default": true,
+          "source": "RFC 6265 section 6.1 - servers SHOULD support at least 4096 bytes per cookie."
+        },
+        {
+          "limit": "nginx large_client_header_buffers (one header)",
+          "limit_bytes": 8192,
+          "token_bytes": 830,
+          "headroom_bytes": 7362,
+          "within_default": true,
+          "source": "nginx default: 4 buffers of 8k. A single header line must fit within one buffer."
+        },
+        {
+          "limit": "Node.js --max-http-header-size (whole header block)",
+          "limit_bytes": 16384,
+          "token_bytes": 830,
+          "headroom_bytes": 15554,
+          "within_default": true,
+          "source": "Node.js default since 12.x, applied to the total header block rather than one line."
+        }
+      ],
+      "resources": {
+        "measured": true,
+        "cpu_us_per_op": 2359.322,
+        "cpu_seconds_total": 4.718644,
+        "cpu_note": "User+system CPU across the timed loop, divided by iterations. On this harness the process is pinned to one core with nothing else scheduled, so this reads close to wall time by construction. It becomes informative only when utilisation varies under contention, which this harness deliberately does not create.",
+        "max_rss_delta_bytes": 0,
+        "max_rss_bytes": 37904384,
+        "rss_note": "Growth in the process high-water mark across the loop. ru_maxrss is a peak that never falls, so this is NOT a per-operation footprint and is not divided by the iteration count -- doing so would produce a confident, meaningless number.",
+        "rss_unit_note": "ru_maxrss read as kilobytes (Linux convention) and converted to bytes."
+      }
+    },
+    "ML-DSA-44": {
+      "scheme": "ML-DSA-44",
+      "kind": "post-quantum",
+      "status": "ok",
+      "alg": "ML-DSA-44",
+      "alg_is_registered": false,
+      "alg_note": "The alg header for a post-quantum scheme carries the scheme's own name as a NON-STANDARD value. No registered JOSE algorithm identifier is asserted for it, and no standardisation draft is named or anticipated here. The measurement does not depend on which identifier is eventually registered: a token's size is driven by the signature and by base64url, and the alg string's own contribution is counted in header_bytes where a reader can see it.",
+      "sign": {
+        "mean_us": 105.663,
+        "median_us": 87.273,
+        "p95_us": 217.674,
+        "p99_us": 304.697,
+        "stdev_us": 55.217,
+        "min_us": 57.378,
+        "max_us": 429.791,
+        "ops_per_sec": 9464.04,
+        "n_iterations": 1000,
+        "ci95_low_us": 102.241,
+        "ci95_high_us": 109.085,
+        "std_error_us": 1.7461,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "verify": {
+        "mean_us": 50.513,
+        "median_us": 46.767,
+        "p95_us": 60.878,
+        "p99_us": 132.997,
+        "stdev_us": 19.089,
+        "min_us": 46.251,
+        "max_us": 354.972,
+        "ops_per_sec": 19796.77,
+        "n_iterations": 1000,
+        "ci95_low_us": 49.33,
+        "ci95_high_us": 51.696,
+        "std_error_us": 0.6036,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "size": {
+        "token_bytes": 3551,
+        "header_bytes": 42,
+        "payload_bytes": 280,
+        "signature_raw_bytes": 2420,
+        "signature_encoded_bytes": 3227,
+        "encoding_overhead_bytes": 807,
+        "signature_share_pct": 90.9,
+        "note": "The signature is base64url-encoded in the compact serialization, so it costs about a third more on the wire than its raw length. The payload is this module's choice and is published with the result; the signature length is not a choice."
+      },
+      "limits": [
+        {
+          "limit": "HTTP cookie value",
+          "limit_bytes": 4096,
+          "token_bytes": 3551,
+          "headroom_bytes": 545,
+          "within_default": true,
+          "source": "RFC 6265 section 6.1 - servers SHOULD support at least 4096 bytes per cookie."
+        },
+        {
+          "limit": "nginx large_client_header_buffers (one header)",
+          "limit_bytes": 8192,
+          "token_bytes": 3551,
+          "headroom_bytes": 4641,
+          "within_default": true,
+          "source": "nginx default: 4 buffers of 8k. A single header line must fit within one buffer."
+        },
+        {
+          "limit": "Node.js --max-http-header-size (whole header block)",
+          "limit_bytes": 16384,
+          "token_bytes": 3551,
+          "headroom_bytes": 12833,
+          "within_default": true,
+          "source": "Node.js default since 12.x, applied to the total header block rather than one line."
+        }
+      ],
+      "resources": {
+        "measured": true,
+        "cpu_us_per_op": 148.244,
+        "cpu_seconds_total": 0.296488,
+        "cpu_note": "User+system CPU across the timed loop, divided by iterations. On this harness the process is pinned to one core with nothing else scheduled, so this reads close to wall time by construction. It becomes informative only when utilisation varies under contention, which this harness deliberately does not create.",
+        "max_rss_delta_bytes": 0,
+        "max_rss_bytes": 38232064,
+        "rss_note": "Growth in the process high-water mark across the loop. ru_maxrss is a peak that never falls, so this is NOT a per-operation footprint and is not divided by the iteration count -- doing so would produce a confident, meaningless number.",
+        "rss_unit_note": "ru_maxrss read as kilobytes (Linux convention) and converted to bytes."
+      }
+    },
+    "ML-DSA-65": {
+      "scheme": "ML-DSA-65",
+      "kind": "post-quantum",
+      "status": "ok",
+      "alg": "ML-DSA-65",
+      "alg_is_registered": false,
+      "alg_note": "The alg header for a post-quantum scheme carries the scheme's own name as a NON-STANDARD value. No registered JOSE algorithm identifier is asserted for it, and no standardisation draft is named or anticipated here. The measurement does not depend on which identifier is eventually registered: a token's size is driven by the signature and by base64url, and the alg string's own contribution is counted in header_bytes where a reader can see it.",
+      "sign": {
+        "mean_us": 173.81,
+        "median_us": 143.736,
+        "p95_us": 351.398,
+        "p99_us": 621.098,
+        "stdev_us": 105.932,
+        "min_us": 81.334,
+        "max_us": 1108.009,
+        "ops_per_sec": 5753.41,
+        "n_iterations": 1000,
+        "ci95_low_us": 167.244,
+        "ci95_high_us": 180.376,
+        "std_error_us": 3.3499,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "verify": {
+        "mean_us": 72.96,
+        "median_us": 68.845,
+        "p95_us": 87.82,
+        "p99_us": 144.568,
+        "stdev_us": 16.965,
+        "min_us": 67.959,
+        "max_us": 282.648,
+        "ops_per_sec": 13706.2,
+        "n_iterations": 1000,
+        "ci95_low_us": 71.908,
+        "ci95_high_us": 74.011,
+        "std_error_us": 0.5365,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "size": {
+        "token_bytes": 4736,
+        "header_bytes": 42,
+        "payload_bytes": 280,
+        "signature_raw_bytes": 3309,
+        "signature_encoded_bytes": 4412,
+        "encoding_overhead_bytes": 1103,
+        "signature_share_pct": 93.2,
+        "note": "The signature is base64url-encoded in the compact serialization, so it costs about a third more on the wire than its raw length. The payload is this module's choice and is published with the result; the signature length is not a choice."
+      },
+      "limits": [
+        {
+          "limit": "HTTP cookie value",
+          "limit_bytes": 4096,
+          "token_bytes": 4736,
+          "headroom_bytes": -640,
+          "within_default": false,
+          "source": "RFC 6265 section 6.1 - servers SHOULD support at least 4096 bytes per cookie."
+        },
+        {
+          "limit": "nginx large_client_header_buffers (one header)",
+          "limit_bytes": 8192,
+          "token_bytes": 4736,
+          "headroom_bytes": 3456,
+          "within_default": true,
+          "source": "nginx default: 4 buffers of 8k. A single header line must fit within one buffer."
+        },
+        {
+          "limit": "Node.js --max-http-header-size (whole header block)",
+          "limit_bytes": 16384,
+          "token_bytes": 4736,
+          "headroom_bytes": 11648,
+          "within_default": true,
+          "source": "Node.js default since 12.x, applied to the total header block rather than one line."
+        }
+      ],
+      "resources": {
+        "measured": true,
+        "cpu_us_per_op": 227.523,
+        "cpu_seconds_total": 0.455046,
+        "cpu_note": "User+system CPU across the timed loop, divided by iterations. On this harness the process is pinned to one core with nothing else scheduled, so this reads close to wall time by construction. It becomes informative only when utilisation varies under contention, which this harness deliberately does not create.",
+        "max_rss_delta_bytes": 0,
+        "max_rss_bytes": 38363136,
+        "rss_note": "Growth in the process high-water mark across the loop. ru_maxrss is a peak that never falls, so this is NOT a per-operation footprint and is not divided by the iteration count -- doing so would produce a confident, meaningless number.",
+        "rss_unit_note": "ru_maxrss read as kilobytes (Linux convention) and converted to bytes."
+      }
+    },
+    "ML-DSA-87": {
+      "scheme": "ML-DSA-87",
+      "kind": "post-quantum",
+      "status": "ok",
+      "alg": "ML-DSA-87",
+      "alg_is_registered": false,
+      "alg_note": "The alg header for a post-quantum scheme carries the scheme's own name as a NON-STANDARD value. No registered JOSE algorithm identifier is asserted for it, and no standardisation draft is named or anticipated here. The measurement does not depend on which identifier is eventually registered: a token's size is driven by the signature and by base64url, and the alg string's own contribution is counted in header_bytes where a reader can see it.",
+      "sign": {
+        "mean_us": 198.01,
+        "median_us": 169.556,
+        "p95_us": 385.206,
+        "p99_us": 574.755,
+        "stdev_us": 92.445,
+        "min_us": 115.603,
+        "max_us": 710.017,
+        "ops_per_sec": 5050.26,
+        "n_iterations": 1000,
+        "ci95_low_us": 192.28,
+        "ci95_high_us": 203.739,
+        "std_error_us": 2.9234,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "verify": {
+        "mean_us": 105.237,
+        "median_us": 98.779,
+        "p95_us": 124.73,
+        "p99_us": 221.796,
+        "stdev_us": 25.304,
+        "min_us": 96.96,
+        "max_us": 406.824,
+        "ops_per_sec": 9502.39,
+        "n_iterations": 1000,
+        "ci95_low_us": 103.668,
+        "ci95_high_us": 106.805,
+        "std_error_us": 0.8002,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "size": {
+        "token_bytes": 6494,
+        "header_bytes": 42,
+        "payload_bytes": 280,
+        "signature_raw_bytes": 4627,
+        "signature_encoded_bytes": 6170,
+        "encoding_overhead_bytes": 1543,
+        "signature_share_pct": 95.0,
+        "note": "The signature is base64url-encoded in the compact serialization, so it costs about a third more on the wire than its raw length. The payload is this module's choice and is published with the result; the signature length is not a choice."
+      },
+      "limits": [
+        {
+          "limit": "HTTP cookie value",
+          "limit_bytes": 4096,
+          "token_bytes": 6494,
+          "headroom_bytes": -2398,
+          "within_default": false,
+          "source": "RFC 6265 section 6.1 - servers SHOULD support at least 4096 bytes per cookie."
+        },
+        {
+          "limit": "nginx large_client_header_buffers (one header)",
+          "limit_bytes": 8192,
+          "token_bytes": 6494,
+          "headroom_bytes": 1698,
+          "within_default": true,
+          "source": "nginx default: 4 buffers of 8k. A single header line must fit within one buffer."
+        },
+        {
+          "limit": "Node.js --max-http-header-size (whole header block)",
+          "limit_bytes": 16384,
+          "token_bytes": 6494,
+          "headroom_bytes": 9890,
+          "within_default": true,
+          "source": "Node.js default since 12.x, applied to the total header block rather than one line."
+        }
+      ],
+      "resources": {
+        "measured": true,
+        "cpu_us_per_op": 277.229,
+        "cpu_seconds_total": 0.554458,
+        "cpu_note": "User+system CPU across the timed loop, divided by iterations. On this harness the process is pinned to one core with nothing else scheduled, so this reads close to wall time by construction. It becomes informative only when utilisation varies under contention, which this harness deliberately does not create.",
+        "max_rss_delta_bytes": 0,
+        "max_rss_bytes": 38551552,
+        "rss_note": "Growth in the process high-water mark across the loop. ru_maxrss is a peak that never falls, so this is NOT a per-operation footprint and is not divided by the iteration count -- doing so would produce a confident, meaningless number.",
+        "rss_unit_note": "ru_maxrss read as kilobytes (Linux convention) and converted to bytes."
+      }
+    },
+    "Falcon-512": {
+      "scheme": "Falcon-512",
+      "kind": "post-quantum",
+      "status": "ok",
+      "alg": "Falcon-512",
+      "alg_is_registered": false,
+      "alg_note": "The alg header for a post-quantum scheme carries the scheme's own name as a NON-STANDARD value. No registered JOSE algorithm identifier is asserted for it, and no standardisation draft is named or anticipated here. The measurement does not depend on which identifier is eventually registered: a token's size is driven by the signature and by base64url, and the alg string's own contribution is counted in header_bytes where a reader can see it.",
+      "sign": {
+        "mean_us": 357.929,
+        "median_us": 343.088,
+        "p95_us": 450.535,
+        "p99_us": 666.815,
+        "stdev_us": 61.342,
+        "min_us": 328.382,
+        "max_us": 1160.214,
+        "ops_per_sec": 2793.85,
+        "n_iterations": 1000,
+        "ci95_low_us": 354.127,
+        "ci95_high_us": 361.731,
+        "std_error_us": 1.9398,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "verify": {
+        "mean_us": 83.086,
+        "median_us": 77.292,
+        "p95_us": 104.185,
+        "p99_us": 163.544,
+        "stdev_us": 21.585,
+        "min_us": 75.603,
+        "max_us": 395.005,
+        "ops_per_sec": 12035.69,
+        "n_iterations": 1000,
+        "ci95_low_us": 81.748,
+        "ci95_high_us": 84.424,
+        "std_error_us": 0.6826,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "size": {
+        "token_bytes": 1199,
+        "header_bytes": 43,
+        "payload_bytes": 280,
+        "signature_raw_bytes": 655,
+        "signature_encoded_bytes": 874,
+        "encoding_overhead_bytes": 219,
+        "signature_share_pct": 72.9,
+        "note": "The signature is base64url-encoded in the compact serialization, so it costs about a third more on the wire than its raw length. The payload is this module's choice and is published with the result; the signature length is not a choice."
+      },
+      "limits": [
+        {
+          "limit": "HTTP cookie value",
+          "limit_bytes": 4096,
+          "token_bytes": 1199,
+          "headroom_bytes": 2897,
+          "within_default": true,
+          "source": "RFC 6265 section 6.1 - servers SHOULD support at least 4096 bytes per cookie."
+        },
+        {
+          "limit": "nginx large_client_header_buffers (one header)",
+          "limit_bytes": 8192,
+          "token_bytes": 1199,
+          "headroom_bytes": 6993,
+          "within_default": true,
+          "source": "nginx default: 4 buffers of 8k. A single header line must fit within one buffer."
+        },
+        {
+          "limit": "Node.js --max-http-header-size (whole header block)",
+          "limit_bytes": 16384,
+          "token_bytes": 1199,
+          "headroom_bytes": 15185,
+          "within_default": true,
+          "source": "Node.js default since 12.x, applied to the total header block rather than one line."
+        }
+      ],
+      "resources": {
+        "measured": true,
+        "cpu_us_per_op": 429.302,
+        "cpu_seconds_total": 0.858603,
+        "cpu_note": "User+system CPU across the timed loop, divided by iterations. On this harness the process is pinned to one core with nothing else scheduled, so this reads close to wall time by construction. It becomes informative only when utilisation varies under contention, which this harness deliberately does not create.",
+        "max_rss_delta_bytes": 0,
+        "max_rss_bytes": 38871040,
+        "rss_note": "Growth in the process high-water mark across the loop. ru_maxrss is a peak that never falls, so this is NOT a per-operation footprint and is not divided by the iteration count -- doing so would produce a confident, meaningless number.",
+        "rss_unit_note": "ru_maxrss read as kilobytes (Linux convention) and converted to bytes."
+      }
+    }
+  },
+  "comparison": {
+    "measurable": true,
+    "baseline": "ECDSA-P256",
+    "baseline_token_bytes": 413,
+    "rows": [
+      {
+        "scheme": "ML-DSA-87",
+        "kind": "post-quantum",
+        "token_bytes": 6494,
+        "token_delta_bytes": 6081,
+        "token_multiple_of_baseline": 15.72,
+        "sign_delta_pct": 488.9
+      },
+      {
+        "scheme": "ML-DSA-65",
+        "kind": "post-quantum",
+        "token_bytes": 4736,
+        "token_delta_bytes": 4323,
+        "token_multiple_of_baseline": 11.47,
+        "sign_delta_pct": 417.0
+      },
+      {
+        "scheme": "ML-DSA-44",
+        "kind": "post-quantum",
+        "token_bytes": 3551,
+        "token_delta_bytes": 3138,
+        "token_multiple_of_baseline": 8.6,
+        "sign_delta_pct": 214.3
+      },
+      {
+        "scheme": "Falcon-512",
+        "kind": "post-quantum",
+        "token_bytes": 1199,
+        "token_delta_bytes": 786,
+        "token_multiple_of_baseline": 2.9,
+        "sign_delta_pct": 964.6
+      },
+      {
+        "scheme": "RSA-3072",
+        "kind": "classical",
+        "token_bytes": 830,
+        "token_delta_bytes": 417,
+        "token_multiple_of_baseline": 2.01,
+        "sign_delta_pct": 6324.6
+      },
+      {
+        "scheme": "RSA-2048",
+        "kind": "classical",
+        "token_bytes": 660,
+        "token_delta_bytes": 247,
+        "token_multiple_of_baseline": 1.6,
+        "sign_delta_pct": 2556.3
+      }
+    ],
+    "note": "Size and speed are reported separately and never blended. They move independently here - a scheme can sign faster while producing a token that no longer fits a header - and a single figure would erase exactly that."
+  },
+  "cfdir_use_cases": [
+    "3.9"
+  ],
+  "cfdir_framework": "v.01"
+}
