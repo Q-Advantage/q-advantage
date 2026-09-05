@@ -1,0 +1,290 @@
+{
+  "environment": {
+    "iso_timestamp": "2026-09-05T09:58:57Z",
+    "liboqs_version": "0.15.0",
+    "openssh": "OpenSSH_9.6p1 Ubuntu-3ubuntu13.19, OpenSSL 3.0.13 30 Jan 2024",
+    "git_commit": "bae67b4ca5f7953bf966c8439cedf2ce16d4598b"
+  },
+  "suites": {
+    "mlkem768x25519-sha256": {
+      "identity": {
+        "protocol": "ssh",
+        "mode": "composed",
+        "suite": "mlkem768x25519-sha256",
+        "use_cases": [
+          "cfdir-3.13"
+        ],
+        "cfdir_framework": "v.01"
+      },
+      "timing": {
+        "mean_us": 186.296,
+        "median_us": 186.071,
+        "p95_us": 224.564,
+        "p99_us": 256.281,
+        "stdev_us": 35.877,
+        "min_us": 146.47,
+        "max_us": 925.566,
+        "ops_per_sec": 5367.79,
+        "n_iterations": 1000,
+        "ci95_low_us": 184.073,
+        "ci95_high_us": 188.52,
+        "std_error_us": 1.1345,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "size": {
+        "bytes_client_to_server": 1216,
+        "bytes_server_to_client": 1120,
+        "bytes_total": 2336,
+        "secret_key_bytes": 2400
+      },
+      "baseline": {
+        "baseline_suite": "curve25519-sha256",
+        "pct_over_classical": 70.2
+      },
+      "cross_validation": {
+        "ebacs_reference_cycles": null,
+        "liboqs_speed_number": null,
+        "measured_vs_reference_pct": null,
+        "reference_notes": "no reference value curated for this primitive yet"
+      },
+      "auth": null,
+      "toolchain": {
+        "liboqs": "0.15.0",
+        "liboqs_python": "0.15.0",
+        "openssl_runtime": "OpenSSL 3.0.13 30 Jan 2024",
+        "openssl_cli": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)",
+        "oqs_provider": null,
+        "openssh": "OpenSSH_9.6p1 Ubuntu-3ubuntu13.19, OpenSSL 3.0.13 30 Jan 2024"
+      },
+      "host": {
+        "cpu_model": "Intel(R) Xeon(R) Platinum 8488C",
+        "arch": "x86_64",
+        "build_path": "OQS_DIST_BUILD dispatch \u00b7 kyber768/falcon AVX2 \u00b7 SHA3 AVX512VL",
+        "cpu_flags": [
+          "avx512vl",
+          "avx512f",
+          "avx2",
+          "sse4_2"
+        ],
+        "cpu_hz_nominal": 3799657000.0,
+        "steal_time_pct": 0.0,
+        "ec2_instance_type": "c7i.large"
+      },
+      "audit": {
+        "git_commit": "bae67b4ca5f7953bf966c8439cedf2ce16d4598b",
+        "timestamp_utc": "2026-09-05T09:58:57Z"
+      },
+      "phases": {
+        "kem_keygen": {
+          "mean_us": 9.52,
+          "median_us": 9.093,
+          "p95_us": 10.794,
+          "p99_us": 18.558,
+          "stdev_us": 2.072,
+          "min_us": 8.767,
+          "max_us": 57.385,
+          "ops_per_sec": 105039.47,
+          "n_iterations": 1000,
+          "ci95_low_us": 9.392,
+          "ci95_high_us": 9.649,
+          "std_error_us": 0.0655,
+          "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+        },
+        "kem_encaps": {
+          "mean_us": 16.715,
+          "median_us": 16.034,
+          "p95_us": 20.293,
+          "p99_us": 35.673,
+          "stdev_us": 4.485,
+          "min_us": 12.684,
+          "max_us": 116.665,
+          "ops_per_sec": 59826.73,
+          "n_iterations": 1000,
+          "ci95_low_us": 16.437,
+          "ci95_high_us": 16.993,
+          "std_error_us": 0.1418,
+          "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+        },
+        "kem_decaps": {
+          "mean_us": 17.48,
+          "median_us": 16.979,
+          "p95_us": 21.087,
+          "p99_us": 34.214,
+          "stdev_us": 2.917,
+          "min_us": 13.148,
+          "max_us": 42.409,
+          "ops_per_sec": 57206.92,
+          "n_iterations": 1000,
+          "ci95_low_us": 17.3,
+          "ci95_high_us": 17.661,
+          "std_error_us": 0.0923,
+          "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+        },
+        "classical_keygen": {
+          "mean_us": 40.54,
+          "median_us": 42.298,
+          "p95_us": 54.513,
+          "p99_us": 71.067,
+          "stdev_us": 16.352,
+          "min_us": 26.123,
+          "max_us": 414.214,
+          "ops_per_sec": 24667.06,
+          "n_iterations": 1000,
+          "ci95_low_us": 39.526,
+          "ci95_high_us": 41.553,
+          "std_error_us": 0.5171,
+          "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+        },
+        "classical_derive": {
+          "mean_us": 30.75,
+          "median_us": 28.223,
+          "p95_us": 39.654,
+          "p99_us": 47.831,
+          "stdev_us": 4.972,
+          "min_us": 27.585,
+          "max_us": 64.916,
+          "ops_per_sec": 32519.83,
+          "n_iterations": 1000,
+          "ci95_low_us": 30.442,
+          "ci95_high_us": 31.059,
+          "std_error_us": 0.1572,
+          "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+        }
+      },
+      "resources": {
+        "kem": {
+          "measured": true,
+          "cpu_us_per_op": 24.319,
+          "cpu_seconds_total": 0.072956,
+          "cpu_note": "User+system CPU across the timed loop, divided by iterations. On this harness the process is pinned to one core with nothing else scheduled, so this reads close to wall time by construction. It becomes informative only when utilisation varies under contention, which this harness deliberately does not create.",
+          "max_rss_delta_bytes": 131072,
+          "max_rss_bytes": 29044736,
+          "rss_note": "Growth in the process high-water mark across the loop. ru_maxrss is a peak that never falls, so this is NOT a per-operation footprint and is not divided by the iteration count -- doing so would produce a confident, meaningless number.",
+          "rss_unit_note": "ru_maxrss read as kilobytes (Linux convention) and converted to bytes."
+        },
+        "classical": {
+          "measured": true,
+          "cpu_us_per_op": 41.095,
+          "cpu_seconds_total": 0.082191,
+          "cpu_note": "User+system CPU across the timed loop, divided by iterations. On this harness the process is pinned to one core with nothing else scheduled, so this reads close to wall time by construction. It becomes informative only when utilisation varies under contention, which this harness deliberately does not create.",
+          "max_rss_delta_bytes": 147456,
+          "max_rss_bytes": 37539840,
+          "rss_note": "Growth in the process high-water mark across the loop. ru_maxrss is a peak that never falls, so this is NOT a per-operation footprint and is not divided by the iteration count -- doing so would produce a confident, meaningless number.",
+          "rss_unit_note": "ru_maxrss read as kilobytes (Linux convention) and converted to bytes."
+        }
+      }
+    },
+    "curve25519-sha256": {
+      "identity": {
+        "protocol": "ssh",
+        "mode": "composed",
+        "suite": "curve25519-sha256",
+        "use_cases": [
+          "cfdir-3.13"
+        ],
+        "cfdir_framework": "v.01"
+      },
+      "timing": {
+        "mean_us": 112.536,
+        "median_us": 109.349,
+        "p95_us": 125.921,
+        "p99_us": 138.218,
+        "stdev_us": 7.238,
+        "min_us": 107.57,
+        "max_us": 198.438,
+        "ops_per_sec": 8886.05,
+        "n_iterations": 1000,
+        "ci95_low_us": 112.087,
+        "ci95_high_us": 112.985,
+        "std_error_us": 0.2289,
+        "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+      },
+      "size": {
+        "bytes_client_to_server": 32,
+        "bytes_server_to_client": 32,
+        "bytes_total": 64
+      },
+      "baseline": {
+        "baseline_suite": null,
+        "pct_over_classical": null
+      },
+      "cross_validation": {
+        "ebacs_reference_cycles": null,
+        "liboqs_speed_number": null,
+        "measured_vs_reference_pct": null,
+        "reference_notes": "no reference value curated for this primitive yet"
+      },
+      "auth": null,
+      "toolchain": {
+        "liboqs": "0.15.0",
+        "liboqs_python": "0.15.0",
+        "openssl_runtime": "OpenSSL 3.0.13 30 Jan 2024",
+        "openssl_cli": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)",
+        "oqs_provider": null,
+        "openssh": "OpenSSH_9.6p1 Ubuntu-3ubuntu13.19, OpenSSL 3.0.13 30 Jan 2024"
+      },
+      "host": {
+        "cpu_model": "Intel(R) Xeon(R) Platinum 8488C",
+        "arch": "x86_64",
+        "build_path": "OQS_DIST_BUILD dispatch \u00b7 kyber768/falcon AVX2 \u00b7 SHA3 AVX512VL",
+        "cpu_flags": [
+          "avx512vl",
+          "avx512f",
+          "avx2",
+          "sse4_2"
+        ],
+        "cpu_hz_nominal": 3799657000.0,
+        "steal_time_pct": 0.0,
+        "ec2_instance_type": "c7i.large"
+      },
+      "audit": {
+        "git_commit": "bae67b4ca5f7953bf966c8439cedf2ce16d4598b",
+        "timestamp_utc": "2026-09-05T09:58:57Z"
+      },
+      "phases": {
+        "classical_keygen": {
+          "mean_us": 27.204,
+          "median_us": 26.389,
+          "p95_us": 32.213,
+          "p99_us": 37.172,
+          "stdev_us": 2.42,
+          "min_us": 26.041,
+          "max_us": 57.3,
+          "ops_per_sec": 36759.73,
+          "n_iterations": 1000,
+          "ci95_low_us": 27.054,
+          "ci95_high_us": 27.354,
+          "std_error_us": 0.0765,
+          "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+        },
+        "classical_derive": {
+          "mean_us": 29.064,
+          "median_us": 28.164,
+          "p95_us": 34.556,
+          "p99_us": 37.811,
+          "stdev_us": 2.429,
+          "min_us": 27.567,
+          "max_us": 47.55,
+          "ops_per_sec": 34406.46,
+          "n_iterations": 1000,
+          "ci95_low_us": 28.914,
+          "ci95_high_us": 29.215,
+          "std_error_us": 0.0768,
+          "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+        }
+      },
+      "resources": {
+        "classical": {
+          "measured": true,
+          "cpu_us_per_op": 32.795,
+          "cpu_seconds_total": 0.065589,
+          "cpu_note": "User+system CPU across the timed loop, divided by iterations. On this harness the process is pinned to one core with nothing else scheduled, so this reads close to wall time by construction. It becomes informative only when utilisation varies under contention, which this harness deliberately does not create.",
+          "max_rss_delta_bytes": 0,
+          "max_rss_bytes": 37670912,
+          "rss_note": "Growth in the process high-water mark across the loop. ru_maxrss is a peak that never falls, so this is NOT a per-operation footprint and is not divided by the iteration count -- doing so would produce a confident, meaningless number.",
+          "rss_unit_note": "ru_maxrss read as kilobytes (Linux convention) and converted to bytes."
+        }
+      }
+    }
+  }
+}
