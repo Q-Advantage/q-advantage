@@ -33,7 +33,12 @@ import {
 } from "@/lib/protocols/metrics";
 import { detectFileAnomalies, publishableVsBaselinePct } from "@/lib/protocols/anomaly";
 import type { ComposedSuite, JoseComposedFile, TimingBlock } from "@/lib/protocols/types";
-import { largestPostQuantumToken, tokenLimitVerdicts } from "@/lib/protocols/derive";
+import {
+  archFreshness,
+  formatMeasuredOn,
+  largestPostQuantumToken,
+  tokenLimitVerdicts,
+} from "@/lib/protocols/derive";
 import {
   formatBytes,
   formatDuration,
@@ -409,10 +414,25 @@ export default function ProtocolsPage() {
     detectFileAnomalies(data.byArch[arch].tls?.suites).map((a) => ({ arch, ...a })),
   );
 
-  /** One track's table, split by architecture when more than one was measured. */
-  function trackPanel(pick: (arch: string) => Record<string, ComposedSuite> | undefined) {
+  /**
+   * One track's table, split by architecture when more than one was measured.
+   *
+   * Each tab carries the date its architecture was measured. Without it, two
+   * columns labelled only "aarch64" and "x86_64" read as one comparison taken
+   * under comparable conditions -- which, when the runs are weeks apart, they
+   * are not.
+   */
+  function trackPanel(
+    pick: (arch: string) => Record<string, ComposedSuite> | undefined,
+    pickMeasuredAt?: (arch: string) => string | null | undefined,
+  ) {
     const withData = arches.filter((a) => pick(a) && Object.keys(pick(a)!).length > 0);
     if (withData.length === 0) return null;
+
+    const freshness = archFreshness(
+      Object.fromEntries(withData.map((a) => [a, pickMeasuredAt?.(a) ?? null])),
+    );
+    const stale = freshness.filter((f) => f.stale);
 
     const table = (arch: string) => (
               <SortableTable
@@ -427,17 +447,48 @@ export default function ProtocolsPage() {
     if (withData.length === 1) return table(withData[0]);
 
     return (
-              <TabbedPanels
+      <>
+        <TabbedPanels
           ariaLabel="Architecture"
           urlParam="arch"
-          items={withData.map((arch) => ({ id: arch, label: arch, content: table(arch) }))}
+          items={withData.map((arch) => {
+            const f = freshness.find((x) => x.arch === arch);
+            return {
+              id: arch,
+              label: `${arch} · ${formatMeasuredOn(f?.measuredAt ?? null)}`,
+              content: table(arch),
+            };
+          })}
         />
+        {stale.length > 0 && (
+          <p className="mt-3 text-[12px] leading-relaxed text-fg-muted">
+            {stale.map((f) => (
+              <span key={f.arch}>
+                The <span className="num font-semibold text-fg">{f.arch}</span> column was measured{" "}
+                <span className="num font-semibold text-fg">{formatMeasuredOn(f.measuredAt)}</span>,{" "}
+                {f.daysBehindNewest} days before the newest run here.{" "}
+              </span>
+            ))}
+            These are real measurements, not estimates &mdash; but they were not taken alongside the
+            others, so read across the tabs as separate runs rather than as one comparison.
+          </p>
+        )}
+      </>
     );
   }
 
-  const tlsPanel = trackPanel((a) => data.byArch[a]?.tls?.suites);
-  const sshPanel = trackPanel((a) => data.byArch[a]?.ssh?.suites);
-  const ipsecPanel = trackPanel((a) => data.byArch[a]?.ipsec?.suites);
+  const tlsPanel = trackPanel(
+    (a) => data.byArch[a]?.tls?.suites,
+    (a) => data.byArch[a]?.tls?.environment?.iso_timestamp,
+  );
+  const sshPanel = trackPanel(
+    (a) => data.byArch[a]?.ssh?.suites,
+    (a) => data.byArch[a]?.ssh?.environment?.iso_timestamp,
+  );
+  const ipsecPanel = trackPanel(
+    (a) => data.byArch[a]?.ipsec?.suites,
+    (a) => data.byArch[a]?.ipsec?.environment?.iso_timestamp,
+  );
 
   const sigPanel = primary?.sig?.schemes ? (
           <SortableTable

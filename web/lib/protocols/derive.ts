@@ -226,3 +226,63 @@ export function largestPostQuantumToken(
     multiple: worst.token_multiple_of_baseline,
   };
 }
+
+/**
+ * How current each architecture's measurements are, relative to the newest.
+ *
+ * WHY THIS EXISTS. /q-shield/protocols renders one tab per architecture,
+ * labelled by architecture alone. On 2026-09-01 that put an aarch64 column
+ * measured 2026-07-11 next to an x86_64 column measured the previous day, with
+ * nothing on the page saying so. Both numbers are real; presenting them as a
+ * side-by-side comparison implies they were taken under comparable conditions,
+ * and seven weeks apart they were not.
+ *
+ * This does not hide the older column. It dates it. An absence of recent ARM
+ * data is a fact about the measurement schedule, and the honest move is to
+ * publish the date rather than to withhold the run or to imply it is current.
+ */
+export interface ArchFreshness {
+  arch: string;
+  /** RFC 3339 timestamp of that architecture's run, or null if unknown. */
+  measuredAt: string | null;
+  /** Whole days behind the newest architecture. 0 for the newest itself. */
+  daysBehindNewest: number | null;
+  /** True when the gap exceeds the threshold and the label must say so. */
+  stale: boolean;
+}
+
+/** A gap wider than this makes a side-by-side read as contemporaneous when it is not. */
+export const ARCH_STALENESS_DAYS = 7;
+
+export function archFreshness(
+  measuredAtByArch: Record<string, string | null | undefined>,
+  thresholdDays: number = ARCH_STALENESS_DAYS,
+): ArchFreshness[] {
+  const parsed = Object.entries(measuredAtByArch).map(([arch, raw]) => {
+    const ms = raw ? Date.parse(raw) : Number.NaN;
+    return { arch, measuredAt: raw ?? null, ms: Number.isFinite(ms) ? ms : null };
+  });
+
+  const known = parsed.filter((p) => p.ms != null).map((p) => p.ms as number);
+  const newest = known.length > 0 ? Math.max(...known) : null;
+
+  return parsed
+    .map(({ arch, measuredAt, ms }) => {
+      // An unparseable or missing date cannot be called stale OR current --
+      // saying either would be a claim the data does not support.
+      if (ms == null || newest == null) {
+        return { arch, measuredAt, daysBehindNewest: null, stale: false };
+      }
+      const days = Math.floor((newest - ms) / 86_400_000);
+      return { arch, measuredAt, daysBehindNewest: days, stale: days > thresholdDays };
+    })
+    .sort((a, b) => a.arch.localeCompare(b.arch));
+}
+
+/** Short, unambiguous date for a tab label. Never a relative "7 weeks ago". */
+export function formatMeasuredOn(iso: string | null): string {
+  if (!iso) return "date unknown";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "date unknown";
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+}

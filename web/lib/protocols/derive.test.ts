@@ -5,6 +5,8 @@ import {
   formatMultiplier,
   hasLiveStatefulSigs,
   humanizeStatefulSigError,
+  archFreshness,
+  formatMeasuredOn,
   hybridToPurePqcRatio,
   largestPostQuantumToken,
   statefulSigsUnavailableReason,
@@ -289,5 +291,66 @@ describe("largestPostQuantumToken", () => {
 
   it("is null for a missing file", () => {
     expect(largestPostQuantumToken(null)).toBeNull();
+  });
+});
+
+describe("archFreshness", () => {
+  // The real shape on 2026-09-01: x86_64 measured daily, one aarch64 run from
+  // 2026-07-11 sitting in the tab next to it.
+  const REAL = { x86_64: "2026-08-31T14:31:10Z", aarch64: "2026-07-11T23:59:36Z" };
+
+  it("marks the newest architecture as current", () => {
+    const x86 = archFreshness(REAL).find((a) => a.arch === "x86_64")!;
+    expect(x86.daysBehindNewest).toBe(0);
+    expect(x86.stale).toBe(false);
+  });
+
+  it("marks a seven-week-old architecture stale, with the gap in days", () => {
+    const arm = archFreshness(REAL).find((a) => a.arch === "aarch64")!;
+    expect(arm.daysBehindNewest).toBe(50);
+    expect(arm.stale).toBe(true);
+  });
+
+  it("does not call a same-day pair stale", () => {
+    const both = archFreshness({ a: "2026-08-31T01:00:00Z", b: "2026-08-31T23:00:00Z" });
+    expect(both.every((x) => x.stale)).toBe(false);
+    expect(both.every((x) => x.daysBehindNewest === 0)).toBe(true);
+  });
+
+  it("treats the threshold as exclusive, so a run exactly on it is not stale", () => {
+    const at = archFreshness({ new: "2026-08-31T00:00:00Z", old: "2026-08-24T00:00:00Z" }, 7);
+    expect(at.find((x) => x.arch === "old")!.daysBehindNewest).toBe(7);
+    expect(at.find((x) => x.arch === "old")!.stale).toBe(false);
+  });
+
+  it("calls an unknown date neither stale nor current — the data cannot support either", () => {
+    const mixed = archFreshness({ good: "2026-08-31T00:00:00Z", bad: null, worse: "not a date" });
+    for (const arch of ["bad", "worse"]) {
+      const row = mixed.find((x) => x.arch === arch)!;
+      expect(row.daysBehindNewest).toBeNull();
+      expect(row.stale).toBe(false);
+    }
+  });
+
+  it("handles a single architecture without inventing a comparison", () => {
+    const one = archFreshness({ x86_64: "2026-08-31T00:00:00Z" });
+    expect(one).toHaveLength(1);
+    expect(one[0].stale).toBe(false);
+  });
+
+  it("returns nothing for no architectures", () => {
+    expect(archFreshness({})).toEqual([]);
+  });
+});
+
+describe("formatMeasuredOn", () => {
+  it("gives an absolute date, never a relative one", () => {
+    // "7 weeks ago" goes stale on the page the moment it is cached.
+    expect(formatMeasuredOn("2026-07-11T23:59:36Z")).toBe("11 Jul 2026");
+  });
+
+  it("says the date is unknown rather than rendering an epoch or a blank", () => {
+    expect(formatMeasuredOn(null)).toBe("date unknown");
+    expect(formatMeasuredOn("not a date")).toBe("date unknown");
   });
 });
