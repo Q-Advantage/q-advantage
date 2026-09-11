@@ -1,0 +1,49 @@
+{
+  "environment": {
+    "iso_timestamp": "2026-09-11T11:01:50Z",
+    "liboqs_version": "0.15.0",
+    "git_commit": "ac983c387d4620863e545ddf7cb2f8a84d7bbc1e",
+    "cpu_model": "Intel(R) Xeon(R) Platinum 8488C",
+    "arch": "x86_64",
+    "build_path": "OQS_DIST_BUILD dispatch \u00b7 kyber768/falcon AVX2 \u00b7 SHA3 AVX512VL",
+    "steal_time_pct": 0.0
+  },
+  "baseline": {
+    "algorithm": "AES-256-GCM",
+    "payload_bytes": 16384,
+    "payload_bytes_source": "RFC 8446 \u00a75.2 \u2014 max TLSPlaintext record length",
+    "key_bytes": 32,
+    "nonce_bytes": 12,
+    "tag_bytes": 16,
+    "encrypt": {
+      "mean_us": 2.663,
+      "median_us": 2.543,
+      "p95_us": 3.229,
+      "p99_us": 3.773,
+      "stdev_us": 1.163,
+      "min_us": 2.032,
+      "max_us": 24.95,
+      "ops_per_sec": 375497.02,
+      "n_iterations": 1000,
+      "ci95_low_us": 2.591,
+      "ci95_high_us": 2.735,
+      "std_error_us": 0.0368,
+      "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+    },
+    "decrypt": {
+      "mean_us": 1.747,
+      "median_us": 1.694,
+      "p95_us": 1.826,
+      "p99_us": 2.216,
+      "stdev_us": 0.691,
+      "min_us": 1.62,
+      "max_us": 18.67,
+      "ops_per_sec": 572305.02,
+      "n_iterations": 1000,
+      "ci95_low_us": 1.704,
+      "ci95_high_us": 1.79,
+      "std_error_us": 0.0219,
+      "ci_note": "95% interval on the MEAN (normal approximation, z=1.96), not a prediction interval for a single operation. stdev_us describes how much individual samples scatter on this host; this describes how precisely the mean is known."
+    }
+  }
+}
