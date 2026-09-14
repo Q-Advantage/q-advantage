@@ -1,46 +1,46 @@
-# Q-Advantage Benchmark — 2026-09-13
+# Q-Advantage Benchmark — 2026-09-14
 
 ## Environment
 
-- **Instance type:** t3.medium
-- **CPU:** Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
-- **Kernel:** 6.17.0-1012-aws
+- **Instance type:** c7i.large
+- **CPU:** Intel(R) Xeon(R) Platinum 8488C
+- **Kernel:** 7.0.0-1011-aws
 - **liboqs version:** 0.15.0
-- **Git commit:** f34ebf3
+- **Git commit:** 1da4bd9
 
 ## KEM Performance
 
 | Algorithm   | Operation   | Mean (µs)   | p95 (µs)   | Ops/sec   | Pubkey (B)   | Privkey (B)   | CT/Sig (B)   |
 |-------------|-------------|-------------|------------|-----------|--------------|---------------|--------------|
-| ML-KEM-512  | keygen      | 16.8        | 22.8       | 59,556    | 800          | 1632          | 768          |
-| ML-KEM-512  | encap       | 20.5        | 29.9       | 48,728    | 800          | 1632          | 768          |
-| ML-KEM-512  | decap       | 17.3        | 23.1       | 57,716    | 800          | 1632          | 768          |
-| ML-KEM-768  | keygen      | 33.3        | 46.1       | 29,993    | 1184         | 2400          | 1088         |
-| ML-KEM-768  | encap       | 34.6        | 42.7       | 28,878    | 1184         | 2400          | 1088         |
-| ML-KEM-768  | decap       | 22.4        | 29.5       | 44,634    | 1184         | 2400          | 1088         |
-| ML-KEM-1024 | keygen      | 37.1        | 76.1       | 26,984    | 1568         | 3168          | 1568         |
-| ML-KEM-1024 | encap       | 36.9        | 89.2       | 27,115    | 1568         | 3168          | 1568         |
-| ML-KEM-1024 | decap       | 37.1        | 49.9       | 26,979    | 1568         | 3168          | 1568         |
+| ML-KEM-512  | keygen      | 6.9         | 7.8        | 144,428   | 800          | 1632          | 768          |
+| ML-KEM-512  | encap       | 8.1         | 8.8        | 122,876   | 800          | 1632          | 768          |
+| ML-KEM-512  | decap       | 8.3         | 9.2        | 120,726   | 800          | 1632          | 768          |
+| ML-KEM-768  | keygen      | 11.8        | 16.6       | 84,883    | 1184         | 2400          | 1088         |
+| ML-KEM-768  | encap       | 14.5        | 18.2       | 68,842    | 1184         | 2400          | 1088         |
+| ML-KEM-768  | decap       | 12.0        | 16.0       | 83,588    | 1184         | 2400          | 1088         |
+| ML-KEM-1024 | keygen      | 12.5        | 15.1       | 79,775    | 1568         | 3168          | 1568         |
+| ML-KEM-1024 | encap       | 13.8        | 15.8       | 72,321    | 1568         | 3168          | 1568         |
+| ML-KEM-1024 | decap       | 15.4        | 18.4       | 65,049    | 1568         | 3168          | 1568         |
 
 ## Signature Performance
 
 | Algorithm               | Operation   | Mean (µs)   | p95 (µs)   | Ops/sec   | Pubkey (B)   | Privkey (B)   | CT/Sig (B)   |
 |-------------------------|-------------|-------------|------------|-----------|--------------|---------------|--------------|
-| ML-DSA-44               | keygen      | 35.8        | 46.2       | 27,961    | 1312         | 2560          | 2420         |
-| ML-DSA-44               | sign        | 148.1       | 365.1      | 6,754     | 1312         | 2560          | 2420         |
-| ML-DSA-44               | verify      | 49.8        | 78.2       | 20,087    | 1312         | 2560          | 2420         |
-| ML-DSA-65               | keygen      | 87.3        | 122.4      | 11,453    | 1952         | 4032          | 3309         |
-| ML-DSA-65               | sign        | 247.5       | 546.4      | 4,040     | 1952         | 4032          | 3309         |
-| ML-DSA-65               | verify      | 77.3        | 109.6      | 12,933    | 1952         | 4032          | 3309         |
-| ML-DSA-87               | keygen      | 87.9        | 126.7      | 11,377    | 2592         | 4896          | 4627         |
-| ML-DSA-87               | sign        | 201.5       | 452.5      | 4,963     | 2592         | 4896          | 4627         |
-| ML-DSA-87               | verify      | 77.0        | 89.3       | 12,990    | 2592         | 4896          | 4627         |
-| SLH_DSA_PURE_SHAKE_128S | keygen      | 198,785     | 263,258    | 5.0       | 32           | 64            | 7856         |
-| SLH_DSA_PURE_SHAKE_128S | sign        | 1,460,081   | 1,829,275  | 0.7       | 32           | 64            | 7856         |
-| SLH_DSA_PURE_SHAKE_128S | verify      | 1,496       | 2,141      | 668.5     | 32           | 64            | 7856         |
-| SLH_DSA_PURE_SHAKE_128F | keygen      | 2,816       | 3,399      | 355.1     | 32           | 64            | 17088        |
-| SLH_DSA_PURE_SHAKE_128F | sign        | 67,167      | 77,254     | 14.9      | 32           | 64            | 17088        |
-| SLH_DSA_PURE_SHAKE_128F | verify      | 3,963       | 4,618      | 252.3     | 32           | 64            | 17088        |
+| ML-DSA-44               | keygen      | 17.8        | 21.0       | 56,208    | 1312         | 2560          | 2420         |
+| ML-DSA-44               | sign        | 58.3        | 128.5      | 17,144    | 1312         | 2560          | 2420         |
+| ML-DSA-44               | verify      | 21.7        | 30.2       | 46,173    | 1312         | 2560          | 2420         |
+| ML-DSA-65               | keygen      | 28.6        | 34.7       | 35,009    | 1952         | 4032          | 3309         |
+| ML-DSA-65               | sign        | 90.7        | 204.1      | 11,029    | 1952         | 4032          | 3309         |
+| ML-DSA-65               | verify      | 31.3        | 44.5       | 31,971    | 1952         | 4032          | 3309         |
+| ML-DSA-87               | keygen      | 59.8        | 78.5       | 16,733    | 2592         | 4896          | 4627         |
+| ML-DSA-87               | sign        | 130.7       | 265.1      | 7,651     | 2592         | 4896          | 4627         |
+| ML-DSA-87               | verify      | 41.2        | 49.1       | 24,257    | 2592         | 4896          | 4627         |
+| SLH_DSA_PURE_SHAKE_128S | keygen      | 100,195     | 101,022    | 10.0      | 32           | 64            | 7856         |
+| SLH_DSA_PURE_SHAKE_128S | sign        | 764,897     | 767,176    | 1.3       | 32           | 64            | 7856         |
+| SLH_DSA_PURE_SHAKE_128S | verify      | 764.9       | 838.0      | 1,307     | 32           | 64            | 7856         |
+| SLH_DSA_PURE_SHAKE_128F | keygen      | 1,565       | 1,647      | 639.0     | 32           | 64            | 17088        |
+| SLH_DSA_PURE_SHAKE_128F | sign        | 36,667      | 36,988     | 27.3      | 32           | 64            | 17088        |
+| SLH_DSA_PURE_SHAKE_128F | verify      | 2,185       | 2,297      | 457.7     | 32           | 64            | 17088        |
 
 ---
 Generated by Q-Advantage benchmark.py — methodology: https://github.com/Q-Advantage/q-advantage/blob/main/METHODOLOGY.md
