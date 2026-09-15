@@ -1,8 +1,14 @@
 import { getLatestRun } from "./load";
 import { getQDayIndex } from "./q-day";
 import { loadProtocolsData } from "@/lib/protocols/load";
+import { deltaSeriesByArch } from "@/lib/protocols/history";
+import {
+  describeDeltaSeries,
+  hostSeriesNote,
+  type DeltaSeriesPair,
+  type SeriesDisplay,
+} from "@/lib/protocols/series";
 import { computeStealPercent } from "@/lib/format";
-import { publishableVsBaselinePct } from "@/lib/protocols/anomaly";
 import type { ComposedSuite } from "@/lib/protocols/types";
 
 /**
@@ -23,6 +29,8 @@ import type { ComposedSuite } from "@/lib/protocols/types";
 const HERO_SUITE = "X25519MLKEM768";
 /** Its classical counterpart, and the baseline every delta is taken against. */
 const CLASSICAL_SUITE = "X25519";
+/** Pure post-quantum key exchange: the comparison the series note describes. */
+const PURE_SUITE = "MLKEM768";
 
 export interface SuiteRow {
   name: string;
@@ -30,8 +38,12 @@ export interface SuiteRow {
   note: string;
   meanUs: number;
   bytesTotal: number | null;
-  /** Negative means faster than classical. Null on the baseline row itself. */
-  pctOverClassical: number | null;
+  /**
+   * The classical-baseline delta as a series across runs on the current host,
+   * with the newest run dated beside it. Null on the baseline row itself, and
+   * wherever the current host has no comparison for this suite.
+   */
+  delta: SeriesDisplay | null;
   isBaseline: boolean;
 }
 
@@ -78,6 +90,11 @@ export interface HomeMetrics {
   qDay: { score: number; bandLow: number; bandHigh: number; systemsScored: number } | null;
   /** TLS suites ranked fastest-first, with the classical baseline pinned last. */
   ranked: SuiteRow[];
+  /**
+   * Explains the "vs classical" figures while the current host has too few runs
+   * for a range, naming the previous host's series separately. Null otherwise.
+   */
+  seriesNote: string | null;
 }
 
 /** Human-readable note per suite. Keyed by the suite name the harness emits. */
@@ -88,15 +105,21 @@ const SUITE_NOTES: Record<string, string> = {
   X25519: "Classical baseline",
 };
 
-function suiteRows(suites: Record<string, ComposedSuite>): SuiteRow[] {
-  const rows: SuiteRow[] = Object.entries(suites).map(([name, s]) => ({
-    name,
-    note: SUITE_NOTES[name] ?? "Composed key exchange",
-    meanUs: s.timing.mean_us,
-    bytesTotal: s.size?.bytes_total ?? null,
-    pctOverClassical: publishableVsBaselinePct(s, suites) ?? null,
-    isBaseline: s.baseline?.baseline_suite == null,
-  }));
+function suiteRows(
+  suites: Record<string, ComposedSuite>,
+  series: Record<string, DeltaSeriesPair>,
+): SuiteRow[] {
+  const rows: SuiteRow[] = Object.entries(suites).map(([name, s]) => {
+    const isBaseline = s.baseline?.baseline_suite == null;
+    return {
+      name,
+      note: SUITE_NOTES[name] ?? "Composed key exchange",
+      meanUs: s.timing.mean_us,
+      bytesTotal: s.size?.bytes_total ?? null,
+      delta: isBaseline ? null : describeDeltaSeries(series[name]),
+      isBaseline,
+    };
+  });
 
   // Fastest first, but the classical baseline always sits last regardless of
   // where its timing lands — it is the reference, not a competitor.
@@ -121,6 +144,7 @@ export function getHomeMetrics(): HomeMetrics {
   const protocols = loadProtocolsData();
   const tls = protocols.byArch["x86_64"]?.tls ?? null;
   const suites = tls?.suites ?? {};
+  const tlsSeries = deltaSeriesByArch("tls")["x86_64"] ?? {};
 
   const hybrid = suites[HERO_SUITE];
   const classical = suites[CLASSICAL_SUITE];
@@ -207,6 +231,7 @@ export function getHomeMetrics(): HomeMetrics {
     representativeSignature,
     kem: encap != null ? { encapUs: encap } : null,
     qDay,
-    ranked: suiteRows(suites),
+    ranked: suiteRows(suites, tlsSeries),
+    seriesNote: hostSeriesNote(tlsSeries[PURE_SUITE], "ML-KEM-768", "X25519"),
   };
 }

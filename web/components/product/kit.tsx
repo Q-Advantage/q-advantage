@@ -408,7 +408,12 @@ export function Tag({ children }: { children: ReactNode }) {
 export function SuiteGrid({
   suites,
 }: {
-  suites: { name: string; note: string; stats: { k: string; v: string; tone?: "pos" | "mute" }[]; baseline?: boolean }[];
+  suites: {
+    name: string;
+    note: string;
+    stats: { k: string; v: string; tone?: "pos" | "mute"; sub?: string[] }[];
+    baseline?: boolean;
+  }[];
 }) {
   return (
     <div className="grid grid-cols-1 gap-px overflow-hidden rounded border border-border bg-border md:grid-cols-2">
@@ -427,6 +432,11 @@ export function SuiteGrid({
                 >
                   {st.v}
                 </div>
+                {st.sub?.map((line) => (
+                  <div key={line} className="num mt-0.5 text-[10.5px] leading-snug text-fg-subtle">
+                    {line}
+                  </div>
+                ))}
               </div>
             ))}
           </div>
@@ -445,6 +455,42 @@ export function Caveat({ label, children }: { label: string; children: ReactNode
       </span>
       {children}
     </div>
+  );
+}
+
+/**
+ * A classical-baseline delta, published as a series (work-order 027).
+ *
+ * The headline figure over its small print: what the figure is -- a median of n
+ * runs on one host, or one dated run -- and the newest run with its date and
+ * commit. Takes the display built by `describeDeltaSeries` in
+ * lib/protocols/series.ts, never a single run's percentage.
+ */
+export function SeriesDelta({
+  display,
+  empty = "—",
+  align = "end",
+}: {
+  display: { value: string | null; tone: "pos" | "neutral" | "mute"; lines: string[] } | null;
+  empty?: ReactNode;
+  align?: "start" | "end";
+}) {
+  if (!display) return <span className="text-fg-subtle">{empty}</span>;
+  return (
+    <span className={`inline-flex flex-col gap-0.5 ${align === "end" ? "items-end text-right" : "items-start text-left"}`}>
+      <span
+        className={
+          display.tone === "pos" ? "text-status-ok" : display.tone === "mute" ? "text-fg-subtle" : "text-fg"
+        }
+      >
+        {display.value ?? "withheld"}
+      </span>
+      {display.lines.map((line) => (
+        <span key={line} className="text-[10.5px] font-medium leading-snug text-fg-subtle">
+          {line}
+        </span>
+      ))}
+    </span>
   );
 }
 

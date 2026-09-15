@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import { PageShell } from "@/components/chrome/PageShell";
-import { AuditBand, Caveat, DataTable, RowName, Section, type KitRow } from "@/components/product/kit";
+import {
+  AuditBand,
+  Caveat,
+  DataTable,
+  RowName,
+  Section,
+  SeriesDelta,
+  type KitRow,
+} from "@/components/product/kit";
 import { loadProtocolsData } from "@/lib/protocols/load";
 import { formatBytes } from "@/lib/format";
 import {
@@ -14,6 +22,9 @@ import {
   type UseCaseCoverage,
 } from "@/lib/data/cfdir";
 import { fileOperatingCostDeltas, formatSignedDelta, mixedSignDeltas } from "@/lib/protocols/ocd";
+import { deltaSeriesByArch } from "@/lib/protocols/history";
+import { describeDeltaSeries } from "@/lib/protocols/series";
+import { formatMeasuredOn } from "@/lib/protocols/derive";
 import {
   congestionIsComposed,
   hasChainSizing,
@@ -82,9 +93,14 @@ export default function CfdirPage() {
   const worst = worstMultiple(chainFile);
   const t = tally(rows);
 
-  const primary = data.byArch["x86_64"] ?? data.byArch[Object.keys(data.byArch)[0]];
+  const primaryArch = data.byArch["x86_64"] ? "x86_64" : Object.keys(data.byArch)[0];
+  const primary = data.byArch[primaryArch];
   const deltas = fileOperatingCostDeltas(primary?.tls?.suites);
   const mixed = mixedSignDeltas(deltas);
+  // The µs and byte deltas below come from one run and are dated as such. The
+  // percentage beside the CPU figure is the series across runs on this host.
+  const tlsEnv = primary?.tls?.environment;
+  const tlsSeries = deltaSeriesByArch("tls")[primaryArch] ?? {};
 
   return (
     <PageShell variant="frame" className="space-y-8">
@@ -353,7 +369,15 @@ export default function CfdirPage() {
               <div key={d.suite} className="rounded border border-border bg-bg-surface p-4">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <div className="font-bold text-fg">{d.suite}</div>
-                  <div className="text-2xs text-fg-subtle">against {d.baselineSuite}</div>
+                  <div className="text-2xs text-fg-subtle">
+                    against {d.baselineSuite}
+                    {tlsEnv && (
+                      <>
+                        {" "}
+                        · run of {formatMeasuredOn(tlsEnv.iso_timestamp)} · {tlsEnv.git_commit.slice(0, 7)}
+                      </>
+                    )}
+                  </div>
                 </div>
                 <dl className="mt-3 grid gap-3 sm:grid-cols-2">
                   {d.components.map((c) => (
@@ -367,11 +391,17 @@ export default function CfdirPage() {
                         }`}
                       >
                         {formatSignedDelta(c)}
-                        {c.deltaPct != null && (
-                          <span className="ml-2 text-[12px] font-semibold text-fg-subtle">
-                            {c.deltaPct > 0 ? "+" : ""}
-                            {c.deltaPct.toFixed(1)}%
+                        {c.component === "cpu" ? (
+                          <span className="mt-1 block text-[12px] font-semibold">
+                            <SeriesDelta display={describeDeltaSeries(tlsSeries[d.suite])} align="start" />
                           </span>
+                        ) : (
+                          c.deltaPct != null && (
+                            <span className="ml-2 text-[12px] font-semibold text-fg-subtle">
+                              {c.deltaPct > 0 ? "+" : ""}
+                              {c.deltaPct.toFixed(1)}%
+                            </span>
+                          )
                         )}
                       </dd>
                     </div>

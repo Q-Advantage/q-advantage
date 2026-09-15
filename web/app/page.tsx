@@ -3,6 +3,7 @@ import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
 import { SubscribeForm } from "@/components/chrome/SubscribeForm";
 import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
+import { SeriesDelta } from "@/components/product/kit";
 import { getHomeMetrics } from "@/lib/data/home-metrics";
 import { getRecentPosts } from "@/lib/blog/posts";
 import { PRODUCTS, TOOLS } from "@/lib/nav";
@@ -365,8 +366,8 @@ function RankedTable({ m }: { m: ReturnType<typeof getHomeMetrics> }) {
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-bg-card">
       <div className="overflow-x-auto">
-        <div className="min-w-[640px]">
-          <div className="grid grid-cols-[38px_minmax(200px,1.5fr)_1fr_1fr_1fr] items-center gap-3 bg-bg-surface px-[18px] py-3 text-2xs font-bold uppercase tracking-eyebrow text-fg-subtle">
+        <div className="min-w-[760px]">
+          <div className="grid grid-cols-[38px_minmax(200px,1.5fr)_1fr_1fr_minmax(220px,1.5fr)] items-center gap-3 bg-bg-surface px-[18px] py-3 text-2xs font-bold uppercase tracking-eyebrow text-fg-subtle">
             <div>#</div>
             <div>Suite</div>
             <div>Mean handshake</div>
@@ -377,7 +378,7 @@ function RankedTable({ m }: { m: ReturnType<typeof getHomeMetrics> }) {
           {m.ranked.map((row, i) => (
             <div
               key={row.name}
-              className={`grid grid-cols-[38px_minmax(200px,1.5fr)_1fr_1fr_1fr] items-center gap-3 border-t border-border-subtle px-[18px] py-3 ${
+              className={`grid grid-cols-[38px_minmax(200px,1.5fr)_1fr_1fr_minmax(220px,1.5fr)] items-center gap-3 border-t border-border-subtle px-[18px] py-3 ${
                 row.isBaseline ? "bg-bg-surface" : ""
               }`}
             >
@@ -407,15 +408,8 @@ function RankedTable({ m }: { m: ReturnType<typeof getHomeMetrics> }) {
                     the whole point of pointing at it. */}
                 {row.bytesTotal != null ? `${row.bytesTotal.toLocaleString()} B` : "—"}
               </div>
-              <div className="num text-[13px]">
-                {row.pctOverClassical == null ? (
-                  <span className="text-fg-subtle">baseline</span>
-                ) : (
-                  <span className={row.pctOverClassical < 0 ? "font-bold text-status-ok" : "font-bold text-fg"}>
-                    {row.pctOverClassical < 0 ? "−" : "+"}
-                    {Math.abs(row.pctOverClassical).toFixed(1)}%
-                  </span>
-                )}
+              <div className="num text-[13px] font-bold">
+                <SeriesDelta display={row.delta} empty={row.isBaseline ? "baseline" : "—"} align="start" />
               </div>
             </div>
           ))}
@@ -448,6 +442,12 @@ function RankedTable({ m }: { m: ReturnType<typeof getHomeMetrics> }) {
         </strong>{" "}
         Read the wire column as the durable number and the timing column as a distribution, not a
         verdict.
+        {m.seriesNote && (
+          <>
+            {" "}
+            {m.seriesNote}
+          </>
+        )}
       </p>
     </div>
   );

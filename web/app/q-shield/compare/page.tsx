@@ -7,6 +7,8 @@ import { computeStealPercent } from "@/lib/format";
 import { CompareViewTabs } from "@/components/data/CompareViewTabs";
 import { ComparisonIndex } from "@/components/data/ComparisonIndex";
 import { HybridVsClassical } from "@/components/data/HybridVsClassical";
+import { deltaSeriesByArch } from "@/lib/protocols/history";
+import { hostSeriesNote } from "@/lib/protocols/series";
 import { AlgorithmBoard } from "@/components/data/AlgorithmBoard";
 import { DataTable, RowName, Tag } from "@/components/product/kit";
 import { availableOperations, buildBoard } from "@/lib/data/board-metrics";
@@ -74,7 +76,11 @@ export default function ComparePage() {
 
   const protocolsData = loadProtocolsData();
   const protocolArches = Object.keys(protocolsData.byArch);
-  const primaryBucket = protocolsData.byArch["x86_64"] ?? protocolsData.byArch[protocolArches[0]];
+  const primaryArch = protocolsData.byArch["x86_64"] ? "x86_64" : protocolArches[0];
+  const primaryBucket = protocolsData.byArch[primaryArch];
+  // The classical-baseline delta as a series across runs on the current host.
+  const tlsSeries = deltaSeriesByArch("tls")[primaryArch];
+  const sshSeries = deltaSeriesByArch("ssh")[primaryArch];
 
   return (
     <>
@@ -141,6 +147,9 @@ export default function ComparePage() {
             <HybridVsClassical
               tlsSuites={primaryBucket.tls?.suites}
               sshSuites={primaryBucket.ssh?.suites}
+              tlsSeries={tlsSeries}
+              sshSeries={sshSeries}
+              seriesNote={hostSeriesNote(tlsSeries?.MLKEM768, "ML-KEM-768", "X25519")}
             />
           </Section>
         )}

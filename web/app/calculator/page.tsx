@@ -4,6 +4,8 @@ import { PageShell } from "@/components/chrome/PageShell";
 import { AuditBand, Caveat, DataTable, RowName, Section } from "@/components/product/kit";
 import { CalculatorView, type CalculatorData } from "@/components/calculator/CalculatorView";
 import { loadProtocolsData } from "@/lib/protocols/load";
+import { deltaSeriesByArch } from "@/lib/protocols/history";
+import { hostSeriesNote } from "@/lib/protocols/series";
 import { ARCHETYPES, EGRESS_GB, HORIZONS, SESSION_REUSE, VCPU_HOUR } from "@/lib/calculator/defaults";
 import { formatUsd, runScenario } from "@/lib/calculator/model";
 import { formatBytes, formatDuration, shortCpuModel } from "@/lib/format";
@@ -42,8 +44,19 @@ export default function CalculatorPage() {
   const env = protocols.byArch[primaryArch]?.tls?.environment;
   const anySuite = Object.values(primary)[0];
 
+  // The "vs classical" column reads as a series across runs on the current
+  // host, never as the single run that prices the scenario. Work-order 027.
+  const tlsSeries = deltaSeriesByArch("tls");
+
   const data: CalculatorData = {
     byArch,
+    deltaSeries: tlsSeries,
+    seriesNoteByArch: Object.fromEntries(
+      Object.keys(byArch).map((arch) => [
+        arch,
+        hostSeriesNote(tlsSeries[arch]?.MLKEM768, "ML-KEM-768", "X25519"),
+      ]),
+    ),
     runCommit: env?.git_commit ?? "",
     runDate: env?.iso_timestamp?.slice(0, 10) ?? "",
     liboqsVersion: env?.liboqs_version ?? "",
@@ -70,8 +83,9 @@ export default function CalculatorPage() {
           PQC Cost Calculator
         </h1>
         <p className="max-w-[62ch] text-[17px] font-medium leading-relaxed text-fg">
-          Post-quantum TLS is slower and heavier than what you run today. This tells you what that
-          costs on your traffic, in dollars, before you commit to it.
+          Post-quantum TLS is heavier than what you run today, and hybrid key exchange is slower
+          &mdash; the post-quantum algorithm itself is not. This tells you what that costs on your
+          traffic, in dollars, before you commit to it.
         </p>
 
         <div className="grid gap-4 border-t border-border pt-5 sm:grid-cols-3">

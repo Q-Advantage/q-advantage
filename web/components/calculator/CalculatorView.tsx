@@ -35,7 +35,8 @@ import {
   type Provenance,
 } from "@/lib/calculator/defaults";
 import { formatCount, formatUsd, runScenario, type ScenarioInputs } from "@/lib/calculator/model";
-import { DataTable, RowName, Tag, Caveat } from "@/components/product/kit";
+import { describeDeltaSeries, type DeltaSeriesPair } from "@/lib/protocols/series";
+import { DataTable, RowName, Tag, Caveat, SeriesDelta } from "@/components/product/kit";
 import { formatBytes, formatDuration, githubChecksUrl } from "@/lib/format";
 
 const SUITE_DISPLAY: Record<string, string> = {
@@ -63,6 +64,14 @@ const STORAGE_KEY = "qadv.calculator.saved.v1";
 
 export interface CalculatorData {
   byArch: Record<string, Record<string, ComposedSuite>>;
+  /**
+   * The classical-baseline delta per architecture and suite, as a series across
+   * runs on the current host (lib/protocols/series.ts). The table shows this --
+   * never the single run in `byArch`, which is what prices the scenario.
+   */
+  deltaSeries: Record<string, Record<string, DeltaSeriesPair>>;
+  /** Explains a thin current-host record, per architecture. Null when there is nothing to explain. */
+  seriesNoteByArch: Record<string, string | null>;
   runCommit: string;
   runDate: string;
   liboqsVersion: string;
@@ -800,16 +809,13 @@ export function CalculatorView({ data }: { data: CalculatorData }) {
                     <RowName key="n" name={SUITE_DISPLAY[s.name] ?? s.name} note={SUITE_KIND[s.name]} />,
                     formatDuration(s.medianUs),
                     s.bytesOut != null ? formatBytes(s.bytesOut) : "—",
-                    s.vsBaselinePct == null ? (
-                      <span key="b" className="text-fg-subtle">
-                        baseline
-                      </span>
-                    ) : (
-                      <span key="d" className={s.vsBaselinePct < 0 ? "text-status-ok" : "text-fg"}>
-                        {s.vsBaselinePct < 0 ? "−" : "+"}
-                        {Math.abs(s.vsBaselinePct).toFixed(1)}%
-                      </span>
-                    ),
+                    // A series across runs on this host, not the single run that
+                    // prices the scenario. Work-order 027.
+                    <SeriesDelta
+                      key="d"
+                      display={describeDeltaSeries(data.deltaSeries[arch]?.[s.name])}
+                      empty={s.isBaseline ? "baseline" : "—"}
+                    />,
                     formatUsd(s.cpuUsd),
                     formatUsd(s.egressUsd),
                     formatUsd(s.totalUsd),
@@ -817,6 +823,11 @@ export function CalculatorView({ data }: { data: CalculatorData }) {
                   ],
                 }))}
               />
+              {data.seriesNoteByArch[arch] && (
+                <p className="mt-2 max-w-[72ch] text-[11.5px] leading-relaxed text-fg-subtle">
+                  {data.seriesNoteByArch[arch]}
+                </p>
+              )}
             </div>
 
             {cliffTriggered && (

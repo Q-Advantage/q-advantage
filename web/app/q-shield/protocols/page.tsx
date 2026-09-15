@@ -17,6 +17,7 @@ import {
   ExportRow,
   RowName,
   Section,
+  SeriesDelta,
   StackedBar,
   Tag,
   type KitRow,
@@ -31,7 +32,14 @@ import {
   formatTailRatio,
   tailRatio,
 } from "@/lib/protocols/metrics";
-import { detectFileAnomalies, publishableVsBaselinePct } from "@/lib/protocols/anomaly";
+import { detectFileAnomalies } from "@/lib/protocols/anomaly";
+import { deltaSeriesByArch } from "@/lib/protocols/history";
+import {
+  describeDeltaSeries,
+  hostSeriesNote,
+  primaryPct,
+  type DeltaSeriesPair,
+} from "@/lib/protocols/series";
 import type { ComposedSuite, JoseComposedFile, TimingBlock } from "@/lib/protocols/types";
 import {
   archFreshness,
@@ -162,13 +170,18 @@ function PhasePanel({ name, suite }: { name: string; suite: ComposedSuite }) {
   );
 }
 
-function suiteRows(suites: Record<string, ComposedSuite> | undefined): KitRow[] {
+function suiteRows(
+  suites: Record<string, ComposedSuite> | undefined,
+  series: Record<string, DeltaSeriesPair> | undefined,
+): KitRow[] {
   return Object.entries(suites ?? {})
     .sort(([, a], [, b]) => a.timing.mean_us - b.timing.mean_us)
     .map(([name, s]) => {
-      // Recomputed against the baseline measured in this same run — never the
-      // stored pct_over_classical, which compares across passes. See metrics.ts.
-      const pct = publishableVsBaselinePct(s, suites);
+      // The classical-baseline delta as a series across runs on the current
+      // host, with the newest run dated beside it -- never one run's figure on
+      // its own. Each run's figure is still the same-run recomputation, never
+      // the stored pct_over_classical. See series.ts and metrics.ts.
+      const delta = describeDeltaSeries(series?.[name]);
       const tail = tailRatio(s.timing);
       return {
         key: name,
@@ -181,7 +194,7 @@ function suiteRows(suites: Record<string, ComposedSuite> | undefined): KitRow[] 
           tail,
           ops: s.timing.ops_per_sec ?? null,
           bytes: s.size?.bytes_total ?? null,
-          vs: pct ?? null,
+          vs: primaryPct(series?.[name]),
         },
         cells: [
           <RowName
@@ -196,16 +209,11 @@ function suiteRows(suites: Record<string, ComposedSuite> | undefined): KitRow[] 
           formatTailRatio(tail),
           formatOpsPerSec(s.timing.ops_per_sec),
           s.size ? `${s.size.bytes_total.toLocaleString()} B` : "—",
-          pct == null ? (
-            <span key="b" className="text-fg-subtle">
-              baseline
-            </span>
-          ) : (
-            <span key="d" className={pct < 0 ? "text-status-ok" : "text-fg"}>
-              {pct < 0 ? "−" : "+"}
-              {Math.abs(pct).toFixed(1)}%
-            </span>
-          ),
+          <SeriesDelta
+            key="d"
+            display={delta}
+            empty={s.baseline?.baseline_suite ? "—" : "baseline"}
+          />,
         ],
         detail: <PhasePanel name={name} suite={s} />,
       };
@@ -425,6 +433,8 @@ export default function ProtocolsPage() {
   function trackPanel(
     pick: (arch: string) => Record<string, ComposedSuite> | undefined,
     pickMeasuredAt?: (arch: string) => string | null | undefined,
+    seriesByArch?: Record<string, Record<string, DeltaSeriesPair>>,
+    note?: (arch: string) => string | null,
   ) {
     const withData = arches.filter((a) => pick(a) && Object.keys(pick(a)!).length > 0);
     if (withData.length === 0) return null;
@@ -434,15 +444,21 @@ export default function ProtocolsPage() {
     );
     const stale = freshness.filter((f) => f.stale);
 
-    const table = (arch: string) => (
-              <SortableTable
-          head={SUITE_HEAD}
-          rows={suiteRows(pick(arch))}
-          sortParam="sort"
-          expandParam="suite"
-          expandHint="phase decomposition"
-        />
-    );
+    const table = (arch: string) => {
+      const text = note?.(arch);
+      return (
+        <>
+          <SortableTable
+            head={SUITE_HEAD}
+            rows={suiteRows(pick(arch), seriesByArch?.[arch])}
+            sortParam="sort"
+            expandParam="suite"
+            expandHint="phase decomposition"
+          />
+          {text && <p className="mt-3 max-w-[80ch] text-[12px] leading-relaxed text-fg-muted">{text}</p>}
+        </>
+      );
+    };
 
     if (withData.length === 1) return table(withData[0]);
 
@@ -477,17 +493,26 @@ export default function ProtocolsPage() {
     );
   }
 
+  // "vs classical" reads as a series across runs on the current host, per
+  // architecture and track. Work-order 027.
+  const tlsSeries = deltaSeriesByArch("tls");
   const tlsPanel = trackPanel(
     (a) => data.byArch[a]?.tls?.suites,
     (a) => data.byArch[a]?.tls?.environment?.iso_timestamp,
+    tlsSeries,
+    (a) => hostSeriesNote(tlsSeries[a]?.MLKEM768, "ML-KEM-768", "X25519"),
   );
   const sshPanel = trackPanel(
     (a) => data.byArch[a]?.ssh?.suites,
     (a) => data.byArch[a]?.ssh?.environment?.iso_timestamp,
+    deltaSeriesByArch("ssh"),
   );
+  const ipsecSeries = deltaSeriesByArch("ipsec");
   const ipsecPanel = trackPanel(
     (a) => data.byArch[a]?.ipsec?.suites,
     (a) => data.byArch[a]?.ipsec?.environment?.iso_timestamp,
+    ipsecSeries,
+    (a) => hostSeriesNote(ipsecSeries[a]?.mlkem768, "ML-KEM-768", "Curve25519"),
   );
 
   const sigPanel = primary?.sig?.schemes ? (
