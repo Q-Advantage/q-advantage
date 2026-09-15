@@ -115,6 +115,58 @@
             "number",
             "null"
           ]
+        },
+        "paired": {
+          "type": "object",
+          "description": "The delta taken per iteration before aggregation: suite and baseline handshakes timed back to back within each iteration, order alternating. Emitted beside pct_over_classical, whose meaning is unchanged; absent on the baseline suite and on runs before work-order 028.",
+          "additionalProperties": false,
+          "required": [
+            "method",
+            "n_pairs",
+            "pct_over_classical"
+          ],
+          "properties": {
+            "method": {
+              "type": "string",
+              "enum": [
+                "interleaved"
+              ]
+            },
+            "n_pairs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "pct_over_classical": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ci95_low_pct": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ci95_high_pct": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "median_delta_us": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ci_note": {
+              "type": "string"
+            },
+            "method_note": {
+              "type": "string"
+            }
+          }
         }
       }
     },

@@ -55,6 +55,20 @@ def run(iterations: int, warmup: int) -> dict:
         measured[suite] = common.time_hybrid_kex(
             kem_alg=kem_alg, classical=classical, iterations=iterations, warmup=warmup
         )
+    # Steal covers exactly the loops above, as it always has, so the paired
+    # measurement below does not widen the window the published figure describes.
+    steal = sampler.result_pct()
+
+    # Paired delta (work-order 028). Measured after every existing loop so those
+    # run exactly as before, and emitted beside pct_over_classical rather than in
+    # place of it. See common.time_paired_delta for why it exists.
+    paired: dict[str, dict] = {
+        suite: common.time_paired_delta(
+            suite=spec, baseline=TLS_SUITES[BASELINE_SUITE], iterations=iterations, warmup=warmup
+        )
+        for suite, spec in TLS_SUITES.items()
+        if suite != BASELINE_SUITE
+    }
 
     baseline_median: float | None = None
     if BASELINE_SUITE in measured:
@@ -94,10 +108,10 @@ def run(iterations: int, warmup: int) -> dict:
             # arm on 1.2 would fold that uplift into a figure published as the
             # PQC increment.
             tls_version="1.3",
+            paired_delta=paired.get(suite),
         )
         records[suite] = rec
 
-    steal = sampler.result_pct()
     for rec in records.values():
         rec["host"]["steal_time_pct"] = steal
 
