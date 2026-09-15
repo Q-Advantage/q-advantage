@@ -327,11 +327,9 @@ export default function QShieldPage() {
                     },
                     {
                       k: "vs classical",
-                      v:
-                        r.pctOverClassical == null
-                          ? "baseline"
-                          : `${r.pctOverClassical < 0 ? "−" : "+"}${Math.abs(r.pctOverClassical).toFixed(1)}%`,
-                      tone: r.pctOverClassical == null ? "mute" : r.pctOverClassical < 0 ? "pos" : undefined,
+                      v: r.isBaseline ? "baseline" : !r.delta ? "—" : (r.delta.value ?? "withheld"),
+                      tone: !r.delta || r.delta.tone === "mute" ? "mute" : r.delta.tone === "pos" ? "pos" : undefined,
+                      sub: r.delta?.lines,
                     },
                   ],
                 }))}
@@ -354,6 +352,13 @@ export default function QShieldPage() {
                 </strong>{" "}
                 — those are fixed by the protocol, not the processor. Read the wire column as the
                 durable number. Migration to a dedicated-core instance is scheduled.
+                {m.seriesNote && (
+                  <>
+                    <br />
+                    <br />
+                    {m.seriesNote}
+                  </>
+                )}
               </Caveat>
             </div>
           </Section>

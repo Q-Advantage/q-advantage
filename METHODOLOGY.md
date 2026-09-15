@@ -314,6 +314,16 @@ Where two measured means sit inside each other's intervals, the difference
 between them is not distinguishable from noise on this host and is not quoted as
 a finding.
 
+**Timing comparisons are published as a series, not as a day.** A percentage
+against the classical baseline moves materially from one run to the next, so
+wherever the site shows one it leads with the median across runs, with the range
+and the number of runs beside it, and shows the newest run only as a dated point
+carrying its commit. A series covers one measurement host: runs from different
+machines are never combined. While a host has fewer than seven runs no range is
+stated — each comparison is shown as the single dated run it is, and the previous
+host's series may appear beside it under that host's name. Runs whose comparison
+is withheld as structurally impossible do not enter the median or the range.
+
 ## Known limitations
 
 - **t3.medium is burstable**, and since 2026-08-17 its X25519 baseline has

@@ -20,6 +20,8 @@ import {
   type SuiteClassification,
 } from "@/lib/protocols/derive";
 import { publishableVsBaselinePct, publishableHybridToPurePqcRatio } from "@/lib/protocols/anomaly";
+import { describeDeltaSeries, type DeltaSeriesPair } from "@/lib/protocols/series";
+import { SeriesDelta } from "@/components/product/kit";
 import { formatDuration, formatBytes, githubCommitUrl } from "@/lib/format";
 import { toCsv, downloadCsv } from "@/lib/csv";
 import { ShareButton } from "./ShareButton";
@@ -40,14 +42,19 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function DeltaBadge({ pct }: { pct: number | undefined }) {
-  if (pct == null) return <span className="text-2xs text-fg-subtle">classical baseline</span>;
-  const faster = pct < 0;
-  const abs = Math.abs(pct).toFixed(1);
+/**
+ * The classical-baseline delta as a series across runs on the current host,
+ * never a bare single-run figure. See lib/protocols/series.ts.
+ */
+function DeltaBadge({ suite, series }: { suite: ComposedSuite; series?: DeltaSeriesPair }) {
+  if (suite.baseline?.baseline_suite == null) {
+    return <span className="text-2xs text-fg-subtle">classical baseline</span>;
+  }
   return (
-    <span className={`text-xs font-medium ${faster ? "text-emerald-500" : "text-fg"}`}>
-      {abs}% {faster ? "faster" : "slower"} <span className="text-fg-subtle font-bold">vs classical</span>
-    </span>
+    <div className="flex flex-col items-end gap-0.5 text-xs font-medium">
+      <span className="text-2xs font-bold uppercase tracking-eyebrow text-fg-subtle">vs classical</span>
+      <SeriesDelta display={describeDeltaSeries(series)} />
+    </div>
   );
 }
 
@@ -55,14 +62,14 @@ function SuiteRow({
   name,
   suite,
   protocol,
-  siblings,
+  series,
   purePqcSuite,
 }: {
   name: string;
   suite: ComposedSuite;
   protocol: "TLS" | "SSH";
-  /** The other suites from the same file — the delta is computed against these. */
-  siblings: Record<string, ComposedSuite>;
+  /** This suite's delta series on the current host. */
+  series?: DeltaSeriesPair;
   /** Same-protocol pure-PQC suite to compare against, when one was measured.
    * Only meaningful when this row itself classifies as "hybrid"; ssh-composed
    * has no pure-PQC suite, so this is legitimately absent there. */
@@ -77,7 +84,7 @@ function SuiteRow({
 
   return (
     <div className="border border-border rounded-md bg-bg-inset px-5 py-4 flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <span className="text-2xs num text-fg-subtle border border-border rounded px-1.5 py-0.5">{protocol}</span>
           <span className="num text-fg font-medium">{name}</span>
@@ -91,7 +98,7 @@ function SuiteRow({
             {CLASS_LABEL[classification]}
           </span>
         </div>
-        <DeltaBadge pct={publishableVsBaselinePct(suite, siblings) ?? undefined} />
+        <DeltaBadge suite={suite} series={series} />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -137,9 +144,17 @@ function SuiteRow({
 export function HybridVsClassical({
   tlsSuites,
   sshSuites,
+  tlsSeries,
+  sshSeries,
+  seriesNote,
 }: {
   tlsSuites?: Record<string, ComposedSuite>;
   sshSuites?: Record<string, ComposedSuite>;
+  /** Delta series per suite on the current host, computed server-side. */
+  tlsSeries?: Record<string, DeltaSeriesPair>;
+  sshSeries?: Record<string, DeltaSeriesPair>;
+  /** Explains a thin current-host record. Null when there is nothing to explain. */
+  seriesNote?: string | null;
 }) {
   const rows = useMemo(() => {
     const out: {
@@ -147,13 +162,14 @@ export function HybridVsClassical({
       suite: ComposedSuite;
       protocol: "TLS" | "SSH";
       siblings: Record<string, ComposedSuite>;
+      series?: DeltaSeriesPair;
     }[] = [];
     for (const [name, suite] of Object.entries(tlsSuites ?? {}))
-      out.push({ name, suite, protocol: "TLS", siblings: tlsSuites ?? {} });
+      out.push({ name, suite, protocol: "TLS", siblings: tlsSuites ?? {}, series: tlsSeries?.[name] });
     for (const [name, suite] of Object.entries(sshSuites ?? {}))
-      out.push({ name, suite, protocol: "SSH", siblings: sshSuites ?? {} });
+      out.push({ name, suite, protocol: "SSH", siblings: sshSuites ?? {}, series: sshSeries?.[name] });
     return out;
-  }, [tlsSuites, sshSuites]);
+  }, [tlsSuites, sshSuites, tlsSeries, sshSeries]);
 
   // One pure-PQC suite per protocol for hybrids to be compared against, when
   // one was measured. Not a hardcoded name match — classifySuite() reads the
@@ -175,6 +191,11 @@ export function HybridVsClassical({
       "classification",
       "median_latency_us",
       "pct_over_classical_recomputed_same_run",
+      "current_host",
+      "pct_over_classical_median_current_host",
+      "pct_over_classical_min_current_host",
+      "pct_over_classical_max_current_host",
+      "runs_current_host",
       "vs_pure_pqc_ratio",
       "bytes_client_to_server",
       "bytes_server_to_client",
@@ -182,17 +203,23 @@ export function HybridVsClassical({
       "amplification_factor",
       "git_commit",
     ];
-    const csvRows = rows.map(({ name, suite, protocol, siblings }) => {
+    const csvRows = rows.map(({ name, suite, protocol, siblings, series }) => {
       const classification = classifySuite(suite);
       const pure = purePqcByProtocol[protocol];
       const ratio =
         classification === "hybrid" && pure ? publishableHybridToPurePqcRatio(suite, pure) : null;
+      const cur = series?.current;
       return [
         protocol,
         name,
         classification,
         suite.timing.median_us,
         publishableVsBaselinePct(suite, siblings) ?? "",
+        cur?.instanceType ?? "",
+        cur?.median ?? "",
+        cur?.min ?? "",
+        cur?.max ?? "",
+        cur?.n ?? "",
         ratio ?? "",
         suite.size?.bytes_client_to_server ?? "",
         suite.size?.bytes_server_to_client ?? "",
@@ -231,17 +258,19 @@ export function HybridVsClassical({
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {rows.map(({ name, suite, protocol, siblings }) => (
+        {rows.map(({ name, suite, protocol, series }) => (
           <SuiteRow
             key={`${protocol}-${name}`}
             name={name}
             suite={suite}
             protocol={protocol}
-            siblings={siblings}
+            series={series}
             purePqcSuite={purePqcByProtocol[protocol]}
           />
         ))}
       </div>
+
+      {seriesNote && <p className="max-w-3xl text-xs leading-relaxed text-fg-muted">{seriesNote}</p>}
     </div>
   );
 }
