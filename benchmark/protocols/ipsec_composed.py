@@ -122,10 +122,26 @@ def run(iterations: int, warmup: int) -> dict:
             # not a reason the whole track fails.
             measured[suite] = {"unavailable": str(exc)}
 
+    # Steal covers exactly the loops above, as it always has, so the paired
+    # measurement below does not widen the window the published figure describes.
+    steal = sampler.result_pct()
+
     baseline_median: float | None = None
     base = measured.get(BASELINE_SUITE)
     if base and "composed" in base:
         baseline_median = base["composed"]["median_us"]
+
+    # Paired delta (work-order 028), after every existing loop and beside
+    # pct_over_classical, for every suite that measured against a baseline that
+    # measured. See common.time_paired_delta.
+    paired: dict[str, dict] = {}
+    if baseline_median:
+        for suite, spec in IKEV2_SUITES.items():
+            if suite == BASELINE_SUITE or "composed" not in measured.get(suite, {}):
+                continue
+            paired[suite] = common.time_paired_delta(
+                suite=spec, baseline=IKEV2_SUITES[BASELINE_SUITE], iterations=iterations, warmup=warmup
+            )
 
     records: dict[str, dict] = {}
     unavailable: dict[str, str] = {}
@@ -161,10 +177,10 @@ def run(iterations: int, warmup: int) -> dict:
             # record -- the seam was the missing piece, not the measurement.
             secret_key_bytes=kex["sizes"].get("kem_secret_key_bytes"),
             resources=kex.get("resources") or None,
+            paired_delta=paired.get(suite),
         )
         records[suite] = rec
 
-    steal = sampler.result_pct()
     for rec in records.values():
         rec["host"]["steal_time_pct"] = steal
 
