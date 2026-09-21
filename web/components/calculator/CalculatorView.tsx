@@ -460,7 +460,7 @@ export function CalculatorView({ data }: { data: CalculatorData }) {
   function downloadJson() {
     const payload = {
       generated_utc: new Date().toISOString(),
-      note: "Computed from measured Q-Shield handshakes and cited public defaults. Nothing here is interpolated.",
+      note: "Computed from measured PQC Arena handshakes and cited public defaults. Nothing here is interpolated.",
       run: { commit: data.runCommit, date: data.runDate, url: githubChecksUrl(data.runCommit) },
       inputs: { ...inputs, architecture: arch, archetype: archetype.label, suites: selected },
       results: result,
@@ -902,7 +902,7 @@ export function CalculatorView({ data }: { data: CalculatorData }) {
             </div>
             <CiteLink
               c={{
-                text: `Q-Shield composed TLS · ${data.runDate} · ${data.runCommit.slice(0, 7)} · liboqs ${data.liboqsVersion} · ${data.cpuModel} (${arch})`,
+                text: `PQC Arena composed TLS · ${data.runDate} · ${data.runCommit.slice(0, 7)} · liboqs ${data.liboqsVersion} · ${data.cpuModel} (${arch})`,
                 url: githubChecksUrl(data.runCommit),
                 retrieved: data.runDate,
               }}

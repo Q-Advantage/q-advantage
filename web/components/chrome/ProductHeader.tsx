@@ -66,16 +66,16 @@ export function ProductHeader({
     >
       <div className="mx-auto max-w-[1240px] px-4 md:px-6">
         <div className="flex h-[58px] items-center justify-between gap-5">
-          <div className="flex min-w-0 items-baseline gap-2">
-            <Link href={homeHref} className="flex-none text-[21px] font-bold tracking-[-0.025em] text-fg">
+          <div className="flex min-w-0 flex-col items-start gap-0 sm:flex-row sm:items-baseline sm:gap-2">
+            <Link href={homeHref} className="flex-none text-[17px] font-bold tracking-[-0.025em] text-fg sm:text-[21px]">
               {before}
               {accentSplit && <span className="text-accent-ink">{accentSplit}</span>}
               {after}
             </Link>
-            <span className="hidden flex-none text-[11.5px] font-semibold text-fg-subtle sm:inline">
+            <span className="flex-none text-[10.5px] font-semibold leading-tight text-fg-subtle sm:text-[11.5px]">
               by{" "}
               <Link href="/" className="border-b border-border text-fg-muted hover:text-fg">
-                Q-Advantage
+                Coldproof
               </Link>
             </span>
           </div>
@@ -104,7 +104,7 @@ export function ProductHeader({
               className="inline-flex h-[32px] items-center gap-1.5 rounded-lg border border-border px-3 text-[12px] font-semibold text-fg-muted transition-colors hover:text-fg"
             >
               <ArrowLeft className="h-3 w-3" aria-hidden />
-              <span className="hidden sm:inline">Q-Advantage</span>
+              <span>Home</span>
             </Link>
           </div>
         </div>

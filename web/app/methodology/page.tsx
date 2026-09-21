@@ -8,13 +8,15 @@ import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 import { getLatestRun, loadAllRuns } from "@/lib/data/load";
 import { deriveHostEras } from "@/lib/data/hosts";
 import { shortCpuModel } from "@/lib/format";
+import { CurrentMethodology } from "@/components/chrome/CurrentMethodology";
 
 export const metadata: Metadata = {
-  title: "Methodology",
+  title: { absolute: "Methodology — Coldproof" },
   description:
-    "How Q-Advantage benchmarks the quantum era: open source, daily GitHub Actions runs, " +
-    "vendor-published or peer-reviewed sources only, full environment capture, every figure dated.",
+    "How Coldproof connects public post-quantum measurements to explicit estate, migration and financial assumptions.",
 };
+
+const SHOW_CURRENT_COLDPROOF_METHODOLOGY: boolean = true;
 
 /**
  * Methodology page — the public contract.
@@ -32,6 +34,8 @@ export const metadata: Metadata = {
  * page can't drift from reality.
  */
 export default function MethodologyPage() {
+  if (SHOW_CURRENT_COLDPROOF_METHODOLOGY) return <CurrentMethodology />;
+
   const run = getLatestRun();
   const env = run.environment;
   // Derived from the committed record, never a hardcoded date. See

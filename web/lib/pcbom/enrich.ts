@@ -425,5 +425,5 @@ export function coverageSentence(summary: EnrichSummary): string {
   }
   const n = enriched.length;
   const noun = cryptoAssetsTotal === 1 ? "component" : "components";
-  return `${n} of ${cryptoAssetsTotal} cryptographic-asset ${noun} enriched with live Q-Shield data.`;
+  return `${n} of ${cryptoAssetsTotal} cryptographic-asset ${noun} enriched with live PQC Arena data.`;
 }

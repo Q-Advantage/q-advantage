@@ -24,7 +24,7 @@ import { ActionButton, triggerDownload } from "./shared";
  */
 
 const SKIP_LABEL: Record<SkipReason, string> = {
-  "not-measured": "Not in Q-Shield's measured set",
+  "not-measured": "Not in PQC Arena's measured set",
   "asset-type-out-of-scope": "Not an algorithm asset",
   "no-algorithm-identifier": "No algorithm identifier declared",
 };
@@ -261,7 +261,7 @@ export function PcbomEnrich({ catalog }: { catalog: PcbomCatalog }) {
                 ))}
               </div>
               <p className="mt-2 text-[11.5px] leading-relaxed text-fg-subtle">
-                A CycloneDX cryptographic asset names an algorithm; Q-Shield measures one operation
+                A CycloneDX cryptographic asset names an algorithm; PQC Arena measures one operation
                 at a time. Each row carries the representative operation &mdash; encapsulation for a
                 KEM, signing for a signature &mdash; and the attached{" "}
                 <code className="num">measurement_id</code> says which.
@@ -296,7 +296,7 @@ export function PcbomEnrich({ catalog }: { catalog: PcbomCatalog }) {
           <div className="border-t border-border-subtle pt-3">
             <div className="eyebrow mb-1.5">What could be matched</div>
             <p className="text-[11.5px] leading-relaxed text-fg-muted">
-              Q-Shield measures{" "}
+              PQC Arena measures{" "}
               <span className="num font-semibold text-fg">
                 {result.summary.measuredAlgorithms.join(", ")}
               </span>{" "}

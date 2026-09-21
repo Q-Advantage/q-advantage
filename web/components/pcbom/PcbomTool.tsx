@@ -45,7 +45,7 @@ export function PcbomTool({ entries, arch }: { entries: PcbomCatalogEntry[]; arc
   if (!entry) {
     return (
       <Caveat label="No data">
-        Q-Shield&rsquo;s current run has no algorithm measurements in a shape this tool can emit yet.
+        PQC Arena&rsquo;s current run has no algorithm measurements in a shape this tool can emit yet.
       </Caveat>
     );
   }
@@ -114,7 +114,7 @@ export function PcbomTool({ entries, arch }: { entries: PcbomCatalogEntry[]; arc
           Download
         </ActionButton>
         <span className="ml-auto text-[11px] text-fg-subtle">
-          Generated in your browser from real Q-Shield data — nothing you enter here is sent anywhere.
+          Generated in your browser from real PQC Arena data — nothing you enter here is sent anywhere.
         </span>
       </div>
 
@@ -155,7 +155,7 @@ export function PcbomTool({ entries, arch }: { entries: PcbomCatalogEntry[]; arc
       </div>
 
       <p className="text-[11px] text-fg-subtle">
-        Architecture: <span className="num font-semibold">{arch}</span>. Only algorithms Q-Shield has
+        Architecture: <span className="num font-semibold">{arch}</span>. Only algorithms PQC Arena has
         actually measured on this architecture appear above — nothing here is interpolated or guessed.
       </p>
     </div>

@@ -366,7 +366,7 @@ describe("coverageSentence", () => {
       catalog,
     );
     expect(coverageSentence(result.summary)).toBe(
-      "1 of 2 cryptographic-asset components enriched with live Q-Shield data.",
+      "1 of 2 cryptographic-asset components enriched with live PQC Arena data.",
     );
   });
 });

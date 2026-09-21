@@ -22,19 +22,37 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: `${base}/q-shield`,
+      url: `${base}/migration-model`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
+      url: `${base}/model/how-it-works`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
+      url: `${base}/pqc-arena`,
       lastModified: dataLastMod,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
-      url: `${base}/q-shield/compare`,
+      url: `${base}/pqc-arena/compare`,
       lastModified: dataLastMod,
       changeFrequency: "daily",
       priority: 0.7,
     },
     {
-      url: `${base}/q-shield/trends`,
+      url: `${base}/pqc-arena/trends`,
+      lastModified: dataLastMod,
+      changeFrequency: "daily",
+      priority: 0.7,
+    },
+    {
+      url: `${base}/pqc-arena/protocols`,
       lastModified: dataLastMod,
       changeFrequency: "daily",
       priority: 0.7,
@@ -44,6 +62,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: dataLastMod,
       changeFrequency: "daily",
       priority: 0.9,
+    },
+    {
+      url: `${base}/p-cbom`,
+      lastModified: dataLastMod,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${base}/blog`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${base}/contact`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
     },
     {
       url: `${base}/methodology`,
@@ -62,7 +98,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   const algorithmPages: MetadataRoute.Sitemap = run.algorithms.map((a) => ({
-    url: `${base}/q-shield/${a.id}`,
+    url: `${base}/pqc-arena/${a.id}`,
     lastModified: dataLastMod,
     changeFrequency: "daily" as const,
     priority: 0.6,

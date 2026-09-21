@@ -1,39 +1,59 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
-import { PageShell } from "@/components/chrome/PageShell";
-import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { ContactForm } from "@/components/chrome/ContactForm";
-import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
+import { BrandClose } from "@/components/chrome/BrandClose";
 
 export const metadata: Metadata = {
-  title: "Contact — Q-Advantage",
+  title: { absolute: "Talk to our team — Coldproof" },
   description:
-    "Talk to Q-Advantage about product access, benchmarking engagements, partnerships, press, or a correction to published data.",
+    "Talk to Coldproof about building a defensible cost model and budget for post-quantum migration.",
 };
 
 export default function ContactPage() {
   return (
-    <div className="marketing-bg min-h-screen flex flex-col">
+    <div className="coldproof-site min-h-screen bg-white text-[#101114]">
       <Header />
-      <PageShell variant="panel" width="narrow">
-        <Breadcrumb back={{ label: "Home", href: "/" }} current="Contact" />
-
-        <div className="mt-8 mb-4">
-          <div className="eyebrow mb-4">Contact</div>
-          <h1 className="text-[clamp(40px,6vw,64px)] font-bold leading-[1.05] tracking-[-0.028em] text-fg mb-5">
-            Talk to us.
-          </h1>
-          <p className="text-lg text-fg-muted leading-[1.6] font-medium">
-            Product access, a custom benchmarking engagement, a partnership — or a correction
-            to something we&apos;ve published. Tell us which, and what you need.
+      <main className="cp-contact-page">
+        <section className="cp-contact-hero cpv2-wrap" aria-labelledby="contact-title">
+          <div className="cp-mono">Talk to our team</div>
+          <h1 id="contact-title">Price the transition<br />before it starts.</h1>
+          <p>
+            Tell us what you operate, what has to change, and which decision needs a number.
+            We’ll start with the migration economics.
           </p>
-        </div>
+        </section>
 
-        <ContactForm />
-      </PageShell>
+        <div className="cpv2-wrap cp-contact-grid">
+          <section className="cp-contact-card cp-contact-main" aria-labelledby="contact-form-title">
+            <div className="cp-mono">Build the budget case</div>
+            <h2 id="contact-form-title">Talk to us.</h2>
+            <p className="cp-contact-intro">
+              Start with your estate, your planning horizon and the financial question your team
+              needs to answer.
+            </p>
+            <ContactForm />
+          </section>
+
+          <aside className="cp-contact-card cp-contact-panel">
+            <div>
+              <span className="cp-mono">For CISOs who need a number</span>
+              <h2>Give finance a migration budget, not another risk memo.</h2>
+              <p>
+                Coldproof builds a seven-year cost model from measured cryptographic performance,
+                estate scope, migration sequencing and operating assumptions.
+              </p>
+            </div>
+            <ul className="cp-contact-outcomes">
+              <li><span>01</span><strong>Low, base and high migration cost</strong></li>
+              <li><span>02</span><strong>One-time and recurring spend</strong></li>
+              <li><span>03</span><strong>Sensitivities, confidence and provenance</strong></li>
+            </ul>
+          </aside>
+        </div>
+      </main>
       <Footer />
-      <GitHubStarPopup />
+      <BrandClose />
     </div>
   );
 }

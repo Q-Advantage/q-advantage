@@ -3,8 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
+import { BrandClose } from "@/components/chrome/BrandClose";
+import { ContactCta } from "@/components/chrome/ContactCta";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
-import { SubscribeForm } from "@/components/chrome/SubscribeForm";
 import { getAllSlugs, getPostBySlug, getRecentPosts } from "@/lib/blog/posts";
 
 export function generateStaticParams() {
@@ -41,7 +42,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const more = getRecentPosts(4).filter((p) => p.slug !== post.slug).slice(0, 3);
 
   return (
-    <div className="contour flex min-h-screen flex-col">
+    <div className="coldproof-site cp-editorial-page flex min-h-screen flex-col">
       <Header />
 
       <main className="flex-1 pt-6">
@@ -64,7 +65,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5 text-[12.5px] text-fg-subtle">
               <span className="num font-semibold">{post.date}</span>
               <span className="text-fg-faint">·</span>
-              <span>Q-Advantage</span>
+              <span>Coldproof</span>
             </div>
           </header>
 
@@ -106,27 +107,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </section>
         )}
 
-        <section className="panel">
-          <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-11">
-            <div>
-              <div className="eyebrow">The briefing</div>
-              <h2 className="mt-1.5 text-[clamp(22px,2.5vw,28px)] font-bold leading-[1.16] tracking-[-0.022em] text-fg">
-                One email a week. Numbers first.
-              </h2>
-              <p className="mt-3 max-w-[48ch] text-[13px] text-fg-muted">
-                What post-quantum is costing the systems you&rsquo;re responsible for, and what
-                changed this week.
-              </p>
-            </div>
-            <div>
-              <SubscribeForm />
-              <p className="mt-2.5 text-[11.5px] text-fg-subtle">Free. Unsubscribe anytime.</p>
-            </div>
-          </div>
-        </section>
+        <section className="panel"><ContactCta /></section>
       </main>
 
       <Footer />
+      <BrandClose />
     </div>
   );
 }

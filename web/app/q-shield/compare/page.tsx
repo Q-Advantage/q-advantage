@@ -25,7 +25,7 @@ import {
 export const metadata: Metadata = {
   title: "Compare algorithms",
   description:
-    "Browse every PQC algorithm pair measured by Q-Shield. ML-KEM, ML-DSA, and SLH-DSA — latency, percentiles, and key sizes from the latest daily run.",
+    "Browse every PQC algorithm pair measured by PQC Arena. ML-KEM, ML-DSA, and SLH-DSA — latency, percentiles, and key sizes from the latest daily run.",
 };
 
 // Force static generation — CompareView handles URL state at runtime.
@@ -169,7 +169,7 @@ export default function ComparePage() {
                 {statefulSigsUnavailableReason(primaryBucket?.lmsXmss) ??
                   "Harness code exists; no real run has landed yet."}{" "}
                 Shown here rather than left silently absent — see{" "}
-                <a href="/q-shield/protocols" className="hover:text-accent underline decoration-border-strong underline-offset-2">/q-shield/protocols</a>{" "}
+                <a href="/pqc-arena/protocols" className="hover:text-accent underline decoration-border-strong underline-offset-2">/pqc-arena/protocols</a>{" "}
                 once measurements land.
               </p>
             </div>

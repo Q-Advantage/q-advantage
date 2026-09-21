@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
+import localFont from "next/font/local";
+import { GeistMono } from "geist/font/mono";
 import "./globals.css";
+import "./coldproof-v2.css";
 
 /**
  * Typography — one face, doing every job.
@@ -22,25 +25,32 @@ const dmSans = DM_Sans({
   axes: ["opsz"],
 });
 
+const hostGrotesk = localFont({
+  src: "./fonts/HostGrotesk-Variable.ttf",
+  display: "swap",
+  variable: "--font-host",
+  weight: "100 900",
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://qadvantage.io"),
   title: {
-    default: "Q-Advantage — The intelligence layer for post-quantum cryptography",
-    template: "%s · Q-Advantage",
+    default: "Coldproof — Know the cost of post-quantum migration",
+    template: "%s — Coldproof",
   },
   description:
-    "Independent, vendor-neutral benchmarks and analysis for the post-quantum transition. Q-Shield measures how the standardized PQC algorithms actually perform, every day.",
+    "Coldproof turns measured post-quantum cryptography performance into migration economics for enterprises, governments, and infrastructure operators.",
   openGraph: {
     type: "website",
-    siteName: "Q-Advantage",
-    title: "Q-Advantage — The intelligence layer for post-quantum cryptography",
-    description: "Independent, vendor-neutral benchmarks and analysis for the post-quantum transition. Q-Shield measures standardized PQC algorithms every day; the Q-Day Index tracks quantum threat readiness.",
+    siteName: "Coldproof",
+    title: "Coldproof — Know the cost of post-quantum migration",
+    description: "Know the cost of post-quantum migration before you migrate.",
     url: "https://qadvantage.io",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Q-Advantage — The intelligence layer for post-quantum cryptography",
-    description: "Independent, vendor-neutral benchmarks and analysis for the post-quantum transition. Q-Shield measures standardized PQC algorithms every day; the Q-Day Index tracks quantum threat readiness.",
+    title: "Coldproof — Know the cost of post-quantum migration",
+    description: "Know the cost of post-quantum migration before you migrate.",
   },
 };
 
@@ -66,7 +76,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={dmSans.variable}>
+    <html lang="en" className={`${dmSans.variable} ${hostGrotesk.variable} ${GeistMono.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>

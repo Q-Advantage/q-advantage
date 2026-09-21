@@ -11,9 +11,9 @@ import { formatUsd, runScenario } from "@/lib/calculator/model";
 import { formatBytes, formatDuration, shortCpuModel } from "@/lib/format";
 
 export const metadata: Metadata = {
-  title: "PQC Cost Calculator",
+  title: { absolute: "PQC Cost Calculator — Coldproof" },
   description:
-    "The ROI of PQC migration, computed: what post-quantum TLS actually costs at your traffic volume, from measured handshakes and cited public pricing. Free, no signup.",
+    "Explore the infrastructure cost of a post-quantum TLS scenario using measured benchmark data. A focused public tool from Coldproof.",
 };
 
 export const dynamic = "force-static";
@@ -153,7 +153,7 @@ export default function CalculatorPage() {
       </Section>
 
       <Caveat label="This page computes — everything else here measures">
-        Everything else Q-Advantage publishes reports a measurement. This page{" "}
+        Everything else Coldproof publishes here reports a measurement. This page{" "}
         <strong className="font-bold text-fg">computes</strong> — it multiplies measured handshake
         costs by traffic volumes and cloud rates to produce a figure nobody measured. That is
         arithmetic over cited inputs, not a model with hidden coefficients, and every input carries a
@@ -229,7 +229,7 @@ export default function CalculatorPage() {
             Price it against your estate →
           </a>
           <a
-            href="/q-shield/protocols"
+            href="/pqc-arena/protocols"
             className="inline-flex h-10 items-center rounded border border-border px-4 text-[13.5px] font-semibold text-fg-muted transition-colors hover:border-border-strong hover:text-fg"
           >
             See the underlying measurements

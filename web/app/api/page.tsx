@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PageShell } from "@/components/chrome/PageShell";
 import { AuditBand, Caveat, DataTable, ExportRow, RowName, Section, Tag } from "@/components/product/kit";
 import { availabilityPayload } from "@/lib/api/v1";
+import { ContactCta } from "@/components/chrome/ContactCta";
 
 export const metadata: Metadata = {
-  title: "Data API — Q-Advantage",
+  title: { absolute: "Post-Quantum Data API — Coldproof" },
   description:
-    "A public, unauthenticated JSON API over every post-quantum benchmark measurement Q-Advantage publishes. Every row traces to the GitHub Actions run that produced it.",
+    "A public, unauthenticated JSON API over every post-quantum benchmark measurement Coldproof publishes. Every row traces to the run that produced it.",
 };
 
 export const dynamic = "force-static";
@@ -34,18 +36,22 @@ export default function ApiReferencePage() {
   const paths = Object.entries(spec.paths);
 
   return (
-    <PageShell variant="frame" className="space-y-8">
-      <div className="flex flex-col gap-3">
+    <PageShell variant="panel" className="cp-api-page space-y-10">
+      <div className="cp-api-hero flex flex-col gap-3">
         <div className="eyebrow">Public data API · v{spec.info.version}</div>
         <h1 className="max-w-[24ch] text-balance text-[clamp(28px,3.6vw,40px)] font-bold leading-[1.08] tracking-[-0.03em] text-fg">
           Take the numbers. All of them.
         </h1>
         <p className="max-w-[66ch] text-[15px] font-medium leading-relaxed text-fg-muted">
-          Every measurement Q-Advantage publishes is readable as JSON, without a key, a login, or a
+          Every measurement Coldproof publishes is readable as JSON, without a key, a login, or a
           rate limit. Responses are prerendered at build time, so they are static files served from
           the edge — and every measurement carries the URL of the GitHub Actions run that produced
           it. If a number here cannot be traced to a run, it is a bug, not a rounding.
         </p>
+        <div className="cp-api-actions">
+          <Link href="/contact">Talk to our team <span aria-hidden>→</span></Link>
+          <a href="/openapi.json">View the OpenAPI specification</a>
+        </div>
       </div>
 
       <AuditBand
@@ -161,6 +167,12 @@ export default function ApiReferencePage() {
           ]}
         />
       </Section>
+
+      <ContactCta
+        eyebrow="From measurement to budget"
+        title="Need these numbers mapped to your estate?"
+        copy="The public API provides evidence. A Coldproof Migration Model turns that evidence and your operating context into a budget decision."
+      />
     </PageShell>
   );
 }

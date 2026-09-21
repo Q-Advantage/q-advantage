@@ -192,12 +192,12 @@ export const STATIC_REFERENCES: Citation[] = [
   VCPU_HOUR.citation,
   EGRESS_GB.citation,
   {
-    text: "Q-Shield methodology — how these handshakes are measured, and what they are not",
+    text: "PQC Arena methodology — how these handshakes are measured, and what they are not",
     url: "https://qadvantage.io/methodology",
     retrieved: "2026-08-16",
   },
   {
-    text: "Q-Shield benchmark source and every committed result file",
+    text: "PQC Arena benchmark source and every committed result file",
     url: "https://github.com/Q-Advantage/q-advantage/tree/main/benchmark/results",
     retrieved: "2026-08-16",
   },

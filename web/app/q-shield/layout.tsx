@@ -7,10 +7,10 @@ import { Footer } from "@/components/chrome/Footer";
  * rather than as a section of the marketing site.
  */
 const TABS: ProductTab[] = [
-  { label: "Overview", href: "/q-shield" },
-  { label: "Compare", href: "/q-shield/compare" },
-  { label: "Protocols", href: "/q-shield/protocols" },
-  { label: "Trends", href: "/q-shield/trends" },
+  { label: "Overview", href: "/pqc-arena" },
+  { label: "Compare", href: "/pqc-arena/compare" },
+  { label: "Protocols", href: "/pqc-arena/protocols" },
+  { label: "Trends", href: "/pqc-arena/trends" },
   { label: "Methodology", href: "/methodology" },
 ];
 
@@ -44,7 +44,7 @@ const TABS: ProductTab[] = [
 export default function QShieldLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <ProductHeader name="Q-Shield" accentSplit="-" tabs={TABS} />
+      <ProductHeader name="PQC Arena" tabs={TABS} homeHref="/pqc-arena" />
       {children}
       <Footer />
     </div>

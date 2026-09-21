@@ -70,7 +70,7 @@ export default function AlgorithmPage({ params }: PageProps) {
   return (
     <>
       <PageShell variant="frame" className="space-y-10">
-        <Breadcrumb back={{ label: "Q-Shield", href: "/q-shield" }} current={algo.display_name} />
+        <Breadcrumb back={{ label: "PQC Arena", href: "/pqc-arena" }} current={algo.display_name} />
 
         {/* Header */}
         <div className="flex flex-col gap-3">

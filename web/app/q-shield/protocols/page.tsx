@@ -56,7 +56,7 @@ import {
 } from "@/lib/format";
 
 export const metadata: Metadata = {
-  title: "Protocol tracks — Q-Shield",
+  title: "PQC protocol measurements",
   description:
     "Post-quantum key exchange measured inside full TLS and SSH handshakes, not as primitives in isolation — with bytes on the wire, phase decomposition, and the classical baseline alongside.",
 };

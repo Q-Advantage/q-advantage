@@ -1,174 +1,85 @@
-import { ImageResponse } from "next/og";
 import { getLatestRun } from "@/lib/data/load";
 import { formatDuration, formatOpsPerSec } from "@/lib/format";
 
-// next/og runs in the edge runtime, but our data loader uses node:fs which
-// doesn't work there. So we run this on the node runtime instead and lose
-// the speed advantage — fine because these are static-generated at build time,
-// not request-time.
+// Keep this legacy URL buildable without next/og's Node renderer. The latter
+// currently fails while prerendering dynamic images on Windows/Node 24. A
+// self-contained SVG preserves the social card and works in the Node runtime
+// required by the filesystem-backed benchmark loader.
 export const runtime = "nodejs";
-export const alt = "Q-Shield algorithm benchmark";
+export const alt = "PQC Arena algorithm benchmark";
 export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
+export const contentType = "image/svg+xml";
 
 export function generateStaticParams() {
   const latest = getLatestRun();
-  return latest.algorithms.map((a) => ({ algorithm: a.id }));
+  return latest.algorithms.map((algorithm) => ({ algorithm: algorithm.id }));
 }
 
-export default async function Image({ params }: { params: { algorithm: string } }) {
-  const run = getLatestRun();
-  const algo = run.algorithms_by_id[params.algorithm];
+function escapeXml(value: string | number) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
 
-  if (!algo) {
-    return new ImageResponse(<div>Not found</div>, size);
+export default function Image({ params }: { params: { algorithm: string } }) {
+  const run = getLatestRun();
+  const algorithm = run.algorithms_by_id[params.algorithm];
+
+  if (!algorithm) {
+    return new Response(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><rect width="1200" height="630" fill="#101114"/><text x="64" y="120" fill="#fff" font-family="sans-serif" font-size="48">Benchmark not found</text></svg>',
+      { headers: { "Content-Type": contentType } },
+    );
   }
 
-  // Use the most "interesting" operation: sign for sigs, encap for KEMs
-  const headlineOp = algo.kind === "kem" ? "encap" : "sign";
-  const stats = algo.operations[headlineOp]!;
+  const headlineOperation = algorithm.kind === "kem" ? "encap" : "sign";
+  const stats = algorithm.operations[headlineOperation]!;
+  const payloadLabel = algorithm.kind === "kem" ? "Ciphertext" : "Signature";
+  const payloadBytes =
+    algorithm.kind === "kem" ? algorithm.ciphertext_bytes : algorithm.signature_bytes;
+  const family = escapeXml(algorithm.family);
+  const kind = algorithm.kind === "kem" ? "KEY ENCAPSULATION" : "DIGITAL SIGNATURE";
+  const name = escapeXml(algorithm.display_name);
+  const duration = escapeXml(formatDuration(stats.mean_us));
+  const throughput = escapeXml(formatOpsPerSec(stats.ops_per_sec));
+  const route = escapeXml(`qadvantage.io/pqc-arena/${algorithm.id}`);
 
-  return new ImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          background: "linear-gradient(135deg, #0a0a0b 0%, #111114 100%)",
-          padding: 64,
-          fontFamily: "sans-serif",
-          color: "#ededed",
-          position: "relative",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: -200,
-            right: -200,
-            width: 800,
-            height: 800,
-            background: "radial-gradient(circle, rgba(74, 222, 128, 0.08) 0%, transparent 60%)",
-            display: "flex",
-          }}
-        />
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+      <defs>
+        <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#0a0a0b"/>
+          <stop offset="1" stop-color="#16181c"/>
+        </linearGradient>
+        <radialGradient id="glow" cx="1" cy="0" r="1">
+          <stop offset="0" stop-color="#8ca9ff" stop-opacity="0.18"/>
+          <stop offset="0.68" stop-color="#8ca9ff" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect width="1200" height="630" fill="url(#background)"/>
+      <rect width="1200" height="630" fill="url(#glow)"/>
+      <text x="64" y="76" fill="#f4f5f7" font-family="Arial, sans-serif" font-size="28" font-weight="600">Coldproof</text>
+      <text x="222" y="76" fill="#8d929c" font-family="monospace" font-size="16" letter-spacing="3">PQC ARENA</text>
+      <text x="64" y="154" fill="#8d929c" font-family="monospace" font-size="17" letter-spacing="3">${family}  ·  ${kind}</text>
+      <text x="64" y="258" fill="#f4f5f7" font-family="Arial, sans-serif" font-size="88" font-weight="500" letter-spacing="-3">${name}</text>
+      <line x1="64" y1="316" x2="1136" y2="316" stroke="#333841"/>
+      <text x="64" y="372" fill="#8d929c" font-family="monospace" font-size="14" letter-spacing="2">${headlineOperation.toUpperCase()} · MEAN</text>
+      <text x="64" y="442" fill="#8ca9ff" font-family="monospace" font-size="54">${duration}</text>
+      <text x="430" y="372" fill="#8d929c" font-family="monospace" font-size="14" letter-spacing="2">OPS / SECOND</text>
+      <text x="430" y="442" fill="#f4f5f7" font-family="monospace" font-size="54">${throughput}</text>
+      <text x="806" y="372" fill="#8d929c" font-family="monospace" font-size="14" letter-spacing="2">${payloadLabel.toUpperCase()}</text>
+      <text x="806" y="442" fill="#f4f5f7" font-family="monospace" font-size="54">${payloadBytes === undefined ? "—" : `${escapeXml(payloadBytes)} B`}</text>
+      <text x="64" y="574" fill="#707680" font-family="monospace" font-size="15">${route}</text>
+      <text x="1136" y="574" fill="#707680" font-family="monospace" font-size="15" text-anchor="end">DATED · REPRODUCIBLE · PUBLIC</text>
+    </svg>`;
 
-        {/* Brand mark */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 48 }}>
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              border: "1.5px solid #ededed",
-              borderRadius: 4,
-              transform: "rotate(45deg)",
-              display: "flex",
-            }}
-          />
-          <div style={{ fontSize: 26, fontWeight: 500, letterSpacing: "-0.02em" }}>
-            Q-Advantage
-          </div>
-          <div style={{ marginLeft: 16, fontSize: 16, color: "#6b6b72", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.18em", display: "flex" }}>
-            Q-Shield
-          </div>
-        </div>
-
-        {/* Family eyebrow */}
-        <div
-          style={{
-            fontSize: 18,
-            color: "#6b6b72",
-            textTransform: "uppercase",
-            letterSpacing: "0.18em",
-            marginBottom: 16,
-            display: "flex",
-            gap: 12,
-          }}
-        >
-          <span>{algo.family}</span>
-          <span style={{ color: "#404048" }}>·</span>
-          <span>{algo.kind === "kem" ? "Key encapsulation" : "Digital signature"}</span>
-        </div>
-
-        {/* Algorithm name */}
-        <div
-          style={{
-            fontSize: 96,
-            fontWeight: 400,
-            letterSpacing: "-0.025em",
-            lineHeight: 1.05,
-            color: "#ededed",
-            marginBottom: 56,
-            display: "flex",
-          }}
-        >
-          {algo.display_name}
-        </div>
-
-        {/* Headline stats */}
-        <div style={{ display: "flex", gap: 80 }}>
-          <Stat
-            label={`${headlineOp} · mean`}
-            value={formatDuration(stats.mean_us)}
-            accent
-          />
-          <Stat label="Ops/sec" value={formatOpsPerSec(stats.ops_per_sec)} />
-          <Stat
-            label={algo.kind === "kem" ? "Ciphertext" : "Signature"}
-            value={`${algo.kind === "kem" ? algo.ciphertext_bytes : algo.signature_bytes} B`}
-          />
-        </div>
-
-        {/* Footer */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 48,
-            left: 64,
-            right: 64,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            fontSize: 16,
-            color: "#6b6b72",
-            fontFamily: "monospace",
-          }}
-        >
-          <div style={{ display: "flex" }}>qadvantage.io/q-shield/{algo.id}</div>
-          <div style={{ display: "flex" }}>Auditable on GitHub</div>
-        </div>
-      </div>
-    ),
-    { ...size },
-  );
-}
-
-function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div
-        style={{
-          fontSize: 14,
-          color: "#6b6b72",
-          textTransform: "uppercase",
-          letterSpacing: "0.18em",
-          display: "flex",
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          fontSize: 56,
-          color: accent ? "#4ade80" : "#ededed",
-          fontFamily: "monospace",
-          display: "flex",
-        }}
-      >
-        {value}
-      </div>
-    </div>
-  );
+  return new Response(svg, {
+    headers: {
+      "Content-Type": contentType,
+      "Cache-Control": "public, immutable, no-transform, max-age=31536000",
+    },
+  });
 }

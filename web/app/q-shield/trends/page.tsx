@@ -25,7 +25,7 @@ import {
 import { computeStealPercent, formatStealPercent, shortCpuModel } from "@/lib/format";
 
 export const metadata: Metadata = {
-  title: "Trends — Q-Shield",
+  title: "PQC benchmark trends",
   description:
     "Every post-quantum algorithm measured daily since May 2026. Latency, percentiles and throughput over time — measured points only, never interpolated.",
 };
@@ -235,7 +235,7 @@ export default function TrendsPage() {
           line here as a performance change. Comparisons between algorithms measured in the{" "}
           <strong className="font-bold text-fg">same run</strong> are sound — that is what{" "}
           <a
-            href="/q-shield/compare"
+            href="/pqc-arena/compare"
             className="font-semibold underline decoration-border-strong underline-offset-2 hover:text-accent"
           >
             compare

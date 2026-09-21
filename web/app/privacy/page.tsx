@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
+import { BrandClose } from "@/components/chrome/BrandClose";
 import { PageShell } from "@/components/chrome/PageShell";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
-import { GitHubStarPopup } from "@/components/chrome/GitHubStarPopup";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy",
+  title: { absolute: "Privacy Policy — Coldproof" },
   description:
-    "How Q-Advantage collects, uses, and protects your personal information — what we collect, " +
+    "How Coldproof collects, uses, and protects your personal information — what we collect, " +
     "why, who we share it with, and your rights under GDPR and CCPA.",
 };
 
@@ -25,7 +25,7 @@ const LAST_UPDATED = "August 2026";
  */
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="coldproof-site cp-editorial-page min-h-screen flex flex-col">
       <Header />
       <PageShell variant="panel" width="narrow">
         <Breadcrumb back={{ label: "Home", href: "/" }} current="Privacy Policy" />
@@ -37,7 +37,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="text-lg text-fg-muted leading-[1.6] font-medium">
-            Q-Advantage collects as little personal information as the site needs to function,
+            Coldproof collects as little personal information as the site needs to function,
             uses it only for the purpose you gave it to us, and never sells it. This page explains
             what we collect, why, how long we keep it, who we share it with, and how to exercise
             your rights over it.
@@ -50,7 +50,7 @@ export default function PrivacyPage() {
         <Section title="1. Who we are">
           <Prose>
             <p>
-              Q-Advantage (&ldquo;Q-Advantage,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;) publishes
+              Coldproof (&ldquo;Coldproof,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;) publishes
               independent benchmarks and analysis for the post-quantum cryptography transition at{" "}
               <span className="text-fg">qadvantage.io</span>. For the purposes of the EU General
               Data Protection Regulation (GDPR) and the California Consumer Privacy Act (CCPA), we
@@ -97,7 +97,7 @@ export default function PrivacyPage() {
           <Prose>
             <p>
               <strong>Email address</strong> is used solely to send you the newsletter you signed
-              up for — new benchmark results, Q-Day Index movements, and related analysis. Our
+              up for — new benchmark results, migration research, and related analysis. Our
               legal basis is your consent, given when you submit the form, or our legitimate
               interest in keeping subscribers informed of content they explicitly requested. We do
               not use your email for any other purpose, and we do not share it with advertisers.
@@ -225,7 +225,7 @@ export default function PrivacyPage() {
         <Section title="10. Children's privacy">
           <Prose>
             <p>
-              Q-Advantage is a professional/industry publication and is not directed at children.
+              Coldproof is a professional service and publication and is not directed at children.
               We do not knowingly collect personal information from anyone under 16. If you believe
               a child has provided us with personal information, contact us at{" "}
               <a
@@ -265,7 +265,7 @@ export default function PrivacyPage() {
         </Section>
       </PageShell>
       <Footer />
-      <GitHubStarPopup />
+      <BrandClose />
     </div>
   );
 }

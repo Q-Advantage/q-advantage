@@ -5,9 +5,9 @@ import { PcbomWorkbench } from "@/components/pcbom/PcbomWorkbench";
 import { getPcbomCatalog } from "@/lib/pcbom/catalog";
 
 export const metadata: Metadata = {
-  title: "P-CBOM — price your cryptographic inventory",
+  title: { absolute: "P-CBOM — Coldproof" },
   description:
-    "Generate a cited P-CBOM v0.1 record for any algorithm Q-Shield measures, or upload your own CycloneDX CBOM and get it back annotated with real measured performance data. Runs entirely in your browser.",
+    "Add measured performance and migration context to your cryptographic bill of materials. Generate or enrich a P-CBOM entirely in your browser.",
 };
 
 export const dynamic = "force-static";
@@ -53,7 +53,7 @@ export default function PcbomPage() {
             {
               n: "1",
               k: "Pick an algorithm",
-              v: "Every algorithm Q-Shield measures, with the operation you care about — keygen, encapsulation, signing, verification.",
+              v: "Every algorithm PQC Arena measures, with the operation you care about — keygen, encapsulation, signing, verification.",
             },
             {
               n: "2",
@@ -84,7 +84,7 @@ export default function PcbomPage() {
       <Section
         eyebrow="Tools"
         title="Generate a record, or annotate the inventory you already have."
-        hint="Only algorithms Q-Shield has actually measured appear here. If something is missing, it is because no run has produced it — not because it was left out."
+        hint="Only algorithms PQC Arena has actually measured appear here. If something is missing, it is because no run has produced it — not because it was left out."
       >
         <PcbomWorkbench catalog={catalog} />
       </Section>
@@ -99,9 +99,9 @@ export default function PcbomPage() {
           A P-CBOM v0.1 record describes one algorithm doing one operation, which is the level a
           CBOM already inventories. A full hybrid handshake &mdash; X25519 together with ML-KEM-768,
           priced as one thing &mdash; is a protocol asset rather than an algorithm, and lands in
-          v0.2. Q-Shield already{" "}
+          v0.2. PQC Arena already{" "}
           <a
-            href="/q-shield/protocols"
+            href="/pqc-arena/protocols"
             className="font-semibold text-link underline decoration-border-strong underline-offset-2"
           >
             measures those handshakes
@@ -148,7 +148,7 @@ export default function PcbomPage() {
           heard of P-CBOM will read it unchanged.
         </p>
         <p className="mt-3 max-w-[70ch] text-[13.5px] leading-relaxed text-fg-muted">
-          The spec is CC0 and the tooling is Apache-2.0. Q-Advantage is not affiliated with
+          The spec is CC0 and the tooling is Apache-2.0. Coldproof is not affiliated with
           CycloneDX or OWASP, and claims no endorsement from either.
         </p>
       </Section>

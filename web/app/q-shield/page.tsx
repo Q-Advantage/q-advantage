@@ -39,7 +39,7 @@ function dur(us: number | undefined): string {
 }
 
 export const metadata: Metadata = {
-  title: "Q-Shield — PQC benchmarks",
+  title: "PQC Arena — post-quantum benchmarks",
   description:
     "Independent performance benchmarks for ML-KEM, ML-DSA, and SLH-DSA — composed into full TLS and SSH handshakes. Auditable, reproducible, public.",
 };
@@ -200,7 +200,7 @@ export default function QShieldPage() {
                     key="n"
                     name={a.display_name}
                     note={`NIST level ${a.nist_level}`}
-                    href={`/q-shield/${a.id}`}
+                    href={`/pqc-arena/${a.id}`}
                   />,
                   dur(a.operations.keygen?.mean_us),
                   dur(a.operations.encap?.mean_us),
@@ -245,7 +245,7 @@ export default function QShieldPage() {
                     key="n"
                     name={a.display_name}
                     note={`NIST level ${a.nist_level}`}
-                    href={`/q-shield/${a.id}`}
+                    href={`/pqc-arena/${a.id}`}
                   />,
                   dur(a.operations.keygen?.mean_us),
                   dur(a.operations.sign?.mean_us),
@@ -274,7 +274,7 @@ export default function QShieldPage() {
             <p className="text-[13.5px] leading-relaxed text-fg-muted">
               Measurements have landed for these schemes &mdash; see{" "}
               <a
-                href="/q-shield/compare"
+                href="/pqc-arena/compare"
                 className="font-semibold text-link underline decoration-border-strong underline-offset-2"
               >
                 Compare
@@ -290,7 +290,7 @@ export default function QShieldPage() {
                 </span>
               </div>
               <p className="mt-2 max-w-[72ch] text-[13px] leading-relaxed text-fg-muted">
-                Q-Shield tracks four parameter sets, with published test vectors and a
+                PQC Arena tracks four parameter sets, with published test vectors and a
                 verification-only path &mdash; the operation that matters here, since a firmware
                 signature is produced once and checked on every boot. The schemes are compiled and
                 proven in Q-Advantage&rsquo;s own reference container. They are not yet enabled in
@@ -371,8 +371,8 @@ export default function QShieldPage() {
         >
           <ExportRow
             items={[
-              { label: "Compare algorithms →", href: "/q-shield/compare", primary: true },
-              { label: "Protocol tracks →", href: "/q-shield/protocols" },
+              { label: "Compare algorithms →", href: "/pqc-arena/compare", primary: true },
+              { label: "Protocol tracks →", href: "/pqc-arena/protocols" },
               { label: "View the run", href: githubCommitUrl(m.run.fullSha) },
               { label: "Benchmark source", href: "https://github.com/Q-Advantage/q-advantage" },
               { label: "Methodology", href: "/methodology" },

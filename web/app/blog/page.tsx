@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
-import { SubscribeForm } from "@/components/chrome/SubscribeForm";
+import { BrandClose } from "@/components/chrome/BrandClose";
+import { ContactCta } from "@/components/chrome/ContactCta";
 import { getAllPosts } from "@/lib/blog/posts";
 
 export const metadata: Metadata = {
-  title: "Blog",
+  title: { absolute: "Post-Quantum Research — Coldproof" },
   description:
     "Analysis behind the numbers: methodology decisions, field developments, and what the post-quantum migration actually costs. Written for the people who have to justify the decision to someone else.",
 };
@@ -15,7 +16,7 @@ export default function BlogIndexPage() {
   const posts = getAllPosts();
 
   return (
-    <div className="contour flex min-h-screen flex-col">
+    <div className="coldproof-site cp-editorial-page flex min-h-screen flex-col">
       <Header />
 
       <main className="flex-1 pt-6">
@@ -59,27 +60,11 @@ export default function BlogIndexPage() {
           </div>
         </section>
 
-        <section className="panel">
-          <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-11">
-            <div>
-              <div className="eyebrow">The briefing</div>
-              <h2 className="mt-1.5 text-[clamp(22px,2.5vw,28px)] font-bold leading-[1.16] tracking-[-0.022em] text-fg">
-                One email a week. Numbers first.
-              </h2>
-              <p className="mt-3 max-w-[48ch] text-[13px] text-fg-muted">
-                What post-quantum is costing the systems you&rsquo;re responsible for, and what
-                changed this week.
-              </p>
-            </div>
-            <div>
-              <SubscribeForm />
-              <p className="mt-2.5 text-[11.5px] text-fg-subtle">Free. Unsubscribe anytime.</p>
-            </div>
-          </div>
-        </section>
+        <section className="panel"><ContactCta /></section>
       </main>
 
       <Footer />
+      <BrandClose />
     </div>
   );
 }
