@@ -66,3 +66,11 @@ GitHub run 38079841595 passed the web type-check, lint, build and unit-test step
 - Web smoke: `web/scripts/smoke-trends.ts:35` rejects duplicate dates; current main data has 150 measurements over 149 distinct dates. The trend projection/smoke check and measured data are unchanged by this PR. Do not delete measurements or loosen a check to make this sprint pass. Resolve the benchmark issue separately before approving merge.
 
 Production is unchanged. The PR remains draft, with these CI blockers explicitly reported.
+
+## Visual revision — homepage continuity
+
+The Research archive, all article pages and Editorial Standards now use one continuous white surface with the homepage's `cpv2-wrap`, Host Grotesk display typography and spacing. Removed the old editorial-page/panel wrappers, grey gutters, rounded section containers, boxed sources and related-publication cards. The feature reuses the existing homepage fibre photograph as decorative editorial imagery, with no new research claims. The archive no longer repeats the featured article in the list below it.
+
+Research styles now live in `web/app/blog/research.css`, imported through `web/app/blog/layout.tsx`; the previous research style block was removed from the shared homepage stylesheet. Homepage and PQC Arena markup were not changed. Published article bodies, URLs, approval rules and content loading are unchanged.
+
+Revised desktop (1440×1000) and mobile (390×844) archive/article layouts were visually checked. Both contain zero `.panel` containers, and mobile content stays within the viewport. Updated screenshots: private vault `coldproof-v3-handoff/research-flow-{index,article}-{desktop,mobile}.jpg`.
