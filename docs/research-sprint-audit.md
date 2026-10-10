@@ -55,3 +55,14 @@ P1: Archive and all three existing articles now share the Research presentation;
 - Optional custom social images and finer article-level evidence annotations remain refinements. Existing archive claims/source notes and historic Q-Shield/Q-Advantage names are not retrospectively re-audited or rewritten.
 - Scheduled content needs a build on/after its publication date; there is no automated scheduler.
 - Unrelated files present on entry remain untouched: `numbers-of-the-week.md`, `web/qa-screenshots/`, `work-orders/028-paired-baseline-delta.md`.
+
+## PR and final CI status
+
+Draft PR: https://github.com/Q-Advantage/q-advantage/pull/68. Vercel built the preview successfully at https://q-advantage-git-codex-research-publishing-sprint-q-advantage.vercel.app/blog. Browser access redirects to Vercel login, so the deployed page was not visually verified; the local build was verified instead.
+
+GitHub run 38079841595 passed the web type-check, lint, build and unit-test steps, but its two jobs are red because of existing benchmark checks outside the changed files:
+
+- Harness: `benchmark/tests/test_workflow_shape.py:111` expects runner labels `[self-hosted, q-advantage-bench]`; current main's workflow uses `[self-hosted, c7i-x86]`. GitHub main file inspection confirmed the mismatch. 152 harness tests passed and this one failed.
+- Web smoke: `web/scripts/smoke-trends.ts:35` rejects duplicate dates; current main data has 150 measurements over 149 distinct dates. The trend projection/smoke check and measured data are unchanged by this PR. Do not delete measurements or loosen a check to make this sprint pass. Resolve the benchmark issue separately before approving merge.
+
+Production is unchanged. The PR remains draft, with these CI blockers explicitly reported.
