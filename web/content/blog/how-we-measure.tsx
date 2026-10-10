@@ -5,7 +5,7 @@ export const meta: PostMeta = {
   slug: "how-we-measure",
   title: "How we measure — and where our own numbers are soft.",
   date: "2026-08-16",
-  category: "Methodology",
+  category: "Data & Methods",
   summary:
     "The run protocol, the hardware, the sourcing bar, and the week the audit trail caught our own instance throttling. If you're going to cite a number from here, this is the page that tells you how much weight it holds.",
   sourceNote:

@@ -47,7 +47,7 @@ export function SubscribeForm() {
       }
     } catch {
       setStatus("error");
-      setMessage("Network error. Email hello@qadvantage.io and we'll add you.");
+      setMessage("Network error. Try again or use our contact page.");
     }
   }
 

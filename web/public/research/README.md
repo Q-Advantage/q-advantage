@@ -1,0 +1,1 @@
+Approved publication figures and supporting downloads live under a directory named for the article slug. Reference /research/<slug>/<filename> in content JSON. Do not place private drafts or unreviewed evidence here: public assets are publicly served.

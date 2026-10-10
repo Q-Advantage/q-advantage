@@ -2,14 +2,14 @@ import type { ComponentType } from "react";
 import BenchmarkDidntLie, { meta as benchmarkDidntLie } from "@/content/blog/benchmark-didnt-lie";
 import HowWeMeasure, { meta as howWeMeasure } from "@/content/blog/how-we-measure";
 import CbomVsPcbom, { meta as cbomVsPcbom } from "@/content/blog/cbom-vs-p-cbom";
+import { getFilePosts } from "./files";
+import type { Category, Evidence } from "./publication";
 
 /**
  * The blog registry.
  *
- * Posts are TypeScript modules rather than markdown files on purpose: it keeps
- * the site free of a markdown pipeline it would otherwise need for three
- * articles, and it means a broken post fails `type-check` instead of rendering
- * blank in production.
+ * Existing publications retain their TypeScript bodies and stable URLs.
+ * New publications are discovered from validated structured content files.
  *
  * Every post declares where its figures came from. `70-marketing/CLAUDE.md`
  * makes "no stat without a source/run" a hard rule, and a blog post is the
@@ -18,11 +18,17 @@ import CbomVsPcbom, { meta as cbomVsPcbom } from "@/content/blog/cbom-vs-p-cbom"
  */
 
 export interface PostMeta {
+  author?: string;
+  updated?: string;
+  version?: string;
+  tags?: string[];
+  evidence?: Evidence[];
+  keyFindings?: string[];
   slug: string;
   title: string;
   /** ISO date, YYYY-MM-DD. Displayed and used for ordering. */
   date: string;
-  category: string;
+  category: Category;
   /** One-line summary — used for the index, and as the page description. */
   summary: string;
   /**
@@ -48,7 +54,13 @@ function byDateDesc(a: Post, b: Post) {
 }
 
 export function getAllPosts(): Post[] {
-  return [...REGISTRY].sort(byDateDesc);
+  const posts = [...REGISTRY, ...getFilePosts()];
+  const slugs = new Set<string>();
+  for (const post of posts) {
+    if (slugs.has(post.slug)) throw new Error(`Duplicate publication slug: ${post.slug}`);
+    slugs.add(post.slug);
+  }
+  return posts.sort(byDateDesc);
 }
 
 export function getRecentPosts(limit: number): Post[] {
@@ -56,9 +68,9 @@ export function getRecentPosts(limit: number): Post[] {
 }
 
 export function getPostBySlug(slug: string): Post | null {
-  return REGISTRY.find((p) => p.slug === slug) ?? null;
+  return getAllPosts().find((p) => p.slug === slug) ?? null;
 }
 
 export function getAllSlugs(): string[] {
-  return REGISTRY.map((p) => p.slug);
+  return getAllPosts().map((p) => p.slug);
 }

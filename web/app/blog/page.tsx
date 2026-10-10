@@ -1,70 +1,43 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
 import { BrandClose } from "@/components/chrome/BrandClose";
-import { ContactCta } from "@/components/chrome/ContactCta";
 import { getAllPosts } from "@/lib/blog/posts";
+import { CATEGORIES } from "@/lib/blog/publication";
+import { ResearchSubscribe } from "@/components/blog/ResearchSubscribe";
 
 export const metadata: Metadata = {
-  title: { absolute: "Post-Quantum Research — Coldproof" },
-  description:
-    "Analysis behind the numbers: methodology decisions, field developments, and what the post-quantum migration actually costs. Written for the people who have to justify the decision to someone else.",
+  title: "Research", description: "Independent, evidence-backed economic analysis to improve post-quantum cryptography investment decisions.",
+  alternates: { canonical: "https://www.coldproof.io/blog", types: { "application/rss+xml": "https://www.coldproof.io/blog/feed.xml" } },
+  openGraph: { title: "Coldproof Research", description: "Evidence for post-quantum investment decisions.", url: "https://www.coldproof.io/blog" },
 };
 
-export default function BlogIndexPage() {
-  const posts = getAllPosts();
-
-  return (
-    <div className="coldproof-site cp-editorial-page flex min-h-screen flex-col">
-      <Header />
-
-      <main className="flex-1 pt-6">
-        <section className="panel">
-          <div className="eyebrow">Blog</div>
-          <h1 className="mt-2 max-w-[20ch] text-balance text-[clamp(28px,3.4vw,40px)] font-bold leading-[1.1] tracking-[-0.028em] text-fg">
-            The analysis behind the numbers.
-          </h1>
-          <p className="mt-4 max-w-[58ch] text-[15.5px] leading-[1.62] text-fg-muted">
-            Methodology decisions, field developments, and what the migration costs — written for
-            the people who have to justify the decision to someone else. Every figure carries the
-            run that produced it.
-          </p>
+export default function BlogIndexPage({ searchParams }: { searchParams: { category?: string } }) {
+  const all = getAllPosts();
+  const category = CATEGORIES.find(c => c === searchParams.category);
+  const posts = category ? all.filter(p => p.category === category) : all;
+  const featured = !category ? posts[0] : undefined;
+  const remaining = featured ? posts.filter(p => p.slug !== featured.slug) : posts;
+  return <div className="coldproof-site research-page flex min-h-screen flex-col">
+    <Header /><main className="flex-1">
+      <div className="cpv2-wrap">
+        <header className="research-intro"><div className="cp-mono">Coldproof Research</div>
+          <h1>The economics of the<br className="research-desktop-break" /> post-quantum transition.</h1>
+          <p>Independent, evidence-backed analysis to improve post-quantum cryptography investment decisions.</p>
+        </header>
+        <nav className="research-filters" aria-label="Publication categories">{["All", ...CATEGORIES].map(c => <Link key={c} href={c === "All" ? "/blog" : `/blog?category=${encodeURIComponent(c)}`} aria-current={(category || "All") === c ? "page" : undefined}>{c}</Link>)}</nav>
+        {featured && <section className="research-feature" aria-label="Featured publication">
+          <Link className="research-feature-image" href={`/blog/${featured.slug}`} aria-label={`Read ${featured.title}`}><Image src="/images/coldproof/hero-fiber.jpg" alt="" fill priority sizes="(max-width: 800px) 100vw, 55vw" /></Link>
+          <div className="research-feature-copy"><span className="cp-mono">Featured / {featured.category}</span><h2><Link href={`/blog/${featured.slug}`}>{featured.title}</Link></h2><p>{featured.summary}</p><div className="research-meta"><time dateTime={featured.date}>{featured.date}</time><span>{featured.author || "Coldproof"}</span></div><Link className="research-read" href={`/blog/${featured.slug}`}>Read publication <span aria-hidden>→</span></Link></div>
+        </section>}
+        <section className="research-library" aria-labelledby="library-title"><div className="research-library-heading"><h2 id="library-title">{featured ? "More research" : category || "Publications"}</h2><a href="/blog/feed.xml">RSS feed ↗</a></div>
+          {remaining.length ? <div className="research-grid">{remaining.map(p => <article key={p.slug} className="research-card"><span className="cp-mono">{p.category}</span><h3><Link href={`/blog/${p.slug}`}>{p.title}</Link></h3><p>{p.summary}</p><div className="research-meta"><time dateTime={p.date}>{p.date}</time><span>{p.author || "Coldproof"}</span></div><Link className="research-read" href={`/blog/${p.slug}`}>Read publication <span aria-hidden>→</span></Link></article>)}</div> : <div className="research-empty"><h3>No publications in this category yet.</h3><p>Research reports will appear here after evidence review and editorial approval.</p><Link href="/blog">Browse all publications →</Link></div>}
         </section>
-
-        <section className="panel">
-          <div className="border-t border-border-subtle">
-            {posts.map((p) => (
-              <Link
-                key={p.slug}
-                href={`/blog/${p.slug}`}
-                className="group grid grid-cols-1 gap-x-6 gap-y-1.5 border-b border-border-subtle px-1 py-6 transition-colors hover:bg-bg-surface md:grid-cols-[110px_1fr]"
-              >
-                <div className="flex flex-row gap-3 md:flex-col md:gap-1">
-                  <span className="num text-[12px] font-semibold text-fg-subtle">{p.date}</span>
-                  <span className="text-[11.5px] text-fg-muted">{p.category}</span>
-                </div>
-                <div className="min-w-0">
-                  <h2 className="text-balance text-[19px] font-bold leading-snug tracking-[-0.028em] text-fg">
-                    {p.title}
-                  </h2>
-                  <p className="mt-1.5 max-w-[70ch] text-[14px] leading-relaxed text-fg-muted">
-                    {p.summary}
-                  </p>
-                  <span className="mt-2.5 inline-block text-[12.5px] font-bold text-link">
-                    Read →
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <section className="panel"><ContactCta /></section>
-      </main>
-
-      <Footer />
-      <BrandClose />
-    </div>
-  );
+        <p className="research-standard">Measured, independently sourced, or explicitly modelled with disclosed assumptions. <Link href="/blog/editorial-standards">Our editorial standard →</Link></p>
+        <ResearchSubscribe />
+      </div>
+    </main><Footer /><BrandClose />
+  </div>;
 }

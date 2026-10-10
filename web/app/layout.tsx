@@ -33,7 +33,7 @@ const hostGrotesk = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://qadvantage.io"),
+  metadataBase: new URL("https://www.coldproof.io"),
   manifest: "/site.webmanifest",
   icons: {
     icon: [
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     siteName: "Coldproof",
     title: "Coldproof — Know the cost of post-quantum migration",
     description: "Know the cost of post-quantum migration before you migrate.",
-    url: "https://qadvantage.io",
+    url: "https://www.coldproof.io",
   },
   twitter: {
     card: "summary_large_image",

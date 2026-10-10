@@ -15,6 +15,8 @@ const nextConfig = {
    */
   experimental: {
     outputFileTracingIncludes: {
+      "/blog": ["./content/research/**/*.json"],
+      "/blog/*": ["./content/research/**/*.json"],
       "/q-shield/compare/opengraph-image": ["./data/results/**/*"],
     },
   },

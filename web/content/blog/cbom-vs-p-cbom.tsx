@@ -5,7 +5,7 @@ export const meta: PostMeta = {
   slug: "cbom-vs-p-cbom",
   title: "CBOM tells you what you run. P-CBOM tells you what it costs.",
   date: "2026-08-03",
-  category: "Standards",
+  category: "Analysis",
   summary:
     "A Cryptography Bill of Materials inventories the algorithms in your estate. It says nothing about what they cost to run. P-CBOM is the CC0 extension that closes that gap.",
   sourceNote:
