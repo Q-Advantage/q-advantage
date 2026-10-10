@@ -14,7 +14,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/api/", "/q-shield/compare/opengraph-image"],
     },
-    sitemap: "https://qadvantage.io/sitemap.xml",
-    host: "https://qadvantage.io",
+    sitemap: "https://coldproof.io/sitemap.xml",
+    host: "https://coldproof.io",
   };
 }

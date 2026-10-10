@@ -5,7 +5,7 @@ export const meta: PostMeta = {
   slug: "benchmark-didnt-lie",
   title: "The benchmark didn't lie. The library changed underneath it.",
   date: "2026-07-27",
-  category: "Methodology",
+  category: "Data & Methods",
   summary:
     "Why static PQC benchmark numbers rot within weeks — and why continuous cross-validation against eBACS and liboqs, not a one-time report, is the only defensible way to measure post-quantum performance.",
   sourceNote:

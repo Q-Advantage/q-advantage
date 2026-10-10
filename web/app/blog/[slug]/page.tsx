@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
 import { BrandClose } from "@/components/chrome/BrandClose";
-import { ContactCta } from "@/components/chrome/ContactCta";
+import { ResearchSubscribe } from "@/components/blog/ResearchSubscribe";
 import { Breadcrumb } from "@/components/chrome/Breadcrumb";
 import { getAllSlugs, getPostBySlug, getRecentPosts } from "@/lib/blog/posts";
 
@@ -24,11 +24,15 @@ export async function generateMetadata({
   return {
     title: post.title,
     description: post.summary,
+    alternates: { canonical: `https://coldproof.io/blog/${post.slug}` },
     openGraph: {
       type: "article",
       title: post.title,
       description: post.summary,
       publishedTime: post.date,
+      modifiedTime: post.updated,
+      authors: [post.author || "Coldproof"],
+      url: `https://coldproof.io/blog/${post.slug}`,
     },
   };
 }
@@ -42,12 +46,19 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const more = getRecentPosts(4).filter((p) => p.slug !== post.slug).slice(0, 3);
 
   return (
-    <div className="coldproof-site cp-editorial-page flex min-h-screen flex-col">
+    <div className="coldproof-site cp-editorial-page research-page flex min-h-screen flex-col">
       <Header />
 
       <main className="flex-1 pt-6">
         <article className="panel">
-          <Breadcrumb back={{ label: "Blog", href: "/blog" }} current={post.category} />
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            "@context": "https://schema.org", "@type": "Article", headline: post.title,
+            description: post.summary, datePublished: post.date, ...(post.updated ? { dateModified: post.updated } : {}),
+            author: { "@type": post.author ? "Person" : "Organization", name: post.author || "Coldproof" },
+            publisher: { "@type": "Organization", name: "Coldproof" },
+            mainEntityOfPage: `https://coldproof.io/blog/${post.slug}`, articleSection: post.category,
+          }).replace(/</g, "\\u003c") }} />
+          <Breadcrumb back={{ label: "Research", href: "/blog" }} current={post.category} />
 
           {/*
             The masthead is centred and the body column below it is centred to
@@ -63,9 +74,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               {post.summary}
             </p>
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5 text-[12.5px] text-fg-subtle">
-              <span className="num font-semibold">{post.date}</span>
+              <time dateTime={post.date} className="num font-semibold">{post.date}</time>
               <span className="text-fg-faint">·</span>
-              <span>Coldproof</span>
+              <span>{post.author || "Coldproof"}</span>
+              {post.updated && <span>Updated <time dateTime={post.updated}>{post.updated}</time></span>}
+              {post.version && <span>Version {post.version}</span>}
             </div>
           </header>
 
@@ -83,12 +96,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             {post.sourceNote}
           </p>
 
+          {!!post.evidence?.length && <p className="mx-auto mb-6 max-w-[68ch] text-sm text-fg-muted">Evidence: {post.evidence.join(" · ")}</p>}
+          {!!post.tags?.length && <p className="mx-auto mb-6 max-w-[68ch] text-sm text-fg-muted">Topics: {post.tags.join(" · ")}</p>}
+          {!!post.keyFindings?.length && <aside className="research-findings mx-auto mb-8 max-w-[68ch]"><h2>Executive summary</h2><ul>{post.keyFindings.map((finding, i) => <li key={i}>{finding}</li>)}</ul></aside>}
           <Body />
+          <p className="research-standard mx-auto mt-12 max-w-[68ch]">Financial claims must be measured, independently sourced, or explicitly modelled with disclosed assumptions. <Link href="/blog/editorial-standards">Editorial standards →</Link></p>
         </article>
 
         {more.length > 0 && (
           <section className="panel">
-            <div className="eyebrow mb-4">More from the blog</div>
+            <div className="eyebrow mb-4">Related publications</div>
             <div className="grid grid-cols-1 gap-2.5 md:grid-cols-3">
               {more.map((p) => (
                 <Link
@@ -107,7 +124,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </section>
         )}
 
-        <section className="panel"><ContactCta /></section>
+        <section className="panel"><ResearchSubscribe /></section>
       </main>
 
       <Footer />

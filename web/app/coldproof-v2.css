@@ -795,3 +795,46 @@
   .cp-explainer-decision { padding: 12px; }
   .cp-explainer-final { padding-block: 78px; }
 }
+
+/* Coldproof Research: shared by the archive and all published articles. */
+.research-page .panel { padding: clamp(24px, 4vw, 56px); }
+.research-intro h1 { max-width: 17ch; margin: 18px 0; font-size: clamp(36px, 5vw, 66px); line-height: 1.04; letter-spacing: -.04em; }
+.research-intro > p { max-width: 62ch; font-size: 18px; line-height: 1.65; color: var(--cp-muted); }
+.research-standard { margin-top: 28px; font-size: 13px; line-height: 1.7; color: var(--cp-muted); }
+.research-standard a, .research-read, .research-library-heading a, .research-contents a { color: var(--cp-blue, #2563eb); }
+.research-feature { display: grid; grid-template-columns: 1fr 1.65fr; gap: 44px; }
+.research-feature-label { display: flex; flex-direction: column; justify-content: space-between; min-height: 270px; padding: 24px; background: #eff5ff; border-left: 3px solid #2563eb; }
+.research-mark { font-family: var(--font-host), sans-serif; font-size: clamp(30px, 4vw, 48px); font-weight: 600; line-height: 1.1; letter-spacing: -.04em; color: #174896; }
+.research-category { display: inline-block; color: #174896; font-size: 12px; font-weight: 650; }
+.research-feature h2 { margin: 16px 0; font-size: clamp(25px, 3vw, 36px); line-height: 1.15; letter-spacing: -.025em; }
+.research-feature p, .research-card p { color: var(--cp-muted); line-height: 1.65; }
+.research-meta { display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0; font-size: 12px; color: var(--cp-muted); }
+.research-read { display: inline-block; font-size: 13px; font-weight: 650; }
+.research-library-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+.research-library-heading h2 { font-size: 28px; font-weight: 600; }
+.research-library-heading a { font-size: 13px; }
+.research-filters { display: flex; flex-wrap: wrap; gap: 8px; padding: 24px 0; margin-bottom: 12px; }
+.research-filters a { border: 1px solid var(--cp-rule); border-radius: 24px; padding: 9px 16px; font-size: 13px; }
+.research-filters a[aria-current] { background: #174896; color: #fff; border-color: #174896; }
+.research-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.research-card { display: flex; flex-direction: column; padding: 28px 0; border-top: 2px solid #2563eb; }
+.research-card h3 { font-family: var(--font-host), sans-serif; margin: 14px 0; font-size: 23px; line-height: 1.25; letter-spacing: -.025em; }
+.research-card p { font-size: 14px; flex: 1; }
+.research-card h3 a:hover, .research-feature h2 a:hover { color: #174896; }
+.research-empty { padding: 40px 0; line-height: 1.7; }
+.research-empty h3 { font-size: 23px; font-weight: 600; }
+.research-subscribe { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+.research-subscribe h2 { font-size: 30px; margin: 12px 0; line-height: 1.2; }
+.research-subscribe p { line-height: 1.65; color: var(--cp-muted); }
+.research-contents, .research-findings { padding: 24px; background: #eff5ff; border-left: 3px solid #2563eb; font-size: 15px; line-height: 1.7; }
+.research-contents ul, .research-findings ul { margin-top: 12px; padding-left: 20px; list-style: disc; }
+.research-findings h2 { font-weight: 650; }
+.research-table, .research-equation { overflow-x: auto; max-width: 100%; margin: 24px 0; }
+.research-table table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.research-table th, .research-table td { padding: 12px; border-bottom: 1px solid var(--cp-rule); text-align: left; vertical-align: top; }
+.research-table th { background: #eff5ff; }
+.research-equation { background: #eff5ff; padding: 20px; font-size: 14px; }
+.research-page a:focus-visible { outline: 2px solid #2563eb; outline-offset: 4px; }
+@media (max-width: 800px) { .research-grid { grid-template-columns: 1fr 1fr; } .research-feature { gap: 24px; } .research-subscribe { grid-template-columns: 1fr; gap: 24px; } }
+@media (max-width: 560px) { .research-grid, .research-feature { grid-template-columns: 1fr; } .research-feature-label { min-height: 180px; } .research-mark { font-size: 36px; } .research-page .panel { padding: 24px 20px; } .research-filters a { font-size: 12px; padding: 8px 12px; } }
+.research-page article > p.rounded-r { border-left-color: #2563eb; }
