@@ -108,7 +108,9 @@ class TestSilentFailureIsVisible:
 class TestTheWorkflowStillDoesWhatItDid:
     def test_it_runs_on_the_self_hosted_benchmark_runner(self):
         doc = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
-        assert doc["jobs"]["benchmark"]["runs-on"] == ["self-hosted", "q-advantage-bench"]
+        # The daily host moved to c7i on 2026-09-14; retain the strict
+        # self-hosted + hardware-label gate without changing the workflow.
+        assert doc["jobs"]["benchmark"]["runs-on"] == ["self-hosted", "c7i-x86"]
 
     def test_the_schedule_and_dispatch_triggers_are_intact(self):
         doc = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
