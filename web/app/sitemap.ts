@@ -10,7 +10,7 @@ import { getAllPosts } from "@/lib/blog/posts";
  * OG image routes and API routes are intentionally excluded (no SEO value).
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://coldproof.io";
+  const base = "https://www.coldproof.io";
   const run = getLatestRun();
   // Use the latest run's timestamp as lastModified for data-driven pages.
   const dataLastMod = run.timestamp;

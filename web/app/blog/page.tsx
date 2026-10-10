@@ -10,8 +10,8 @@ import { ResearchSubscribe } from "@/components/blog/ResearchSubscribe";
 
 export const metadata: Metadata = {
   title: "Research", description: "Independent, evidence-backed economic analysis to improve post-quantum cryptography investment decisions.",
-  alternates: { canonical: "https://coldproof.io/blog", types: { "application/rss+xml": "https://coldproof.io/blog/feed.xml" } },
-  openGraph: { title: "Coldproof Research", description: "Evidence for post-quantum investment decisions.", url: "https://coldproof.io/blog" },
+  alternates: { canonical: "https://www.coldproof.io/blog", types: { "application/rss+xml": "https://www.coldproof.io/blog/feed.xml" } },
+  openGraph: { title: "Coldproof Research", description: "Evidence for post-quantum investment decisions.", url: "https://www.coldproof.io/blog" },
 };
 
 export default function BlogIndexPage({ searchParams }: { searchParams: { category?: string } }) {

@@ -1,3 +1,4 @@
+import React from "react";
 import fs from "node:fs";
 import path from "node:path";
 import { Prose, P, H2, UL } from "@/components/blog/Prose";

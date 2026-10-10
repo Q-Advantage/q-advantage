@@ -4,7 +4,7 @@ import { Header } from "@/components/chrome/Header";
 import { Footer } from "@/components/chrome/Footer";
 import { BrandClose } from "@/components/chrome/BrandClose";
 import { Prose, H2, P } from "@/components/blog/Prose";
-export const metadata: Metadata = { title: "Editorial standards", description: "Coldproof’s evidence-first research and human publication review policy.", alternates: { canonical: "https://coldproof.io/blog/editorial-standards" } };
+export const metadata: Metadata = { title: "Editorial standards", description: "Coldproof’s evidence-first research and human publication review policy.", alternates: { canonical: "https://www.coldproof.io/blog/editorial-standards" } };
 export default function EditorialStandards() {
   return <div className="coldproof-site research-page"><Header /><main><div className="cpv2-wrap"><article className="research-standards-page research-body"><Prose><Link href="/blog" className="text-link">← Research</Link><div className="eyebrow mt-8">Our editorial standard</div><h1 className="my-6 text-4xl font-bold leading-tight text-fg">Evidence before estimates.</h1>
     <P>Coldproof does not publish numbers merely because an AI model can generate them. Every substantive financial claim must be measured, independently sourced, or explicitly modelled with disclosed assumptions.</P>

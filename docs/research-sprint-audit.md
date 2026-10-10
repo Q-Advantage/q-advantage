@@ -74,3 +74,13 @@ The Research archive, all article pages and Editorial Standards now use one cont
 Research styles now live in `web/app/blog/research.css`, imported through `web/app/blog/layout.tsx`; the previous research style block was removed from the shared homepage stylesheet. Homepage and PQC Arena markup were not changed. Published article bodies, URLs, approval rules and content loading are unchanged.
 
 Revised desktop (1440×1000) and mobile (390×844) archive/article layouts were visually checked. Both contain zero `.panel` containers, and mobile content stays within the viewport. Updated screenshots: private vault `coldproof-v3-handoff/research-flow-{index,article}-{desktop,mobile}.jpg`.
+
+## Final publishing checks
+
+Live HTTP inspection confirmed `coldproof.io/blog` redirects to `www.coldproof.io/blog`, served by Vercel. Canonical, sitemap, robots, RSS and structured-data URLs now use the final www host. The protected PR preview still requires a Vercel login; dashboard domain mapping was not inspected.
+
+Hardened the existing subscription endpoint against null/non-string input and private provider-error disclosure. Mocked subscription tests cover normalization, missing configuration, malformed requests and provider failures without sending email or reading credentials. A proposed automatic Open Graph image route was removed after live testing reproduced Next 14's Windows `ERR_INVALID_URL`; optional custom images remain a later refinement. Canonical metadata and malformed-request HTTP responses were verified in the built app.
+
+The file-based publishing trial uses test-only in-memory fixtures: drafts remain excluded from archive, lookup and RSS, while eligible structured content is discovered without a registry edit and renders tables, escaped text and downloads. No real draft was approved or published by this trial.
+
+Final type checking, lint and production build passed (211 static pages); 16 test files and 285 tests passed. Local built preview is now http://localhost:3020/blog. Benchmark CI failures remain outside this sprint and were explicitly deferred by the user. Real newsletter delivery and a real article review need an authorized test email and chosen draft. Production remains unchanged pending founder approval and merge.

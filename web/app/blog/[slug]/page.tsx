@@ -17,10 +17,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!post) return { title: "Not found" };
   return {
     title: post.title, description: post.summary,
-    alternates: { canonical: `https://coldproof.io/blog/${post.slug}` },
+    alternates: { canonical: `https://www.coldproof.io/blog/${post.slug}` },
     openGraph: {
       type: "article", title: post.title, description: post.summary, publishedTime: post.date,
-      modifiedTime: post.updated, authors: [post.author || "Coldproof"], url: `https://coldproof.io/blog/${post.slug}`,
+      modifiedTime: post.updated, authors: [post.author || "Coldproof"], url: `https://www.coldproof.io/blog/${post.slug}`,
     },
   };
 }
@@ -39,7 +39,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           description: post.summary, datePublished: post.date, ...(post.updated ? { dateModified: post.updated } : {}),
           author: { "@type": post.author ? "Person" : "Organization", name: post.author || "Coldproof" },
           publisher: { "@type": "Organization", name: "Coldproof" },
-          mainEntityOfPage: `https://coldproof.io/blog/${post.slug}`, articleSection: post.category,
+          mainEntityOfPage: `https://www.coldproof.io/blog/${post.slug}`, articleSection: post.category,
         }).replace(/</g, "\\u003c") }} />
         <nav className="research-back cp-mono" aria-label="Breadcrumb"><Link href="/blog">← Research</Link><span>{post.category}</span></nav>
         <header className="research-masthead"><h1>{post.title}</h1><p>{post.summary}</p>

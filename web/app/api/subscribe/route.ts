@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
  *
  * Forwards the email to the Beehiiv API. Configured via env vars:
  *  - BEEHIIV_API_KEY      — secret bearer token for Beehiiv API
- *  - BEEHIIV_PUBLICATION_ID — publication ID (format: "pub_<uuid>")
+ *  - BEEHIIV_PUB_ID — publication ID (format: "pub_<uuid>")
  *
  * Returns 200 on success, 4xx/5xx on validation or upstream errors.
  * The API key never reaches the browser.
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const email = body.email?.trim().toLowerCase();
+  const email = body && typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
   if (!email || !EMAIL_RE.test(email)) {
     return NextResponse.json(
       { error: "Please enter a valid email address." },
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     // problem, so we don't leak the cause to the client.
     console.error("[/api/subscribe] Missing BEEHIIV_API_KEY or BEEHIIV_PUB_ID");
     return NextResponse.json(
-      { error: "Subscription service is temporarily unavailable. Email hello@qadvantage.io to subscribe." },
+      { error: "Subscription service is temporarily unavailable. Please use our contact page." },
       { status: 503 },
     );
   }
@@ -64,28 +64,26 @@ export async function POST(request: Request) {
         email,
         reactivate_existing: true,
         send_welcome_email: true,
-        utm_source: "qadvantage.io",
+        utm_source: "coldproof.io",
         utm_medium: "website",
         utm_campaign: "landing-page",
       }),
     });
 
     if (!upstream.ok) {
-      // Beehiiv returns useful errors; surface a sanitized version
-      const errBody = (await upstream.json().catch(() => null)) as { errors?: { message?: string }[] } | null;
-      const detail = errBody?.errors?.[0]?.message;
-      console.error(`[/api/subscribe] Beehiiv ${upstream.status}: ${detail ?? "unknown error"}`);
+      // Provider details may contain account or subscriber information. Keep them private.
+      console.error(`[/api/subscribe] Beehiiv returned ${upstream.status}`);
       return NextResponse.json(
-        { error: detail || "Subscription failed. Try again or email hello@qadvantage.io." },
-        { status: upstream.status },
+        { error: upstream.status === 429 ? "Too many requests. Try again in a minute." : "Subscription service is temporarily unavailable. Please use our contact page." },
+        { status: upstream.status === 429 ? 429 : 502 },
       );
     }
 
     return NextResponse.json({ ok: true });
-  } catch (err) {
-    console.error("[/api/subscribe] Network error:", err);
+  } catch {
+    console.error("[/api/subscribe] Network error");
     return NextResponse.json(
-      { error: "Network error. Try again or email hello@qadvantage.io." },
+      { error: "Network error. Try again or use our contact page." },
       { status: 502 },
     );
   }
