@@ -40,6 +40,18 @@ def run(iterations: int, warmup: int) -> dict:
         measured[suite] = common.time_hybrid_kex(
             kem_alg=kem_alg, classical=classical, iterations=iterations, warmup=warmup
         )
+    # Steal covers exactly the loops above, as it always has.
+    steal = sampler.result_pct()
+
+    # Paired delta (work-order 028), after every existing loop and beside
+    # pct_over_classical. See common.time_paired_delta.
+    paired: dict[str, dict] = {
+        suite: common.time_paired_delta(
+            suite=spec, baseline=SSH_SUITES[BASELINE_SUITE], iterations=iterations, warmup=warmup
+        )
+        for suite, spec in SSH_SUITES.items()
+        if suite != BASELINE_SUITE
+    }
 
     baseline_median: float | None = None
     if BASELINE_SUITE in measured:
@@ -71,9 +83,9 @@ def run(iterations: int, warmup: int) -> dict:
             # record -- the seam was the missing piece, not the measurement.
             secret_key_bytes=kex["sizes"].get("kem_secret_key_bytes"),
             resources=kex.get("resources") or None,
+            paired_delta=paired.get(suite),
         )
 
-    steal = sampler.result_pct()
     for rec in records.values():
         rec["host"]["steal_time_pct"] = steal
 

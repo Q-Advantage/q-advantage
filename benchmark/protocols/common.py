@@ -371,6 +371,188 @@ def time_hybrid_kex(
 
 
 # ----------------------------------------------------------------------------
+# Paired baseline delta (work-order 028)
+# ----------------------------------------------------------------------------
+#
+# WHY THIS EXISTS. `pct_over_classical` is a ratio of two medians, and each
+# median comes from its own timing loops, run one after another. Work-order
+# 028's investigation found that the SAME operation, timed in two different
+# loops of one run, can read far apart -- on both the t3.medium and c7i.large
+# hosts -- and that this loop-to-loop disagreement accounts for most of the
+# hybrid delta's movement from run to run. Anything that holds for a whole loop
+# shifts one median and not the other. The committed record stores aggregates
+# only, so it could show that mechanism but not whether pairing removes it.
+#
+# A paired measurement times the suite's handshake and the baseline's back to
+# back inside one iteration and takes the delta per iteration, before anything
+# is aggregated. A slowdown long enough to span one pair lands on both sides and
+# cancels. The order within a pair alternates every iteration, so neither side
+# is systematically first.
+#
+# Emitted ALONGSIDE pct_over_classical, never in place of it. The two are not
+# expected to match exactly: a paired handshake is one timed block, where the
+# composed total sums separately timed phases. Whether the paired figure is
+# steadier across runs is the question the daily runs now answer.
+
+PAIRED_METHOD_NOTE = (
+    "Suite and baseline handshakes timed back to back within each iteration, order alternating, "
+    "with the percentage taken per iteration before aggregation. Each handshake performs the "
+    "operations the composed total counts: one KEM keygen, encapsulation and decapsulation, and "
+    "two classical keygens and two derivations. Per-iteration setup is outside the clock."
+)
+
+PAIRED_CI_NOTE = (
+    "95% distribution-free interval on the MEDIAN per-iteration percentage, from the order "
+    "statistics that bracket it. It says how precisely this run pins the median down, not how "
+    "much the figure moves between runs."
+)
+
+
+def _handshake_ops(kem_alg: str | None, classical: str | None):
+    """
+    (setup, handshake, close) for one composed key exchange.
+
+    `setup()` does the per-iteration work that must stay off the clock -- a
+    fresh ciphertext to decapsulate -- and `handshake(prepared)` performs
+    exactly the operations HANDSHAKE_WEIGHTS counts, so the paired figure prices
+    the same handshake the composed total does. `close()` frees liboqs objects.
+
+    liboqs is imported only when there is a KEM, so a classical-only pair runs
+    wherever `cryptography` does.
+    """
+    kem_keygen = peer = peer_pub = None
+    if kem_alg:
+        import oqs
+
+        if kem_alg not in oqs.get_enabled_kem_mechanisms():
+            raise RuntimeError(f"{kem_alg} not enabled in this liboqs build")
+        kem_keygen = oqs.KeyEncapsulation(kem_alg)
+        peer = oqs.KeyEncapsulation(kem_alg)
+        peer_pub = peer.generate_keypair()
+
+    c = local_priv = peer_c_pub = None
+    if classical:
+        c = _classical_registry()[classical]
+        peer_c_pub = c.public_of(c.keygen())
+        local_priv = c.keygen()
+
+    def setup() -> Any:
+        return peer.encap_secret(peer_pub)[0] if peer is not None else None
+
+    def handshake(ciphertext: Any) -> None:
+        if peer is not None:
+            kem_keygen.generate_keypair()
+            peer.encap_secret(peer_pub)
+            peer.decap_secret(ciphertext)
+        if c is not None:
+            c.keygen()
+            c.keygen()
+            c.derive(local_priv, peer_c_pub)
+            c.derive(local_priv, peer_c_pub)
+
+    def close() -> None:
+        for obj in (kem_keygen, peer):
+            if obj is not None:
+                obj.free()
+
+    return setup, handshake, close
+
+
+def paired_delta_stats(suite_ns: list[int], baseline_ns: list[int]) -> dict[str, Any]:
+    """
+    Aggregate per-iteration pairs into the `baseline.paired` block.
+
+    The percentage is taken per pair and only then summarised, which is the
+    point: a median of per-pair deltas, not a ratio of two medians. The interval
+    uses order statistics (binomial, normal approximation) so nothing is assumed
+    about the shape of the timings, which on a shared host are heavily skewed.
+    Pairs with a non-positive baseline time are dropped rather than divided by.
+    """
+    pairs = [(s, b) for s, b in zip(suite_ns, baseline_ns) if b > 0]
+    n = len(pairs)
+    out: dict[str, Any] = {
+        "method": "interleaved",
+        "n_pairs": n,
+        "pct_over_classical": None,
+        "ci95_low_pct": None,
+        "ci95_high_pct": None,
+        "median_delta_us": None,
+        "ci_note": PAIRED_CI_NOTE,
+        "method_note": PAIRED_METHOD_NOTE,
+    }
+    if n < 2:
+        out["ci_note"] = "A paired interval needs at least two pairs."
+        return out
+
+    pcts = sorted((s - b) / b * 100.0 for s, b in pairs)
+    half = Z_95 * math.sqrt(n) / 2.0
+    lo_rank = max(1, math.floor(n / 2.0 - half))  # 1-based order statistics
+    hi_rank = min(n, math.ceil(1 + n / 2.0 + half))
+    out.update({
+        "pct_over_classical": round(statistics.median(pcts), 1),
+        "ci95_low_pct": round(pcts[lo_rank - 1], 1),
+        "ci95_high_pct": round(pcts[hi_rank - 1], 1),
+        "median_delta_us": round(statistics.median([(s - b) / 1000.0 for s, b in pairs]), 3),
+    })
+    return out
+
+
+def time_paired_delta(
+    *,
+    suite: tuple[str | None, str | None],
+    baseline: tuple[str | None, str | None],
+    iterations: int = 1000,
+    warmup: int = 50,
+) -> dict[str, Any]:
+    """Time `suite` against `baseline` in interleaved pairs; returns the `baseline.paired` block.
+
+    Both are (kem_alg | None, classical | None), the shape every track's suite table uses.
+    """
+    s_setup, s_handshake, s_close = _handshake_ops(*suite)
+    try:
+        b_setup, b_handshake, b_close = _handshake_ops(*baseline)
+    except Exception:
+        s_close()
+        raise
+
+    suite_ns: list[int] = []
+    base_ns: list[int] = []
+    try:
+        for _ in range(warmup):
+            s_handshake(s_setup())
+            b_handshake(b_setup())
+        gc.collect()
+        gc.disable()
+        try:
+            for i in range(iterations):
+                s_prep = s_setup()
+                b_prep = b_setup()
+                if i % 2 == 0:
+                    t0 = time.perf_counter_ns()
+                    s_handshake(s_prep)
+                    t1 = time.perf_counter_ns()
+                    b_handshake(b_prep)
+                    t2 = time.perf_counter_ns()
+                    suite_ns.append(t1 - t0)
+                    base_ns.append(t2 - t1)
+                else:
+                    t0 = time.perf_counter_ns()
+                    b_handshake(b_prep)
+                    t1 = time.perf_counter_ns()
+                    s_handshake(s_prep)
+                    t2 = time.perf_counter_ns()
+                    base_ns.append(t1 - t0)
+                    suite_ns.append(t2 - t1)
+        finally:
+            gc.enable()
+    finally:
+        s_close()
+        b_close()
+
+    return paired_delta_stats(suite_ns, base_ns)
+
+
+# ----------------------------------------------------------------------------
 # Size accounting
 # ----------------------------------------------------------------------------
 
@@ -675,6 +857,7 @@ def build_result(
     tls_version: str | None = None,
     resources: dict | None = None,
     secret_key_bytes: int | None = None,
+    paired_delta: dict | None = None,
 ) -> dict:
     identity: dict[str, Any] = {"protocol": protocol, "mode": mode, "suite": suite}
 
@@ -697,7 +880,14 @@ def build_result(
         "identity": identity,
         "timing": timing,
         "size": _size_record(size, secret_key_bytes),
-        "baseline": {"baseline_suite": baseline_suite, "pct_over_classical": pct_over_classical},
+        "baseline": {
+            "baseline_suite": baseline_suite,
+            "pct_over_classical": pct_over_classical,
+            # The paired delta (work-order 028) sits beside the existing field,
+            # never in place of it, and is omitted rather than nulled when not
+            # measured -- a baseline suite has nothing to pair against.
+            **({"paired": paired_delta} if paired_delta is not None else {}),
+        },
         "cross_validation": asdict(cross_validation) if cross_validation else asdict(CrossValidation()),
         "auth": auth,
         "toolchain": asdict(toolchain or capture_toolchain()),
