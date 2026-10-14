@@ -10,6 +10,7 @@
  * measured, on a chart whose entire claim is the opposite.
  */
 import { getLatestRun, loadAllRuns } from "../lib/data/load";
+import { assertCalendarWindow, assertUniqueRuns } from "./trend-smoke-checks";
 import {
   MAX_SERIES,
   buildTrends,
@@ -31,8 +32,17 @@ for (const s of trends.series) {
     `  ${s.label.padEnd(24)} ${String(s.points.length).padStart(3)} points, ${s.gaps} gaps, ` +
       `${pointDates.size} distinct dates`,
   );
-  if (pointDates.size !== s.points.length) {
-    throw new Error(`${s.label} has duplicate dates — a run contributed more than one point.`);
+  assertUniqueRuns(s.points);
+  // Trace every point back to a committed measurement. Dates alone are not
+  // run identities: reruns and overlapping hardware can share a date.
+  for (const point of s.points) {
+    const source = allRuns.find((candidate) =>
+      candidate.date_string === point.date && candidate.full_sha === point.commit &&
+      candidate.host_era_id === point.era_id);
+    const operation = source?.algorithms_by_id[s.id]?.operations.keygen;
+    if (!source || operation?.mean_us !== point.value) {
+      throw new Error(`${s.label} has a point that does not match its source measurement.`);
+    }
   }
   if (s.points.some((p) => p.value <= 0 || !Number.isFinite(p.value))) {
     throw new Error(
@@ -103,8 +113,15 @@ for (const id of ["30", "90", "all"]) {
   const r = buildTrends(selection, "mean", "keygen", id);
   const days = rangeDays(id);
   console.log(`  ${id.padEnd(4)} → ${r.runsInRange} runs (limit ${days ?? "none"})`);
-  if (days != null && r.runsInRange > days) {
-    throw new Error(`Range ${id} returned ${r.runsInRange} runs, more than ${days}.`);
+  assertCalendarWindow(r.dates, days);
+  const newest = allRuns[0].date_string;
+  const cutoff = new Date(`${newest}T00:00:00Z`);
+  if (days != null) cutoff.setUTCDate(cutoff.getUTCDate() - (days - 1));
+  const expectedDates = allRuns
+    .filter((source) => days == null || source.date_string >= cutoff.toISOString().slice(0, 10))
+    .map((source) => source.date_string).sort();
+  if (r.runsInRange !== expectedDates.length || JSON.stringify([...r.dates].sort()) !== JSON.stringify(expectedDates)) {
+    throw new Error(`Range ${id} does not contain exactly the committed runs in its calendar window.`);
   }
 }
 if (buildTrends(selection, "mean", "keygen", "all").runsInRange !== allRuns.length) {
