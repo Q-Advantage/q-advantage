@@ -1,0 +1,236 @@
+{
+  "environment": {
+    "iso_timestamp": "2026-10-20T11:53:17Z",
+    "liboqs_version": "0.15.0",
+    "liboqs_python_version": "0.15.0",
+    "git_commit": "7ae5c36d2f6d15f619b45f5985d69db9bbae7aa1",
+    "cpu_model": "Intel(R) Xeon(R) Platinum 8488C",
+    "arch": "x86_64",
+    "cpu_cores_logical": 2,
+    "steal_time_pct": 0.0
+  },
+  "method": {
+    "label": "cryptographic throughput under load",
+    "label_note": "NOT connections per core, and not 'concurrency' unqualified. This measures N concurrent cryptographic OPERATIONS contending for CPU, with no sockets, no accept queue and no kernel connection state. Layer B measures the other thing -- full TCP+TLS connections including socket setup -- and the two must never share a name.",
+    "parallelism": "Separate processes, not threads. Python threads do not parallelise CPU-bound work past the GIL, so a threaded version would measure the GIL and report it as cryptographic scaling.",
+    "timing": "Each worker runs for a fixed duration and reports operations completed. A fixed iteration count would let workers finish at different moments and average the aggregate over a partly-idle window, flattering the result.",
+    "synchronisation": "Workers are released on a shared wall-clock instant so no worker runs alone while its peers are still starting.",
+    "core_count_caveat": "This host reports 2 logical cores. Points above that count are oversubscribed: they measure the scheduler under contention, which is a real operational question but not parallel scaling. Every point records which it is.",
+    "relationship_to_single_op_track": "Additive to the isolated single-operation benchmarks, never a replacement. The isolated number is what makes cross-run comparison clean; this one describes behaviour under contention."
+  },
+  "operations": {
+    "ML-KEM-768/encap": {
+      "label": "cryptographic throughput under load",
+      "label_note": "NOT connections per core, and not 'concurrency' unqualified. This measures N concurrent cryptographic OPERATIONS contending for CPU, with no sockets, no accept queue and no kernel connection state. Layer B measures the other thing -- full TCP+TLS connections including socket setup -- and the two must never share a name.",
+      "single_worker_ops_per_sec": 87068.7,
+      "points": [
+        {
+          "n_workers": 1,
+          "measured": true,
+          "workers_reporting": 1,
+          "duration_s": 3.0,
+          "ops_completed_total": 261207,
+          "aggregate_ops_per_sec": 87068.7,
+          "per_worker_ops_per_sec": {
+            "min": 87068.7,
+            "median": 87068.7,
+            "max": 87068.7
+          },
+          "oversubscribed": false,
+          "scaling_efficiency": 1.0,
+          "efficiency_note": "Aggregate throughput against a perfect-scaling ideal of 1 x the single-worker rate. This point fits within the host's core count."
+        },
+        {
+          "n_workers": 2,
+          "measured": true,
+          "workers_reporting": 2,
+          "duration_s": 3.0,
+          "ops_completed_total": 294191,
+          "aggregate_ops_per_sec": 98063.11,
+          "per_worker_ops_per_sec": {
+            "min": 49028.06,
+            "median": 49031.6,
+            "max": 49035.14
+          },
+          "oversubscribed": false,
+          "scaling_efficiency": 0.5631,
+          "efficiency_note": "Aggregate throughput against a perfect-scaling ideal of 2 x the single-worker rate. This point fits within the host's core count."
+        },
+        {
+          "n_workers": 4,
+          "measured": true,
+          "workers_reporting": 4,
+          "duration_s": 3.0,
+          "ops_completed_total": 293838,
+          "aggregate_ops_per_sec": 97911.88,
+          "per_worker_ops_per_sec": {
+            "min": 21929.69,
+            "median": 25088.88,
+            "max": 25828.35
+          },
+          "oversubscribed": true,
+          "scaling_efficiency": 0.2811,
+          "efficiency_note": "Aggregate throughput against a perfect-scaling ideal of 4 x the single-worker rate. This point is oversubscribed on a 2-core host, so it measures the scheduler under contention rather than parallel scaling."
+        },
+        {
+          "n_workers": 8,
+          "measured": true,
+          "workers_reporting": 8,
+          "duration_s": 3.0,
+          "ops_completed_total": 292961,
+          "aggregate_ops_per_sec": 97454.21,
+          "per_worker_ops_per_sec": {
+            "min": 9779.73,
+            "median": 10235.41,
+            "max": 15909.63
+          },
+          "oversubscribed": true,
+          "scaling_efficiency": 0.1399,
+          "efficiency_note": "Aggregate throughput against a perfect-scaling ideal of 8 x the single-worker rate. This point is oversubscribed on a 2-core host, so it measures the scheduler under contention rather than parallel scaling."
+        }
+      ]
+    },
+    "ML-KEM-768/decap": {
+      "label": "cryptographic throughput under load",
+      "label_note": "NOT connections per core, and not 'concurrency' unqualified. This measures N concurrent cryptographic OPERATIONS contending for CPU, with no sockets, no accept queue and no kernel connection state. Layer B measures the other thing -- full TCP+TLS connections including socket setup -- and the two must never share a name.",
+      "single_worker_ops_per_sec": 82457.88,
+      "points": [
+        {
+          "n_workers": 1,
+          "measured": true,
+          "workers_reporting": 1,
+          "duration_s": 3.0,
+          "ops_completed_total": 247374,
+          "aggregate_ops_per_sec": 82457.88,
+          "per_worker_ops_per_sec": {
+            "min": 82457.88,
+            "median": 82457.88,
+            "max": 82457.88
+          },
+          "oversubscribed": false,
+          "scaling_efficiency": 1.0,
+          "efficiency_note": "Aggregate throughput against a perfect-scaling ideal of 1 x the single-worker rate. This point fits within the host's core count."
+        },
+        {
+          "n_workers": 2,
+          "measured": true,
+          "workers_reporting": 2,
+          "duration_s": 3.0,
+          "ops_completed_total": 267645,
+          "aggregate_ops_per_sec": 89214.86,
+          "per_worker_ops_per_sec": {
+            "min": 44045.94,
+            "median": 44607.43,
+            "max": 45168.93
+          },
+          "oversubscribed": false,
+          "scaling_efficiency": 0.541,
+          "efficiency_note": "Aggregate throughput against a perfect-scaling ideal of 2 x the single-worker rate. This point fits within the host's core count."
+        },
+        {
+          "n_workers": 4,
+          "measured": true,
+          "workers_reporting": 4,
+          "duration_s": 3.0,
+          "ops_completed_total": 268605,
+          "aggregate_ops_per_sec": 89440.82,
+          "per_worker_ops_per_sec": {
+            "min": 21460.4,
+            "median": 22288.62,
+            "max": 23463.93
+          },
+          "oversubscribed": true,
+          "scaling_efficiency": 0.2712,
+          "efficiency_note": "Aggregate throughput against a perfect-scaling ideal of 4 x the single-worker rate. This point is oversubscribed on a 2-core host, so it measures the scheduler under contention rather than parallel scaling."
+        },
+        {
+          "n_workers": 8,
+          "measured": true,
+          "workers_reporting": 8,
+          "duration_s": 3.0,
+          "ops_completed_total": 269104,
+          "aggregate_ops_per_sec": 89518.79,
+          "per_worker_ops_per_sec": {
+            "min": 11031.38,
+            "median": 11148.56,
+            "max": 11513.0
+          },
+          "oversubscribed": true,
+          "scaling_efficiency": 0.1357,
+          "efficiency_note": "Aggregate throughput against a perfect-scaling ideal of 8 x the single-worker rate. This point is oversubscribed on a 2-core host, so it measures the scheduler under contention rather than parallel scaling."
+        }
+      ]
+    },
+    "ML-DSA-65/verify": {
+      "label": "cryptographic throughput under load",
+      "label_note": "NOT connections per core, and not 'concurrency' unqualified. This measures N concurrent cryptographic OPERATIONS contending for CPU, with no sockets, no accept queue and no kernel connection state. Layer B measures the other thing -- full TCP+TLS connections including socket setup -- and the two must never share a name.",
+      "single_worker_ops_per_sec": 35690.39,
+      "points": [
+        {
+          "n_workers": 1,
+          "measured": true,
+          "workers_reporting": 1,
+          "duration_s": 3.0,
+          "ops_completed_total": 107072,
+          "aggregate_ops_per_sec": 35690.39,
+          "per_worker_ops_per_sec": {
+            "min": 35690.39,
+            "median": 35690.39,
+            "max": 35690.39
+          },
+          "oversubscribed": false,
+          "scaling_efficiency": 1.0,
+          "efficiency_note": "Aggregate throughput against a perfect-scaling ideal of 1 x the single-worker rate. This point fits within the host's core count."
+        },
+        {
+          "n_workers": 2,
+          "measured": true,
+          "workers_reporting": 2,
+          "duration_s": 3.0,
+          "ops_completed_total": 115122,
+          "aggregate_ops_per_sec": 38373.63,
+          "per_worker_ops_per_sec": {
+            "min": 19169.48,
+            "median": 19186.84,
+            "max": 19204.2
+          },
+          "oversubscribed": false,
+          "scaling_efficiency": 0.5376,
+          "efficiency_note": "Aggregate throughput against a perfect-scaling ideal of 2 x the single-worker rate. This point fits within the host's core count."
+        },
+        {
+          "n_workers": 4,
+          "measured": true,
+          "workers_reporting": 4,
+          "duration_s": 3.0,
+          "ops_completed_total": 115084,
+          "aggregate_ops_per_sec": 38321.22,
+          "per_worker_ops_per_sec": {
+            "min": 9454.27,
+            "median": 9536.2,
+            "max": 9817.74
+          },
+          "oversubscribed": true,
+          "scaling_efficiency": 0.2684,
+          "efficiency_note": "Aggregate throughput against a perfect-scaling ideal of 4 x the single-worker rate. This point is oversubscribed on a 2-core host, so it measures the scheduler under contention rather than parallel scaling."
+        },
+        {
+          "n_workers": 8,
+          "measured": true,
+          "workers_reporting": 8,
+          "duration_s": 3.0,
+          "ops_completed_total": 114661,
+          "aggregate_ops_per_sec": 38141.95,
+          "per_worker_ops_per_sec": {
+            "min": 3809.62,
+            "median": 3904.56,
+            "max": 6437.27
+          },
+          "oversubscribed": true,
+          "scaling_efficiency": 0.1336,
+          "efficiency_note": "Aggregate throughput against a perfect-scaling ideal of 8 x the single-worker rate. This point is oversubscribed on a 2-core host, so it measures the scheduler under contention rather than parallel scaling."
+        }
+      ]
+    }
+  }
+}
